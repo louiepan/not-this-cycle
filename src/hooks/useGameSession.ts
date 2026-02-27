@@ -1,0 +1,228 @@
+'use client';
+
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { GameEngine } from '@/engine/GameEngine';
+import { RatingEngine } from '@/engine/RatingEngine';
+import type {
+  Scenario,
+  ChannelDef,
+  DifficultyConfig,
+  GameState,
+  Choice,
+  EngineAction,
+  Stakeholder,
+  RatingResult,
+} from '@/engine/types';
+import { DIFFICULTIES } from '@/engine/types';
+import { useGameClock } from './useGameClock';
+import { track, initTracker, flush } from '@/analytics/tracker';
+
+export type SessionPhase = 'menu' | 'playing' | 'review';
+
+interface UseGameSessionReturn {
+  phase: SessionPhase;
+  gameState: GameState | null;
+  ratingResult: RatingResult | null;
+  stakeholders: Stakeholder[];
+  stakeholderNames: Record<string, string>;
+  channels: ChannelDef[];
+  elapsed: number;
+  difficulty: DifficultyConfig;
+  typingNames: string[];
+
+  startGame: (difficulty: DifficultyConfig) => void;
+  resolveDecision: (decisionId: string, choice: Choice) => void;
+  switchChannel: (channelId: string) => void;
+  getChoicesForChannel: (channelId: string) => Choice[] | null;
+  formatGameTime: (ms: number) => string;
+  formatClockDisplay: () => string;
+}
+
+export function useGameSession(scenario: Scenario): UseGameSessionReturn {
+  const [phase, setPhase] = useState<SessionPhase>('menu');
+  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [ratingResult, setRatingResult] = useState<RatingResult | null>(null);
+  const [typingNames, setTypingNames] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<DifficultyConfig>(DIFFICULTIES.senior);
+  const [channels, setChannels] = useState<ChannelDef[]>([]);
+
+  const engineRef = useRef<GameEngine | null>(null);
+  const ratingEngineRef = useRef(new RatingEngine());
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onTick = useCallback((elapsed: number) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    const actions = engine.tick(elapsed);
+    const newState = engine.getState();
+    setGameState(newState);
+
+    handleActions(actions, engine);
+
+    if (engine.isComplete()) {
+      const rating = ratingEngineRef.current.computeRating(newState);
+      setRatingResult(rating);
+      setPhase('review');
+      track('game_complete', {
+        compositeScore: rating.compositeScore,
+        archetype: rating.archetype,
+        bucket: rating.calibrationBucket,
+      });
+      flush();
+    }
+  }, []);
+
+  const { elapsed, start: startClock } = useGameClock(onTick);
+
+  const handleActions = useCallback(
+    (actions: EngineAction[], engine: GameEngine) => {
+      const messageActions = actions.filter(
+        (a) => a.type === 'deliver_message'
+      );
+
+      if (messageActions.length > 0) {
+        // Show typing indicator briefly before messages appear
+        const stakeholders = engine.getStakeholders();
+        const senderIds = new Set(
+          messageActions
+            .filter((a) => a.type === 'deliver_message' && !a.message.isPlayerMessage)
+            .map((a) => (a as { type: 'deliver_message'; message: { from: string } }).message.from)
+        );
+
+        const names = stakeholders
+          .filter((s) => senderIds.has(s.id))
+          .map((s) => s.name.split(' ')[0]);
+
+        if (names.length > 0) {
+          setTypingNames(names);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => setTypingNames([]), 1500);
+        }
+      }
+
+      for (const action of actions) {
+        if (action.type === 'escalate') {
+          track('decision_escalated', { decisionId: action.decisionId });
+        }
+        if (action.type === 'auto_resolve') {
+          track('decision_auto_resolved', { decisionId: action.decisionId });
+        }
+      }
+    },
+    []
+  );
+
+  const startGame = useCallback(
+    (diff: DifficultyConfig) => {
+      const seed = Date.now();
+      const sessionId = `${seed}-${Math.random().toString(36).slice(2, 8)}`;
+      initTracker(sessionId);
+
+      const engine = new GameEngine(scenario, diff, seed);
+      engineRef.current = engine;
+      engine.start();
+
+      setDifficulty(diff);
+      setChannels(engine.getChannels());
+      setPhase('playing');
+      setGameState(engine.getState());
+      setRatingResult(null);
+      startClock();
+
+      track('session_start', { difficulty: diff.id, seed });
+      track('difficulty_selected', { difficulty: diff.id });
+    },
+    [scenario, startClock]
+  );
+
+  const resolveDecision = useCallback(
+    (decisionId: string, choice: Choice) => {
+      const engine = engineRef.current;
+      if (!engine) return;
+
+      engine.resolve(decisionId, choice.id);
+      setGameState(engine.getState());
+
+      track('decision_made', {
+        decisionId,
+        choiceId: choice.id,
+        tone: choice.tone,
+        isDefer: choice.isDefer,
+      });
+    },
+    []
+  );
+
+  const switchChannel = useCallback((channelId: string) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    engine.switchChannel(channelId);
+    setGameState(engine.getState());
+
+    track('channel_switch', { channelId });
+  }, []);
+
+  const getChoicesForChannel = useCallback(
+    (channelId: string): Choice[] | null => {
+      if (!gameState) return null;
+      const pending = gameState.pendingDecisions.find(
+        (d) => d.channel === channelId
+      );
+      return pending ? pending.choices : null;
+    },
+    [gameState]
+  );
+
+  const stakeholders = useMemo(() => {
+    return engineRef.current?.getStakeholders() ?? [];
+  }, [gameState]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const stakeholderNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of stakeholders) {
+      map[s.id] = s.name;
+    }
+    return map;
+  }, [stakeholders]);
+
+  const formatGameTime = useCallback((ms: number): string => {
+    // 5 minutes of real time = 8 hours of in-game time (9 AM -> 5 PM)
+    const gameMinutes = Math.floor((ms / 300000) * 480);
+    const totalMinutes = 9 * 60 + gameMinutes;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const h = hours % 12 || 12;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    return `${h}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+  }, []);
+
+  const formatClockDisplay = useCallback((): string => {
+    const remaining = Math.max(
+      0,
+      (scenario.durationTarget * (difficulty?.timingScale || 1) - elapsed) / 1000
+    );
+    const m = Math.floor(remaining / 60);
+    const s = Math.floor(remaining % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }, [elapsed, scenario.durationTarget, difficulty]);
+
+  return {
+    phase,
+    gameState,
+    ratingResult,
+    stakeholders,
+    stakeholderNames,
+    channels,
+    elapsed,
+    difficulty,
+    typingNames,
+    startGame,
+    resolveDecision,
+    switchChannel,
+    getChoicesForChannel,
+    formatGameTime,
+    formatClockDisplay,
+  };
+}
