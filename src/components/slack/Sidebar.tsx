@@ -37,8 +37,8 @@ export function Sidebar({
 
       <div className="flex-1 overflow-y-auto py-3">
         {/* Channels section */}
-        <div className="mb-3">
-          <div className="px-4 py-1 text-xs text-slack-text-secondary font-semibold uppercase tracking-wide">
+        <div className="mb-5">
+          <div className="px-4 py-1.5 text-xs text-slack-text-secondary font-semibold uppercase tracking-wide">
             Channels
           </div>
           {publicChannels.map((channel) => (
@@ -56,7 +56,7 @@ export function Sidebar({
         {/* DMs section */}
         {dmChannels.length > 0 && (
           <div>
-            <div className="px-4 py-1 text-xs text-slack-text-secondary font-semibold uppercase tracking-wide">
+            <div className="px-4 py-1.5 text-xs text-slack-text-secondary font-semibold uppercase tracking-wide">
               Direct Messages
             </div>
             {dmChannels.map((channel) => (
@@ -95,7 +95,7 @@ function ChannelItem({
   return (
     <button
       onClick={onSelect}
-      className={`w-full text-left px-4 py-[3px] text-[15px] flex items-center justify-between
+      className={`w-full text-left px-4 py-1.5 text-[15px] flex items-center justify-between
         transition-colors cursor-pointer
         ${isActive ? 'bg-slack-sidebar-active text-white' : 'hover:bg-slack-sidebar-hover'}
         ${hasUnread && !isActive ? 'text-white font-semibold' : ''}
@@ -137,7 +137,7 @@ function DMItem({
   return (
     <button
       onClick={onSelect}
-      className={`w-full text-left px-4 py-[3px] text-[15px] flex items-center justify-between gap-2
+      className={`w-full text-left px-4 py-1.5 text-[15px] flex items-center justify-between gap-2
         transition-colors cursor-pointer
         ${isActive ? 'bg-slack-sidebar-active text-white' : 'hover:bg-slack-sidebar-hover'}
         ${hasUnread && !isActive ? 'text-white font-semibold' : ''}

@@ -236,8 +236,10 @@ const CHANNELS: ChannelDef[] = [
   { id: 'product-strategy', name: 'product-strategy', type: 'channel', description: 'Q4 roadmap planning' },
   { id: 'eng-team', name: 'eng-team', type: 'channel', description: 'Engineering updates' },
   { id: 'design-sync', name: 'design-sync', type: 'channel', description: 'Design reviews' },
-  { id: 'dm-manager', name: '{{the-manager.firstName}} {{the-manager.lastName}}', type: 'dm' },
   { id: 'planning-war-room', name: 'planning-war-room', type: 'channel', description: 'Cross-functional planning' },
+  { id: 'dm-manager', name: '{{the-manager.firstName}} {{the-manager.lastName}}', type: 'dm' },
+  { id: 'dm-staff-eng', name: '{{the-staff-eng.firstName}} {{the-staff-eng.lastName}}', type: 'dm' },
+  { id: 'dm-design-lead', name: '{{the-design-lead.firstName}} {{the-design-lead.lastName}}', type: 'dm' },
 ];
 
 // ============================================================
@@ -245,6 +247,78 @@ const CHANNELS: ChannelDef[] = [
 // ============================================================
 
 const EVENTS: GameEvent[] = [
+  // ---- Warm-start: pre-existing channel history ----
+
+  // Context already in product-strategy when you arrive
+  {
+    id: 'evt-history-product',
+    triggerAt: 0,
+    channel: 'product-strategy',
+    messages: [
+      {
+        id: 'msg-history-1',
+        from: 'the-manager',
+        content: 'Heads up team — Q4 planning kicks off today. {{the-vp.firstName}} wants a roadmap locked by end of week. Let\'s stay aligned.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-history-2',
+        from: 'the-design-lead',
+        content: 'Sounds good. I\'ll have the updated mocks ready for review this afternoon.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-history-3',
+        from: 'the-staff-eng',
+        content: 'Just flagging — there are some tech debt items we should discuss before locking scope.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
+  // Manager DM — morning greeting
+  {
+    id: 'evt-history-dm-manager',
+    triggerAt: 0,
+    channel: 'dm-manager',
+    messages: [
+      {
+        id: 'msg-dm-mgr-morning',
+        from: 'the-manager',
+        content: 'Good morning! Big day today. Let me know if you need anything — I\'m in back-to-backs but can make time.',
+        delay: 0,
+        mentionsPlayer: true,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
+  // Staff Eng DM — heads up
+  {
+    id: 'evt-history-dm-eng',
+    triggerAt: 0,
+    channel: 'dm-staff-eng',
+    messages: [
+      {
+        id: 'msg-dm-eng-morning',
+        from: 'the-staff-eng',
+        content: 'Hey — got a sec later today? Need to talk about the auth service before we commit to anything for Q4.',
+        delay: 0,
+        mentionsPlayer: true,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
   // ---- Act 1: The Morning (0-60s) ----
 
   // Friendly opener from your teammate

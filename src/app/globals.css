@@ -46,6 +46,7 @@ body {
   background: var(--color-slack-bg);
   color: var(--color-slack-text);
   font-family: var(--font-slack);
+  font-weight: 400;
   font-size: 15px;
   line-height: 1.46668;
   -webkit-font-smoothing: antialiased;

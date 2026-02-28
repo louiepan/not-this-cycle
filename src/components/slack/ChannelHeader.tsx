@@ -11,7 +11,7 @@ export function ChannelHeader({ channel }: ChannelHeaderProps) {
 
   return (
     <div className="h-[52px] border-b border-slack-divider flex items-center px-4 shrink-0 bg-slack-channel-header justify-between">
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-4 min-w-0">
         {/* Hamburger */}
         <button className="text-slack-text-secondary hover:text-slack-text shrink-0 cursor-default">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>

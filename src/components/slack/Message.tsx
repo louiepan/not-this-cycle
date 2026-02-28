@@ -58,8 +58,8 @@ export function Message({
   return (
     <div
       ref={ref}
-      className={`group flex gap-2 px-5 py-0.5 transition-all duration-300
-        ${showHeader ? 'mt-2' : ''}
+      className={`group flex gap-3 px-5 py-1 transition-all duration-300
+        ${showHeader ? 'mt-4' : ''}
         ${mentionsPlayer ? 'bg-slack-mention-bg/30 border-l-2 border-slack-mention-text' : 'hover:bg-slack-message-hover'}
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}
     >
