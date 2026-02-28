@@ -54,7 +54,7 @@ export default function Home() {
       <ReviewScreen
         result={resolvedResult}
         stakeholders={session.stakeholders}
-        onPlayAgain={() => window.location.reload()}
+        onPlayAgain={() => session.resetGame()}
       />
     );
   }
@@ -76,6 +76,7 @@ export default function Home() {
       unreadCounts={session.gameState.unreadCounts}
       mentionCounts={session.gameState.mentionCounts}
       hasDecision={hasDecision}
+      nudge={session.nudgeMessage}
       typingNames={session.typingNames}
       gameClock={session.formatClockDisplay()}
       onChannelSelect={(id: string) => session.switchChannel(id)}

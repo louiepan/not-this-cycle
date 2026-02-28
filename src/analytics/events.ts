@@ -6,7 +6,8 @@ export type AnalyticsEventType =
   | 'decision_auto_resolved'
   | 'channel_switch'
   | 'game_complete'
-  | 'difficulty_selected';
+  | 'difficulty_selected'
+  | 'low_confidence_nudge';
 
 export interface AnalyticsEvent {
   type: AnalyticsEventType;

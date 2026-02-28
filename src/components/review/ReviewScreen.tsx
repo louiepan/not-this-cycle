@@ -70,9 +70,12 @@ export function ReviewScreen({ result, stakeholders, onPlayAgain }: ReviewScreen
   const firstFeedback = result.peerFeedback[0];
 
   const variables: { label: string; value: number; inverted: boolean }[] = [
-    { label: 'IMPACT', value: result.variables.execTrust, inverted: false },
-    { label: 'SCOPE', value: Math.round((result.variables.communicationEffectiveness + result.variables.productJudgment) / 2), inverted: false },
-    { label: 'CULTURE', value: result.variables.teamMorale, inverted: false },
+    { label: 'EXEC TRUST', value: result.variables.execTrust, inverted: false },
+    { label: 'COMMUNICATION', value: result.variables.communicationEffectiveness, inverted: false },
+    { label: 'TEAM MORALE', value: result.variables.teamMorale, inverted: false },
+    { label: 'PRODUCT JUDGMENT', value: result.variables.productJudgment, inverted: false },
+    { label: 'TECH DEBT', value: result.variables.techDebt, inverted: true },
+    { label: 'RESPONSIVENESS', value: result.variables.responsivenessDebt, inverted: true },
   ];
 
   return (

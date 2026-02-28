@@ -2,15 +2,15 @@ import type { Choice } from './types';
 
 /**
  * Matches freeform player text to the closest available choice
- * using keyword overlap and tone heuristics.
+ * using keyword overlap + tone heuristics.
  *
- * Scoring:
- * 1. Normalize both texts (lowercase, strip punctuation)
- * 2. Extract significant words (skip stop words)
- * 3. Score = weighted sum of:
- *    - Keyword overlap between player text and choice label+message
- *    - Bigram overlap for phrase-level matching
- *    - Tone signal words (e.g. "later" -> deflecting, "absolutely" -> committing)
+ * Tone is weighted heavily (0.6) because short player inputs like
+ * "yes", "no", "let me think" carry strong tonal signal even without
+ * keyword overlap. This is intentional — the game should reward
+ * players for communicating clearly even in short messages.
+ *
+ * Returns { choice, confidence } so callers can apply a confidence
+ * threshold and ask the player to elaborate if the match is weak.
  */
 
 const STOP_WORDS = new Set([
@@ -31,6 +31,11 @@ const TONE_SIGNALS: Record<string, string> = {
   'ship': 'committing',
   'lets go': 'committing',
   'on it': 'committing',
+  'done': 'committing',
+  'will do': 'committing',
+  'got it': 'committing',
+  'ok': 'committing',
+  'okay': 'committing',
   'agree': 'diplomatic',
   'understand': 'diplomatic',
   'hear you': 'diplomatic',
@@ -38,24 +43,43 @@ const TONE_SIGNALS: Record<string, string> = {
   'fair': 'diplomatic',
   'balance': 'diplomatic',
   'both': 'diplomatic',
+  'compromise': 'diplomatic',
+  'work together': 'diplomatic',
+  'align': 'diplomatic',
+  'good point': 'diplomatic',
   'pushback': 'direct',
   'push back': 'direct',
-  'no': 'direct',
+  'disagree': 'direct',
   'concern': 'direct',
   'risk': 'direct',
   'realistic': 'direct',
   'honest': 'direct',
   'actually': 'direct',
+  'problem': 'direct',
+  'wrong': 'direct',
+  'cant': 'direct',
+  'wont work': 'direct',
   'wait': 'deflecting',
   'later': 'deflecting',
   'check': 'deflecting',
-  'think': 'deflecting',
+  'think about': 'deflecting',
   'need time': 'deflecting',
   'get back': 'deflecting',
   'circle back': 'deflecting',
   'not sure': 'deflecting',
   'maybe': 'deflecting',
+  'hmm': 'deflecting',
+  'idk': 'deflecting',
+  'let me': 'deflecting',
 };
+
+export const CONFIDENCE_THRESHOLD = 0.15;
+
+export interface MatchResult {
+  choice: Choice;
+  confidence: number;
+  matchedTone: string | null;
+}
 
 function normalize(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -74,7 +98,7 @@ function extractBigrams(words: string[]): string[] {
 }
 
 function keywordOverlap(playerWords: string[], choiceWords: string[]): number {
-  if (choiceWords.length === 0) return 0;
+  if (choiceWords.length === 0 || playerWords.length === 0) return 0;
   const choiceSet = new Set(choiceWords);
   let matches = 0;
   for (const word of playerWords) {
@@ -85,17 +109,23 @@ function keywordOverlap(playerWords: string[], choiceWords: string[]): number {
 
 function detectTone(text: string): string | null {
   const normalized = normalize(text);
-  for (const [signal, tone] of Object.entries(TONE_SIGNALS)) {
+  // Check multi-word signals first (more specific)
+  const sortedSignals = Object.entries(TONE_SIGNALS).sort(
+    (a, b) => b[0].length - a[0].length
+  );
+  for (const [signal, tone] of sortedSignals) {
     if (normalized.includes(signal)) return tone;
   }
   return null;
 }
 
-export function matchChoice(playerText: string, choices: Choice[]): Choice {
+export function matchChoice(playerText: string, choices: Choice[]): MatchResult {
   if (choices.length === 0) {
     throw new Error('No choices available to match against');
   }
-  if (choices.length === 1) return choices[0];
+  if (choices.length === 1) {
+    return { choice: choices[0], confidence: 1.0, matchedTone: null };
+  }
 
   const playerWords = extractWords(playerText);
   const playerBigrams = extractBigrams(playerWords);
@@ -123,10 +153,10 @@ export function matchChoice(playerText: string, choices: Choice[]): Choice {
 
     let toneScore = 0;
     if (playerTone && playerTone === choice.tone) {
-      toneScore = 0.3;
+      toneScore = 0.6;
     }
 
-    const score = wordScore * 0.5 + bigramScore * 0.2 + toneScore;
+    const score = wordScore * 0.25 + bigramScore * 0.15 + toneScore;
 
     if (score > bestScore) {
       bestScore = score;
@@ -134,5 +164,9 @@ export function matchChoice(playerText: string, choices: Choice[]): Choice {
     }
   }
 
-  return bestChoice;
+  return {
+    choice: bestChoice,
+    confidence: Math.min(bestScore, 1.0),
+    matchedTone: playerTone,
+  };
 }

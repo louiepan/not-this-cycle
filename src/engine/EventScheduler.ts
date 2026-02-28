@@ -23,12 +23,16 @@ const PRIORITY_ORDER: Record<EventPriority, number> = {
  * Manages the timeline of events. On each tick, checks which events
  * are ready to fire based on elapsed time, conditions, and dependencies.
  * Uses elapsed-time comparison (not setInterval) to avoid browser drift.
+ *
+ * Emits typing_started actions before messages arrive so the UI can
+ * show typing indicators. The lead time varies by difficulty.
  */
 export class EventScheduler {
   private events: Map<string, GameEvent>;
   private pendingMessages: ScheduledMessage[] = [];
   private difficulty: DifficultyConfig;
   private resolvedEventTimestamps: Map<string, number> = new Map();
+  private typingEmitted: Set<string> = new Set();
 
   constructor(events: GameEvent[], difficulty: DifficultyConfig) {
     this.events = new Map(events.map((e) => [e.id, e]));
@@ -51,12 +55,29 @@ export class EventScheduler {
       actions.push(...eventActions);
     }
 
-    // 2. Deliver pending messages whose time has come
+    // 2. Emit typing indicators for messages about to arrive
+    const leadTime = this.difficulty.typingLeadTimeMs;
+    for (const scheduled of this.pendingMessages) {
+      const msgId = scheduled.message.id;
+      if (this.typingEmitted.has(msgId)) continue;
+      if (scheduled.message.isPlayerMessage) continue;
+
+      const typingWindowStart = scheduled.deliverAt - leadTime;
+      if (elapsed >= typingWindowStart && elapsed < scheduled.deliverAt) {
+        this.typingEmitted.add(msgId);
+        actions.push({
+          type: 'typing_started',
+          channel: scheduled.message.channel,
+          stakeholderId: scheduled.message.from as string,
+        });
+      }
+    }
+
+    // 3. Deliver pending messages whose time has come
     const readyMessages = this.pendingMessages.filter(
       (m) => m.deliverAt <= elapsed
     );
 
-    // Sort by priority then by scheduled time
     readyMessages.sort((a, b) => {
       const priorityDiff = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
       if (priorityDiff !== 0) return priorityDiff;

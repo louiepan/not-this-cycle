@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { GameEngine } from '@/engine/GameEngine';
 import { RatingEngine } from '@/engine/RatingEngine';
-import { matchChoice } from '@/engine/ChoiceMatcher';
+import { matchChoice, CONFIDENCE_THRESHOLD } from '@/engine/ChoiceMatcher';
 import type {
   Scenario,
   ChannelDef,
@@ -30,12 +30,13 @@ interface UseGameSessionReturn {
   elapsed: number;
   difficulty: DifficultyConfig;
   typingNames: string[];
+  nudgeMessage: string | null;
 
   startGame: (difficulty: DifficultyConfig) => void;
+  resetGame: () => void;
   resolveDecision: (decisionId: string, choice: Choice, playerText?: string) => void;
   submitText: (channelId: string, text: string) => void;
   switchChannel: (channelId: string) => void;
-  getChoicesForChannel: (channelId: string) => Choice[] | null;
   formatGameTime: (ms: number) => string;
   formatClockDisplay: () => string;
 }
@@ -47,10 +48,12 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const [typingNames, setTypingNames] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<DifficultyConfig>(DIFFICULTIES.senior);
   const [channels, setChannels] = useState<ChannelDef[]>([]);
+  const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
 
   const engineRef = useRef<GameEngine | null>(null);
   const ratingEngineRef = useRef(new RatingEngine());
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nudgeActiveRef = useRef(false);
 
   const onTick = useCallback((elapsed: number) => {
     const engine = engineRef.current;
@@ -75,31 +78,55 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     }
   }, []);
 
-  const { elapsed, start: startClock } = useGameClock(onTick);
+  const { elapsed, start: startClock, pause: stopClock } = useGameClock(onTick);
 
   const handleActions = useCallback(
     (actions: EngineAction[], engine: GameEngine) => {
-      const messageActions = actions.filter(
-        (a) => a.type === 'deliver_message'
+      const stakeholders = engine.getStakeholders();
+
+      // Handle typing_started actions
+      const typingActions = actions.filter(
+        (a) => a.type === 'typing_started'
       );
-
-      if (messageActions.length > 0) {
-        // Show typing indicator briefly before messages appear
-        const stakeholders = engine.getStakeholders();
-        const senderIds = new Set(
-          messageActions
-            .filter((a) => a.type === 'deliver_message' && !a.message.isPlayerMessage)
-            .map((a) => (a as { type: 'deliver_message'; message: { from: string } }).message.from)
-        );
-
-        const names = stakeholders
-          .filter((s) => senderIds.has(s.id))
-          .map((s) => s.name.split(' ')[0]);
+      if (typingActions.length > 0) {
+        const names = typingActions
+          .map((a) => {
+            if (a.type !== 'typing_started') return null;
+            const s = stakeholders.find((s) => s.id === a.stakeholderId);
+            return s ? s.name.split(' ')[0] : null;
+          })
+          .filter(Boolean) as string[];
 
         if (names.length > 0) {
-          setTypingNames(names);
+          setTypingNames((prev) => {
+            const combined = new Set([...prev, ...names]);
+            return Array.from(combined);
+          });
+        }
+      }
+
+      // Clear typing when messages are actually delivered
+      const messageActions = actions.filter(
+        (a) => a.type === 'deliver_message' && !a.message.isPlayerMessage
+      );
+      if (messageActions.length > 0) {
+        const deliveredSenderIds = new Set(
+          messageActions.map((a) =>
+            a.type === 'deliver_message' ? a.message.from : ''
+          )
+        );
+
+        const deliveredNames = stakeholders
+          .filter((s) => deliveredSenderIds.has(s.id))
+          .map((s) => s.name.split(' ')[0]);
+
+        if (deliveredNames.length > 0) {
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-          typingTimeoutRef.current = setTimeout(() => setTypingNames([]), 1500);
+          typingTimeoutRef.current = setTimeout(() => {
+            setTypingNames((prev) =>
+              prev.filter((n) => !deliveredNames.includes(n))
+            );
+          }, 300);
         }
       }
 
@@ -130,6 +157,9 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       setPhase('playing');
       setGameState(engine.getState());
       setRatingResult(null);
+      setTypingNames([]);
+      setNudgeMessage(null);
+      nudgeActiveRef.current = false;
       startClock();
 
       track('session_start', { difficulty: diff.id, seed });
@@ -138,6 +168,18 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     [scenario, startClock]
   );
 
+  const resetGame = useCallback(async () => {
+    stopClock();
+    await flush();
+    engineRef.current = null;
+    setPhase('menu');
+    setGameState(null);
+    setRatingResult(null);
+    setTypingNames([]);
+    setNudgeMessage(null);
+    nudgeActiveRef.current = false;
+  }, [stopClock]);
+
   const resolveDecision = useCallback(
     (decisionId: string, choice: Choice, playerText?: string) => {
       const engine = engineRef.current;
@@ -145,6 +187,8 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
 
       engine.resolve(decisionId, choice.id, playerText);
       setGameState(engine.getState());
+      setNudgeMessage(null);
+      nudgeActiveRef.current = false;
 
       track('decision_made', {
         decisionId,
@@ -159,14 +203,34 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
 
   const submitText = useCallback(
     (channelId: string, text: string) => {
-      if (!gameState) return;
+      const engine = engineRef.current;
+      if (!engine || !gameState) return;
+
       const pending = gameState.pendingDecisions.find(
         (d) => d.channel === channelId
       );
-      if (!pending) return;
 
-      const matched = matchChoice(text, pending.choices);
-      resolveDecision(pending.decisionId, matched, text);
+      if (!pending) {
+        engine.addFreeformMessage(channelId, text);
+        setGameState(engine.getState());
+        return;
+      }
+
+      const result = matchChoice(text, pending.choices);
+
+      if (result.confidence < CONFIDENCE_THRESHOLD && !nudgeActiveRef.current) {
+        nudgeActiveRef.current = true;
+        setNudgeMessage('Could you say more? Try being more specific about what you want to do.');
+        track('low_confidence_nudge', {
+          decisionId: pending.decisionId,
+          confidence: result.confidence,
+          playerText: text,
+        });
+        return;
+      }
+
+      // Accept the match (either good confidence or second attempt)
+      resolveDecision(pending.decisionId, result.choice, text);
     },
     [gameState, resolveDecision]
   );
@@ -177,20 +241,11 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
 
     engine.switchChannel(channelId);
     setGameState(engine.getState());
+    setNudgeMessage(null);
+    nudgeActiveRef.current = false;
 
     track('channel_switch', { channelId });
   }, []);
-
-  const getChoicesForChannel = useCallback(
-    (channelId: string): Choice[] | null => {
-      if (!gameState) return null;
-      const pending = gameState.pendingDecisions.find(
-        (d) => d.channel === channelId
-      );
-      return pending ? pending.choices : null;
-    },
-    [gameState]
-  );
 
   const stakeholders = useMemo(() => {
     return engineRef.current?.getStakeholders() ?? [];
@@ -235,11 +290,12 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     elapsed,
     difficulty,
     typingNames,
+    nudgeMessage,
     startGame,
+    resetGame,
     resolveDecision,
     submitText,
     switchChannel,
-    getChoicesForChannel,
     formatGameTime,
     formatClockDisplay,
   };

@@ -13,6 +13,7 @@ interface ChannelViewProps {
   stakeholderNames: Record<string, string>;
   playerName: string;
   hasDecision: boolean;
+  nudge: string | null;
   typingNames: string[];
   onMessageSubmit: (text: string) => void;
   formatTime: (ms: number) => string;
@@ -24,6 +25,7 @@ export function ChannelView({
   stakeholderNames,
   playerName,
   hasDecision,
+  nudge,
   typingNames,
   onMessageSubmit,
   formatTime,
@@ -71,6 +73,7 @@ export function ChannelView({
       <MessageComposer
         channelName={channel.name}
         hasDecision={hasDecision}
+        nudge={nudge}
         onSubmit={onMessageSubmit}
       />
     </div>

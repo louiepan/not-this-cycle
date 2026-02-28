@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 interface MessageComposerProps {
   channelName: string;
   hasDecision: boolean;
+  nudge: string | null;
   onSubmit: (text: string) => void;
   disabled?: boolean;
 }
@@ -12,6 +13,7 @@ interface MessageComposerProps {
 export function MessageComposer({
   channelName,
   hasDecision,
+  nudge,
   onSubmit,
   disabled = false,
 }: MessageComposerProps) {
@@ -39,10 +41,15 @@ export function MessageComposer({
   }
 
   return (
-    <div className="px-4 pb-3 shrink-0">
+    <div className="px-4 pb-4 shrink-0">
+      {nudge && (
+        <div className="mb-1.5 px-3 py-1.5 text-xs text-slack-yellow bg-slack-yellow/10 rounded border border-slack-yellow/20">
+          {nudge}
+        </div>
+      )}
       <div className="border border-slack-composer-border rounded-lg bg-slack-composer-bg focus-within:border-slack-text-secondary transition-colors">
         {/* Input */}
-        <div className="px-3 py-2">
+        <div className="px-4 py-3">
           <input
             ref={inputRef}
             type="text"

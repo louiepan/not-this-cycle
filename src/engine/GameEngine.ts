@@ -178,6 +178,22 @@ export class GameEngine {
     return actions;
   }
 
+  addFreeformMessage(channel: string, content: string): void {
+    const elapsed = this.stateManager.getState().clock;
+    const message: DeliveredMessage = {
+      id: `freeform-${elapsed}-${Math.random().toString(36).slice(2, 6)}`,
+      eventId: 'freeform',
+      channel,
+      from: 'player',
+      content,
+      timestamp: elapsed,
+      mentionsPlayer: false,
+      contextValue: null,
+      isPlayerMessage: true,
+    };
+    this.stateManager.addMessage(message);
+  }
+
   switchChannel(channelId: string): void {
     this.stateManager.setActiveChannel(channelId);
   }

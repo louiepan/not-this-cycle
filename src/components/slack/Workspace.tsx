@@ -13,6 +13,7 @@ interface WorkspaceProps {
   unreadCounts: Record<string, number>;
   mentionCounts: Record<string, number>;
   hasDecision: boolean;
+  nudge: string | null;
   typingNames: string[];
   gameClock: string;
   onChannelSelect: (channelId: string) => void;
@@ -29,6 +30,7 @@ export function Workspace({
   unreadCounts,
   mentionCounts,
   hasDecision,
+  nudge,
   typingNames,
   gameClock,
   onChannelSelect,
@@ -59,6 +61,7 @@ export function Workspace({
         stakeholderNames={stakeholderNames}
         playerName={playerName}
         hasDecision={hasDecision}
+        nudge={nudge}
         typingNames={typingNames}
         onMessageSubmit={onMessageSubmit}
         formatTime={formatTime}

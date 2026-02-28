@@ -41,6 +41,7 @@ export interface DifficultyConfig {
   escalationTimeoutScale: number;
   ambientNoiseLevel: number;
   concurrentConversations: number;
+  typingLeadTimeMs: number;
 }
 
 export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
@@ -51,6 +52,7 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     escalationTimeoutScale: 1.3,
     ambientNoiseLevel: 0.3,
     concurrentConversations: 2,
+    typingLeadTimeMs: 2500,
   },
   senior: {
     id: 'senior',
@@ -59,6 +61,7 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     escalationTimeoutScale: 1.0,
     ambientNoiseLevel: 0.6,
     concurrentConversations: 3,
+    typingLeadTimeMs: 1500,
   },
   principal: {
     id: 'principal',
@@ -67,6 +70,7 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     escalationTimeoutScale: 0.7,
     ambientNoiseLevel: 0.9,
     concurrentConversations: 4,
+    typingLeadTimeMs: 800,
   },
 };
 
@@ -302,6 +306,7 @@ export type EngineAction =
   | { type: 'auto_resolve'; decisionId: string; description: string }
   | { type: 'update_state'; variable: VariableName; delta: number; tag: string }
   | { type: 'close_decision'; decisionId: string }
+  | { type: 'typing_started'; channel: string; stakeholderId: string }
   | { type: 'end_game' };
 
 // ============================================================
