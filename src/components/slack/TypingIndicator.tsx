@@ -15,13 +15,13 @@ export function TypingIndicator({ names }: TypingIndicatorProps) {
         : `${names[0]} and ${names.length - 1} others are typing`;
 
   return (
-    <div className="px-5 py-1 text-xs text-slack-text-secondary flex items-center gap-1.5">
-      <div className="flex gap-0.5">
-        <span className="w-1.5 h-1.5 bg-slack-text-secondary rounded-full animate-bounce [animation-delay:0ms]" />
-        <span className="w-1.5 h-1.5 bg-slack-text-secondary rounded-full animate-bounce [animation-delay:150ms]" />
-        <span className="w-1.5 h-1.5 bg-slack-text-secondary rounded-full animate-bounce [animation-delay:300ms]" />
+    <div className="px-5 py-1.5 text-xs text-slack-text-secondary flex items-center gap-2">
+      <div className="flex gap-[3px] items-center">
+        <span className="typing-dot" />
+        <span className="typing-dot [animation-delay:150ms]" />
+        <span className="typing-dot [animation-delay:300ms]" />
       </div>
-      <span>{text}</span>
+      <span className="font-medium">{text}...</span>
     </div>
   );
 }

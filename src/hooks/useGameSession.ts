@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { GameEngine } from '@/engine/GameEngine';
 import { RatingEngine } from '@/engine/RatingEngine';
+import { matchChoice } from '@/engine/ChoiceMatcher';
 import type {
   Scenario,
   ChannelDef,
@@ -31,7 +32,8 @@ interface UseGameSessionReturn {
   typingNames: string[];
 
   startGame: (difficulty: DifficultyConfig) => void;
-  resolveDecision: (decisionId: string, choice: Choice) => void;
+  resolveDecision: (decisionId: string, choice: Choice, playerText?: string) => void;
+  submitText: (channelId: string, text: string) => void;
   switchChannel: (channelId: string) => void;
   getChoicesForChannel: (channelId: string) => Choice[] | null;
   formatGameTime: (ms: number) => string;
@@ -137,11 +139,11 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   );
 
   const resolveDecision = useCallback(
-    (decisionId: string, choice: Choice) => {
+    (decisionId: string, choice: Choice, playerText?: string) => {
       const engine = engineRef.current;
       if (!engine) return;
 
-      engine.resolve(decisionId, choice.id);
+      engine.resolve(decisionId, choice.id, playerText);
       setGameState(engine.getState());
 
       track('decision_made', {
@@ -149,9 +151,24 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         choiceId: choice.id,
         tone: choice.tone,
         isDefer: choice.isDefer,
+        freeformText: playerText ? true : false,
       });
     },
     []
+  );
+
+  const submitText = useCallback(
+    (channelId: string, text: string) => {
+      if (!gameState) return;
+      const pending = gameState.pendingDecisions.find(
+        (d) => d.channel === channelId
+      );
+      if (!pending) return;
+
+      const matched = matchChoice(text, pending.choices);
+      resolveDecision(pending.decisionId, matched, text);
+    },
+    [gameState, resolveDecision]
   );
 
   const switchChannel = useCallback((channelId: string) => {
@@ -220,6 +237,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     typingNames,
     startGame,
     resolveDecision,
+    submitText,
     switchChannel,
     getChoicesForChannel,
     formatGameTime,

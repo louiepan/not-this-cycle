@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import type { ChannelDef, DeliveredMessage, Choice } from '@/engine/types';
+import type { ChannelDef, DeliveredMessage } from '@/engine/types';
 import { ChannelHeader } from './ChannelHeader';
 import { MessageGroup } from './MessageGroup';
 import { MessageComposer } from './MessageComposer';
@@ -12,9 +12,9 @@ interface ChannelViewProps {
   messages: DeliveredMessage[];
   stakeholderNames: Record<string, string>;
   playerName: string;
-  choices: Choice[] | null;
+  hasDecision: boolean;
   typingNames: string[];
-  onChoiceSelect: (choice: Choice) => void;
+  onMessageSubmit: (text: string) => void;
   formatTime: (ms: number) => string;
 }
 
@@ -23,9 +23,9 @@ export function ChannelView({
   messages,
   stakeholderNames,
   playerName,
-  choices,
+  hasDecision,
   typingNames,
-  onChoiceSelect,
+  onMessageSubmit,
   formatTime,
 }: ChannelViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -50,8 +50,15 @@ export function ChannelView({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto py-2"
+        className="flex-1 overflow-y-auto"
       >
+        {/* Today divider */}
+        <div className="flex items-center px-5 py-4">
+          <div className="flex-1 h-px bg-slack-divider" />
+          <span className="px-4 text-xs font-bold text-slack-text-secondary">Today</span>
+          <div className="flex-1 h-px bg-slack-divider" />
+        </div>
+
         <MessageGroup
           messages={messages}
           stakeholderNames={stakeholderNames}
@@ -63,8 +70,8 @@ export function ChannelView({
 
       <MessageComposer
         channelName={channel.name}
-        choices={choices}
-        onChoiceSelect={onChoiceSelect}
+        hasDecision={hasDecision}
+        onSubmit={onMessageSubmit}
       />
     </div>
   );

@@ -8,16 +8,13 @@ interface DifficultySelectProps {
 
 const DIFFICULTY_INFO = {
   junior: {
-    subtitle: 'Longer timers, less noise',
-    description: 'Good for your first playthrough.',
+    description: 'Longer timers, less noise. Good for your first playthrough.',
   },
   senior: {
-    subtitle: 'Standard pressure',
-    description: 'The real thing.',
+    description: 'Standard pressure. The real thing.',
   },
   principal: {
-    subtitle: 'Everything at once',
-    description: 'You asked for this.',
+    description: 'Everything at once. You asked for this.',
   },
 };
 
@@ -30,15 +27,14 @@ export function DifficultySelect({ onSelect }: DifficultySelectProps) {
           <button
             key={diff.id}
             onClick={() => onSelect(diff)}
-            className="text-left px-5 py-4 rounded-lg border border-slack-divider
-              bg-slack-channel-bg hover:bg-slack-message-hover
-              transition-colors cursor-pointer group"
+            className="text-center px-6 py-5 rounded-xl border border-slack-divider
+              bg-slack-channel-bg hover:bg-slack-message-hover hover:border-slack-text-secondary
+              transition-all cursor-pointer group"
           >
             <div className="text-slack-white font-bold text-lg group-hover:text-slack-link transition-colors">
               {diff.label}
             </div>
-            <div className="text-slack-text-secondary text-sm">{info.subtitle}</div>
-            <div className="text-slack-text-muted text-xs mt-1">{info.description}</div>
+            <div className="text-slack-text-secondary text-sm mt-1">{info.description}</div>
           </button>
         );
       })}

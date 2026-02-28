@@ -6,11 +6,10 @@ import { Q4_PLANNING_SCENARIO, PEER_FEEDBACK_TEMPLATES } from '@/content/scenari
 import { AcceptOfferScreen } from '@/components/game/AcceptOfferScreen';
 import { Workspace } from '@/components/slack/Workspace';
 import { ReviewScreen } from '@/components/review/ReviewScreen';
-import type { Choice, DifficultyConfig, RatingResult, VariableName } from '@/engine/types';
+import type { DifficultyConfig, RatingResult, VariableName } from '@/engine/types';
 
 function buildPeerFeedback(
   result: RatingResult,
-  stakeholderNames: Record<string, string>
 ): RatingResult {
   const feedback: { stakeholderId: string; feedback: string }[] = [];
 
@@ -39,8 +38,8 @@ export default function Home() {
 
   const resolvedResult = useMemo(() => {
     if (!session.ratingResult) return null;
-    return buildPeerFeedback(session.ratingResult, session.stakeholderNames);
-  }, [session.ratingResult, session.stakeholderNames]);
+    return buildPeerFeedback(session.ratingResult);
+  }, [session.ratingResult]);
 
   if (session.phase === 'menu') {
     return (
@@ -63,7 +62,9 @@ export default function Home() {
   if (!session.gameState) return null;
 
   const activeChannel = session.gameState.activeChannel;
-  const channelChoices = session.getChoicesForChannel(activeChannel);
+  const hasDecision = session.gameState.pendingDecisions.some(
+    (d) => d.channel === activeChannel
+  );
 
   return (
     <Workspace
@@ -74,18 +75,11 @@ export default function Home() {
       playerName="You"
       unreadCounts={session.gameState.unreadCounts}
       mentionCounts={session.gameState.mentionCounts}
-      choices={channelChoices}
+      hasDecision={hasDecision}
       typingNames={session.typingNames}
       gameClock={session.formatClockDisplay()}
       onChannelSelect={(id: string) => session.switchChannel(id)}
-      onChoiceSelect={(choice: Choice) => {
-        const pending = session.gameState?.pendingDecisions.find(
-          (d) => d.channel === activeChannel
-        );
-        if (pending) {
-          session.resolveDecision(pending.decisionId, choice);
-        }
-      }}
+      onMessageSubmit={(text: string) => session.submitText(activeChannel, text)}
       formatTime={session.formatGameTime}
     />
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChannelDef, DeliveredMessage, Choice } from '@/engine/types';
+import type { ChannelDef, DeliveredMessage } from '@/engine/types';
 import { Sidebar } from './Sidebar';
 import { ChannelView } from './ChannelView';
 
@@ -12,11 +12,11 @@ interface WorkspaceProps {
   playerName: string;
   unreadCounts: Record<string, number>;
   mentionCounts: Record<string, number>;
-  choices: Choice[] | null;
+  hasDecision: boolean;
   typingNames: string[];
   gameClock: string;
   onChannelSelect: (channelId: string) => void;
-  onChoiceSelect: (choice: Choice) => void;
+  onMessageSubmit: (text: string) => void;
   formatTime: (ms: number) => string;
 }
 
@@ -28,11 +28,11 @@ export function Workspace({
   playerName,
   unreadCounts,
   mentionCounts,
-  choices,
+  hasDecision,
   typingNames,
   gameClock,
   onChannelSelect,
-  onChoiceSelect,
+  onMessageSubmit,
   formatTime,
 }: WorkspaceProps) {
   const activeChannel = channels.find((c) => c.id === activeChannelId);
@@ -58,9 +58,9 @@ export function Workspace({
         messages={channelMessages}
         stakeholderNames={stakeholderNames}
         playerName={playerName}
-        choices={choices}
+        hasDecision={hasDecision}
         typingNames={typingNames}
-        onChoiceSelect={onChoiceSelect}
+        onMessageSubmit={onMessageSubmit}
         formatTime={formatTime}
       />
     </div>

@@ -14,6 +14,25 @@ interface MessageProps {
   animate?: boolean;
 }
 
+function renderContent(content: string): React.ReactNode {
+  const parts = content.split(/(@channel|@here|@you)/g);
+  if (parts.length === 1) return content;
+
+  return parts.map((part, i) => {
+    if (part === '@channel' || part === '@here' || part === '@you') {
+      return (
+        <span
+          key={i}
+          className="bg-slack-mention-bg/60 text-slack-mention-text rounded px-0.5"
+        >
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 export function Message({
   senderName,
   content,
@@ -33,6 +52,9 @@ export function Message({
     }
   }, [animate]);
 
+  const displayName = isPlayer ? senderName : senderName;
+  const timestampLabel = isPlayer ? `${timestamp} (PM)` : timestamp;
+
   return (
     <div
       ref={ref}
@@ -42,7 +64,7 @@ export function Message({
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}
     >
       {showAvatar ? (
-        <Avatar name={senderName} size="md" />
+        <Avatar name={displayName} size="md" />
       ) : (
         <div className="w-9 shrink-0" />
       )}
@@ -50,13 +72,13 @@ export function Message({
         {showHeader && (
           <div className="flex items-baseline gap-2">
             <span className="font-bold text-[15px] text-slack-white hover:underline cursor-pointer">
-              {senderName}
+              {displayName}
             </span>
-            <span className="text-xs text-slack-text-secondary">{timestamp}</span>
+            <span className="text-xs text-slack-text-secondary">{timestampLabel}</span>
           </div>
         )}
         <div className="text-slack-text text-[15px] whitespace-pre-wrap break-words">
-          {content}
+          {renderContent(content)}
         </div>
       </div>
     </div>

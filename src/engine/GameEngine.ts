@@ -103,8 +103,9 @@ export class GameEngine {
 
   /**
    * Player resolves a decision by selecting a choice.
+   * If playerText is provided, it replaces the choice's canned message in the chat.
    */
-  resolve(decisionId: string, choiceId: string): EngineAction[] {
+  resolve(decisionId: string, choiceId: string, playerText?: string): EngineAction[] {
     const pending = this.stateManager.getPendingDecision(decisionId);
     if (!pending) return [];
 
@@ -143,7 +144,7 @@ export class GameEngine {
       eventId: pending.eventId,
       channel: pending.channel,
       from: 'player',
-      content: choice.message,
+      content: playerText || choice.message,
       timestamp: elapsed,
       mentionsPlayer: false,
       contextValue: null,
