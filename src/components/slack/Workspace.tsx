@@ -45,27 +45,29 @@ export function Workspace({
   if (!activeChannel) return null;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      <Sidebar
-        channels={channels}
-        activeChannelId={activeChannelId}
-        unreadCounts={unreadCounts}
-        mentionCounts={mentionCounts}
-        onChannelSelect={onChannelSelect}
-        workspaceName="TechCorp HQ"
-        gameClock={gameClock}
-      />
-      <ChannelView
-        channel={activeChannel}
-        messages={channelMessages}
-        stakeholderNames={stakeholderNames}
-        playerName={playerName}
-        hasDecision={hasDecision}
-        nudge={nudge}
-        typingNames={typingNames}
-        onMessageSubmit={onMessageSubmit}
-        formatTime={formatTime}
-      />
+    <div className="h-screen w-screen overflow-hidden bg-[radial-gradient(120%_120%_at_50%_0%,#2b3040_0%,#1a1d21_55%)] p-0 sm:p-3 lg:p-5">
+      <div className="flex h-full w-full overflow-hidden border border-white/10 bg-slack-bg shadow-2xl sm:rounded-2xl">
+        <Sidebar
+          channels={channels}
+          activeChannelId={activeChannelId}
+          unreadCounts={unreadCounts}
+          mentionCounts={mentionCounts}
+          onChannelSelect={onChannelSelect}
+          workspaceName="TechCorp HQ"
+          gameClock={gameClock}
+        />
+        <ChannelView
+          channel={activeChannel}
+          messages={channelMessages}
+          stakeholderNames={stakeholderNames}
+          playerName={playerName}
+          hasDecision={hasDecision}
+          nudge={nudge}
+          typingNames={typingNames}
+          onMessageSubmit={onMessageSubmit}
+          formatTime={formatTime}
+        />
+      </div>
     </div>
   );
 }

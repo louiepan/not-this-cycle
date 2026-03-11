@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 
 interface MessageComposerProps {
   channelName: string;
+  channelType: 'channel' | 'dm';
   hasDecision: boolean;
   nudge: string | null;
   onSubmit: (text: string) => void;
@@ -12,6 +13,7 @@ interface MessageComposerProps {
 
 export function MessageComposer({
   channelName,
+  channelType,
   hasDecision,
   nudge,
   onSubmit,
@@ -42,6 +44,11 @@ export function MessageComposer({
 
   return (
     <div className="px-4 pb-4 shrink-0">
+      {hasDecision && (
+        <div className="mb-1.5 px-3 py-1.5 text-xs text-slack-link bg-slack-link/10 rounded border border-slack-link/20">
+          Decision pending in this channel. Send your response to lock in a choice.
+        </div>
+      )}
       {nudge && (
         <div className="mb-1.5 px-3 py-1.5 text-xs text-slack-yellow bg-slack-yellow/10 rounded border border-slack-yellow/20">
           {nudge}
@@ -56,7 +63,7 @@ export function MessageComposer({
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={`Message ${channelName.startsWith('#') ? '' : '#'}${channelName}`}
+            placeholder={`Message ${channelType === 'channel' ? '#' : ''}${channelName}`}
             disabled={disabled}
             className="w-full bg-transparent text-slack-text text-[15px] placeholder:text-slack-text-secondary
               outline-none disabled:opacity-50"

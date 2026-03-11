@@ -67,11 +67,19 @@ export function ChannelView({
           playerName={playerName}
           formatTime={formatTime}
         />
+        {messages.length === 0 && typingNames.length === 0 && (
+          <div className="px-8 py-14 text-center">
+            <p className="text-sm text-slack-text-secondary">
+              Quiet channel. The next ping should land shortly.
+            </p>
+          </div>
+        )}
         <TypingIndicator names={typingNames} />
       </div>
 
       <MessageComposer
         channelName={channel.name}
+        channelType={channel.type}
         hasDecision={hasDecision}
         nudge={nudge}
         onSubmit={onMessageSubmit}

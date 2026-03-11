@@ -12,14 +12,15 @@ export function AcceptOfferScreen({ onAccept }: AcceptOfferScreenProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyConfig | null>(null);
 
   return (
-    <div className="h-screen w-screen bg-slack-bg flex items-center justify-center">
-      <div className="max-w-md w-full mx-4">
+    <div className="h-screen w-screen bg-[radial-gradient(100%_120%_at_10%_0%,#263044_0%,#1a1d21_60%)] flex items-center justify-center px-4">
+      <div className="max-w-2xl w-full">
         {!selectedDifficulty ? (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-slack-white mb-2">
+          <div className="text-center rounded-2xl border border-white/10 bg-black/15 backdrop-blur-sm p-8 sm:p-10">
+            <p className="text-xs tracking-[0.2em] uppercase text-slack-link mb-3">TechCorp PM Onboarding</p>
+            <h2 className="text-3xl font-black text-slack-white mb-2">
               Choose your level
             </h2>
-            <p className="text-slack-text-secondary mb-8">
+            <p className="text-slack-text-secondary mb-8 text-base">
               This determines how much pressure you&apos;ll face.
             </p>
             <div className="flex justify-center">
@@ -28,7 +29,7 @@ export function AcceptOfferScreen({ onAccept }: AcceptOfferScreenProps) {
           </div>
         ) : (
           <div>
-            <div className="bg-slack-channel-bg rounded-xl p-6 border border-slack-divider">
+            <div className="bg-slack-channel-bg rounded-2xl p-7 border border-slack-divider shadow-xl">
               <div className="flex items-center gap-2 mb-5">
                 <span className="text-2xl">✉️</span>
                 <h1 className="text-xl font-bold text-slack-white">

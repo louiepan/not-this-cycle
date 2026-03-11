@@ -77,9 +77,13 @@ export function useGameClock(onTick: (elapsed: number) => void): UseGameClockRet
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
-      stopInterval();
     };
-  }, [isRunning, pause, resume, stopInterval]);
+  }, [isRunning, pause, resume]);
+
+  // Ensure interval is cleaned up only on unmount.
+  useEffect(() => {
+    return () => stopInterval();
+  }, [stopInterval]);
 
   return { elapsed, isRunning, start, pause, resume };
 }

@@ -26,7 +26,7 @@ export function Sidebar({
   const dmChannels = channels.filter((c) => c.type === 'dm');
 
   return (
-    <div className="w-[220px] bg-slack-sidebar flex flex-col shrink-0 h-full border-r border-white/5">
+    <div className="w-[210px] sm:w-[240px] lg:w-[270px] bg-slack-sidebar flex flex-col shrink-0 h-full border-r border-white/5">
       {/* Workspace header */}
       <div className="h-[52px] border-b border-white/10 flex items-center px-4 shrink-0">
         <div className="flex items-center justify-between w-full">
