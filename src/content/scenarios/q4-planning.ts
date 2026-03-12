@@ -342,7 +342,7 @@ const EVENTS: GameEvent[] = [
   // VP drops in with the big ask
   {
     id: 'evt-vp-roadmap',
-    triggerAt: 8000,
+    triggerAt: 4800,
     channel: 'product-strategy',
     messages: [
       {
@@ -362,7 +362,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-vp-roadmap',
-      timeout: 20000,
+      timeout: 12000,
       choices: [
         {
           id: 'choice-vp-commit',
@@ -473,7 +473,7 @@ const EVENTS: GameEvent[] = [
   // ---- Ambient: Adjacent PM appears ----
   {
     id: 'evt-adjacent-intro',
-    triggerAt: 18000,
+    triggerAt: 10800,
     channel: 'product-strategy',
     messages: [
       {
@@ -486,7 +486,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-adjacent-offer',
-      timeout: 25000,
+      timeout: 15000,
       choices: [
         {
           id: 'choice-adj-accept',
@@ -525,12 +525,12 @@ const EVENTS: GameEvent[] = [
     },
   },
 
-  // ---- Act 2: The Fires (60-180s) ----
+  // ---- Act 2: The Fires (36-108s) ----
 
   // Staff Eng tech debt alarm
   {
     id: 'evt-eng-tech-debt',
-    triggerAt: 35000,
+    triggerAt: 21000,
     channel: 'eng-team',
     messages: [
       {
@@ -557,7 +557,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-eng-tech-debt',
-      timeout: 25000,
+      timeout: 15000,
       choices: [
         {
           id: 'choice-eng-refactor',
@@ -636,7 +636,7 @@ const EVENTS: GameEvent[] = [
   // Design Lead UX concerns
   {
     id: 'evt-design-ux',
-    triggerAt: 55000,
+    triggerAt: 33000,
     channel: 'design-sync',
     messages: [
       {
@@ -656,7 +656,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-design-ux',
-      timeout: 22000,
+      timeout: 13200,
       choices: [
         {
           id: 'choice-design-phase',
@@ -699,7 +699,7 @@ const EVENTS: GameEvent[] = [
   // Data Analyst drops a bomb
   {
     id: 'evt-data-metrics',
-    triggerAt: 80000,
+    triggerAt: 48000,
     channel: 'planning-war-room',
     messages: [
       {
@@ -727,7 +727,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-data-response',
-      timeout: 20000,
+      timeout: 12000,
       choices: [
         {
           id: 'choice-data-surface',
@@ -785,7 +785,7 @@ const EVENTS: GameEvent[] = [
   // ---- TPM timeline pressure ----
   {
     id: 'evt-tpm-timeline',
-    triggerAt: 100000,
+    triggerAt: 60000,
     channel: 'planning-war-room',
     messages: [
       {
@@ -805,7 +805,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-tpm-dates',
-      timeout: 18000,
+      timeout: 10800,
       choices: [
         {
           id: 'choice-tpm-optimistic',
@@ -879,12 +879,12 @@ const EVENTS: GameEvent[] = [
     priority: 'escalation',
   },
 
-  // ---- Act 3: The Crisis (180-260s) ----
+  // ---- Act 3: The Crisis (108-156s) ----
 
   // Manager 1:1 — the ambiguous check-in
   {
     id: 'evt-manager-checkin',
-    triggerAt: 140000,
+    triggerAt: 84000,
     channel: 'dm-manager',
     messages: [
       {
@@ -904,7 +904,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-manager-checkin',
-      timeout: 25000,
+      timeout: 15000,
       choices: [
         {
           id: 'choice-mgr-transparent',
@@ -945,7 +945,7 @@ const EVENTS: GameEvent[] = [
   // Adjacent PM power play — drops exec name in the war room
   {
     id: 'evt-adjacent-power-play',
-    triggerAt: 170000,
+    triggerAt: 102000,
     channel: 'planning-war-room',
     messages: [
       {
@@ -966,7 +966,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-adjacent-power',
-      timeout: 18000,
+      timeout: 10800,
       choices: [
         {
           id: 'choice-adj-challenge',
@@ -1008,7 +1008,7 @@ const EVENTS: GameEvent[] = [
   // Staff Eng goes quiet (if morale is low)
   {
     id: 'evt-eng-withdrawal',
-    triggerAt: 190000,
+    triggerAt: 114000,
     channel: 'eng-team',
     condition: { variable: 'teamMorale', operator: 'lt', value: 45 },
     messages: [
@@ -1024,12 +1024,12 @@ const EVENTS: GameEvent[] = [
     priority: 'ambient',
   },
 
-  // ---- Act 4: The Reckoning (260-300s) ----
+  // ---- Act 4: The Reckoning (156-180s) ----
 
   // VP final ask — the exec summary
   {
     id: 'evt-vp-final',
-    triggerAt: 220000,
+    triggerAt: 132000,
     channel: 'product-strategy',
     messages: [
       {
@@ -1042,7 +1042,7 @@ const EVENTS: GameEvent[] = [
     ],
     decision: {
       id: 'dec-vp-final-summary',
-      timeout: 25000,
+      timeout: 15000,
       choices: [
         {
           id: 'choice-final-ambitious',
@@ -1121,7 +1121,7 @@ const EVENTS: GameEvent[] = [
   // Final ambient — the day wraps
   {
     id: 'evt-closing',
-    triggerAt: 270000,
+    triggerAt: 162000,
     channel: 'eng-team',
     messages: [
       {
@@ -1139,7 +1139,7 @@ const EVENTS: GameEvent[] = [
   // TPM closing
   {
     id: 'evt-tpm-closing',
-    triggerAt: 275000,
+    triggerAt: 165000,
     channel: 'planning-war-room',
     messages: [
       {
@@ -1163,7 +1163,7 @@ const AMBIENT_POOLS: MessagePool[] = [
   {
     slotId: 'ambient-noise-1',
     channel: 'planning-war-room',
-    window: { earliest: 25000, latest: 45000 },
+    window: { earliest: 15000, latest: 27000 },
     variants: [
       {
         id: 'amb-noise-1a',
@@ -1178,7 +1178,7 @@ const AMBIENT_POOLS: MessagePool[] = [
   {
     slotId: 'ambient-noise-2',
     channel: 'eng-team',
-    window: { earliest: 65000, latest: 90000 },
+    window: { earliest: 39000, latest: 54000 },
     variants: [
       {
         id: 'amb-noise-2a',
@@ -1193,7 +1193,7 @@ const AMBIENT_POOLS: MessagePool[] = [
   {
     slotId: 'ambient-noise-3',
     channel: 'design-sync',
-    window: { earliest: 120000, latest: 150000 },
+    window: { earliest: 72000, latest: 90000 },
     variants: [
       {
         id: 'amb-noise-3a',
@@ -1208,7 +1208,7 @@ const AMBIENT_POOLS: MessagePool[] = [
   {
     slotId: 'ambient-noise-4',
     channel: 'planning-war-room',
-    window: { earliest: 200000, latest: 230000 },
+    window: { earliest: 120000, latest: 138000 },
     variants: [
       {
         id: 'amb-noise-4a',
@@ -1284,11 +1284,11 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
   id: 'q4-planning',
   title: 'Not This Cycle',
   premise: 'It\'s Q4 planning week. The CEO wants a demo in 6 weeks. Your VP wants a plan by EOD. Your engineer wants a refactor. Your designer wants more time. And someone just DM\'d your manager about you.',
-  durationTarget: 300000,
+  durationTarget: 180000,
   stakeholders: [THE_VP, THE_STAFF_ENG, THE_DESIGN_LEAD, THE_DATA_ANALYST, THE_MANAGER, THE_TPM, THE_ADJACENT_PM],
   channels: CHANNELS,
   events: EVENTS,
   ambientPools: AMBIENT_POOLS,
   initialState: {},
-  endCondition: { type: 'clock', at: 300000 },
+  endCondition: { type: 'clock', at: 180000 },
 };
