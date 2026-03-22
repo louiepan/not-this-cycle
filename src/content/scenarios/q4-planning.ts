@@ -1284,11 +1284,11 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
   id: 'q4-planning',
   title: 'Not This Cycle',
   premise: 'It\'s Q4 planning week. The CEO wants a demo in 6 weeks. Your VP wants a plan by EOD. Your engineer wants a refactor. Your designer wants more time. And someone just DM\'d your manager about you.',
-  durationTarget: 300000,
+  durationTarget: 180000,
   stakeholders: [THE_VP, THE_STAFF_ENG, THE_DESIGN_LEAD, THE_DATA_ANALYST, THE_MANAGER, THE_TPM, THE_ADJACENT_PM],
   channels: CHANNELS,
   events: EVENTS,
   ambientPools: AMBIENT_POOLS,
   initialState: {},
-  endCondition: { type: 'clock', at: 300000 },
+  endCondition: { type: 'clock', at: 180000 },
 };

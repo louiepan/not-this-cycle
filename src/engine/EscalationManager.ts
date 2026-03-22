@@ -95,7 +95,6 @@ export class EscalationManager {
     }
 
     // Add responsiveness debt based on seniority
-    const firstMessage = pending.choices[0]; // use decision context
     const seniority = this.getDecisionSeniority(pending);
     const debtCost = RESPONSIVENESS_COST[seniority] || 5;
     actions.push({

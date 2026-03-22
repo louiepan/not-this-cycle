@@ -1,9 +1,15 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Lato } from 'next/font/google';
+import './globals.css';
+
+const lato = Lato({
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
+});
 
 export const metadata: Metadata = {
-  title: "Not This Cycle — A PM Simulator",
-  description: "Navigate Q4 planning as a Product Manager at a big tech company. Satire that stings.",
+  title: 'Not This Cycle — A PM Simulator',
+  description: 'Navigate Q4 planning as a Product Manager at a big tech company. Satire that stings.',
 };
 
 export default function RootLayout({
@@ -13,15 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>{children}</body>
+      <body className={lato.className}>{children}</body>
     </html>
   );
 }

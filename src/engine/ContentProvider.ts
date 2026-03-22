@@ -4,7 +4,9 @@ import {
   type StakeholderTemplate,
   type ChannelDef,
   type GameEvent,
+  type DifficultyConfig,
 } from './types';
+import { AmbientNoiseGenerator } from './AmbientNoiseGenerator';
 import { SeededRandom } from './SeededRandom';
 
 export interface ContentProvider {
@@ -12,6 +14,7 @@ export interface ContentProvider {
   getStakeholders(): Stakeholder[];
   getChannels(): ChannelDef[];
   getEvents(): GameEvent[];
+  getAmbientEvents(difficulty: DifficultyConfig): GameEvent[];
   resolveTemplate(template: string, stakeholders: Stakeholder[]): string;
 }
 
@@ -25,9 +28,11 @@ export class StaticContentProvider implements ContentProvider {
   private stakeholders: Stakeholder[];
   private templateMap: Map<string, Stakeholder>;
   private rng: SeededRandom;
+  private seed: number;
 
   constructor(scenario: Scenario, seed: number) {
     this.scenario = scenario;
+    this.seed = seed;
     this.rng = new SeededRandom(seed);
     this.stakeholders = this.resolveStakeholders(scenario.stakeholders);
     this.templateMap = new Map(
@@ -73,6 +78,19 @@ export class StaticContentProvider implements ContentProvider {
     }));
   }
 
+  getAmbientEvents(difficulty: DifficultyConfig): GameEvent[] {
+    const authored = this.getResolvedAmbientPoolEvents(difficulty);
+    const generated = new AmbientNoiseGenerator(
+      this.scenario,
+      this.stakeholders,
+      this.getChannels(),
+      difficulty,
+      this.seed + 1000
+    ).generate();
+
+    return [...authored, ...generated];
+  }
+
   resolveTemplate(template: string, stakeholders: Stakeholder[]): string {
     return template.replace(/\{\{(\w[\w-]*)\.(firstName|lastName|name|role)\}\}/g,
       (match, id, field) => {
@@ -97,6 +115,29 @@ export class StaticContentProvider implements ContentProvider {
       return {
         ...template,
         name: `${name.firstName} ${name.lastName}`,
+      };
+    });
+  }
+
+  private getResolvedAmbientPoolEvents(difficulty: DifficultyConfig): GameEvent[] {
+    const rng = new SeededRandom(this.seed + 1);
+    const selectedPools = this.scenario.ambientPools.filter(
+      () => rng.next() < difficulty.ambientNoiseLevel
+    );
+    const pools = selectedPools.length > 0 ? selectedPools : this.scenario.ambientPools.slice(0, 1);
+
+    return pools.map((pool) => {
+      const variant = rng.pick(pool.variants);
+      const triggerAt = rng.int(pool.window.earliest, pool.window.latest);
+      return {
+        id: `ambient-${pool.slotId}`,
+        triggerAt,
+        channel: pool.channel,
+        messages: [{
+          ...variant,
+          content: this.resolveTemplate(variant.content, this.stakeholders),
+        }],
+        priority: 'ambient' as const,
       };
     });
   }

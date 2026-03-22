@@ -1,6 +1,5 @@
 import {
   type GameState,
-  type GameEvent,
   type EngineAction,
   type Scenario,
   type ChannelDef,
@@ -8,7 +7,6 @@ import {
   type Stakeholder,
   type DeliveredMessage,
   type ResolvedDecision,
-  type Choice,
   DIFFICULTIES,
 } from './types';
 import { StateManager } from './StateManager';
@@ -16,7 +14,6 @@ import { EventScheduler } from './EventScheduler';
 import { EscalationManager } from './EscalationManager';
 import { StaticContentProvider } from './ContentProvider';
 import type { ContentProvider } from './ContentProvider';
-import { SeededRandom } from './SeededRandom';
 
 export class GameEngine {
   private stateManager: StateManager;
@@ -45,7 +42,7 @@ export class GameEngine {
     this.stateManager = new StateManager(scenario.initialState);
 
     const resolvedEvents = this.contentProvider.getEvents();
-    const ambientEvents = this.materializeAmbientPools(scenario);
+    const ambientEvents = this.contentProvider.getAmbientEvents(difficulty);
     this.scheduler = new EventScheduler([...resolvedEvents, ...ambientEvents], difficulty);
 
     this.escalationManager = new EscalationManager(
@@ -225,25 +222,6 @@ export class GameEngine {
   isComplete(): boolean {
     return this.stateManager.getState().phase === 'review';
   }
-
-  private materializeAmbientPools(scenario: Scenario): GameEvent[] {
-    const rng = new SeededRandom(this.seed + 1);
-    return scenario.ambientPools.map((pool) => {
-      const variant = rng.pick(pool.variants);
-      const triggerAt = rng.int(pool.window.earliest, pool.window.latest);
-      return {
-        id: `ambient-${pool.slotId}`,
-        triggerAt,
-        channel: pool.channel,
-        messages: [{
-          ...variant,
-          content: this.contentProvider.resolveTemplate(variant.content, this.stakeholders),
-        }],
-        priority: 'ambient' as const,
-      };
-    });
-  }
-
   private shouldEnd(elapsed: number): boolean {
     const endCondition = this.scenario.endCondition;
     if (endCondition.type === 'clock') {

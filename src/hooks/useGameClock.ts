@@ -25,7 +25,9 @@ export function useGameClock(onTick: (elapsed: number) => void): UseGameClockRet
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onTickRef = useRef(onTick);
 
-  onTickRef.current = onTick;
+  useEffect(() => {
+    onTickRef.current = onTick;
+  }, [onTick]);
 
   const tick = useCallback(() => {
     const now = Date.now();

@@ -55,7 +55,7 @@ export function ChannelView({
         className="flex-1 overflow-y-auto"
       >
         {/* Today divider */}
-        <div className="flex items-center px-5 py-4">
+        <div className="flex items-center px-6 py-5">
           <div className="flex-1 h-px bg-slack-divider" />
           <span className="px-4 text-xs font-bold text-slack-text-secondary">Today</span>
           <div className="flex-1 h-px bg-slack-divider" />
@@ -68,7 +68,7 @@ export function ChannelView({
           formatTime={formatTime}
         />
         {messages.length === 0 && typingNames.length === 0 && (
-          <div className="px-8 py-14 text-center">
+          <div className="px-8 py-16 text-center">
             <p className="text-sm text-slack-text-secondary">
               Quiet channel. The next ping should land shortly.
             </p>
@@ -77,13 +77,15 @@ export function ChannelView({
         <TypingIndicator names={typingNames} />
       </div>
 
-      <MessageComposer
-        channelName={channel.name}
-        channelType={channel.type}
-        hasDecision={hasDecision}
-        nudge={nudge}
-        onSubmit={onMessageSubmit}
-      />
+      <div className="border-t border-white/6 bg-[#1f2023] px-0 pb-1 pt-2">
+        <MessageComposer
+          channelName={channel.name}
+          channelType={channel.type}
+          hasDecision={hasDecision}
+          nudge={nudge}
+          onSubmit={onMessageSubmit}
+        />
+      </div>
     </div>
   );
 }

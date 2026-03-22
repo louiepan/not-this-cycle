@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { GameEngine } from '../GameEngine';
 import { DIFFICULTIES } from '../types';
-import type { Scenario, EngineAction } from '../types';
+import type { Scenario } from '../types';
 
 /**
  * Minimal scenario for integration testing.

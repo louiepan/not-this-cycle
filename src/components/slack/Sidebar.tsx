@@ -26,19 +26,19 @@ export function Sidebar({
   const dmChannels = channels.filter((c) => c.type === 'dm');
 
   return (
-    <div className="w-[210px] sm:w-[240px] lg:w-[270px] bg-slack-sidebar flex flex-col shrink-0 h-full border-r border-white/5">
+    <div className="flex h-full w-[220px] shrink-0 flex-col border-r border-white/8 bg-slack-sidebar sm:w-[250px] lg:w-[276px]">
       {/* Workspace header */}
-      <div className="h-[52px] border-b border-white/10 flex items-center px-4 shrink-0">
+      <div className="flex h-[52px] shrink-0 items-center border-b border-white/10 px-4 md:h-[50px]">
         <div className="flex items-center justify-between w-full">
-          <span className="font-bold text-lg text-white truncate">{workspaceName}</span>
-          <span className="text-xs text-slack-text-secondary tabular-nums font-mono">{gameClock}</span>
+          <span className="truncate text-[17px] font-bold text-white">{workspaceName}</span>
+          <span className="font-mono text-[11px] tabular-nums text-slack-text-secondary md:hidden">{gameClock}</span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto py-3">
         {/* Channels section */}
-        <div className="mb-5">
-          <div className="px-4 py-1.5 text-xs text-slack-text-secondary font-semibold uppercase tracking-wide">
+        <div className="mb-4">
+          <div className="px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slack-text-secondary/80">
             Channels
           </div>
           {publicChannels.map((channel) => (
@@ -56,7 +56,7 @@ export function Sidebar({
         {/* DMs section */}
         {dmChannels.length > 0 && (
           <div>
-            <div className="px-4 py-1.5 text-xs text-slack-text-secondary font-semibold uppercase tracking-wide">
+            <div className="px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slack-text-secondary/80">
               Direct Messages
             </div>
             {dmChannels.map((channel) => (
@@ -95,9 +95,9 @@ function ChannelItem({
   return (
     <button
       onClick={onSelect}
-      className={`w-full text-left px-4 py-1.5 text-[15px] flex items-center justify-between
+      className={`flex w-full items-center justify-between px-4 py-[7px] text-left text-[15px]
         transition-colors cursor-pointer
-        ${isActive ? 'bg-slack-sidebar-active text-white' : 'hover:bg-slack-sidebar-hover'}
+        ${isActive ? 'bg-slack-sidebar-active/95 text-white shadow-[inset_3px_0_0_rgba(255,255,255,0.18)]' : 'hover:bg-slack-sidebar-hover'}
         ${hasUnread && !isActive ? 'text-white font-semibold' : ''}
         ${!hasUnread && !isActive ? 'text-slack-text-secondary' : ''}`}
     >
@@ -137,9 +137,9 @@ function DMItem({
   return (
     <button
       onClick={onSelect}
-      className={`w-full text-left px-4 py-1.5 text-[15px] flex items-center justify-between gap-2
+      className={`flex w-full items-center justify-between gap-2 px-4 py-[7px] text-left text-[15px]
         transition-colors cursor-pointer
-        ${isActive ? 'bg-slack-sidebar-active text-white' : 'hover:bg-slack-sidebar-hover'}
+        ${isActive ? 'bg-slack-sidebar-active/95 text-white shadow-[inset_3px_0_0_rgba(255,255,255,0.18)]' : 'hover:bg-slack-sidebar-hover'}
         ${hasUnread && !isActive ? 'text-white font-semibold' : ''}
         ${!hasUnread && !isActive ? 'text-slack-text-secondary' : ''}`}
     >

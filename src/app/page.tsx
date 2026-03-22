@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameSession } from '@/hooks/useGameSession';
 import { Q4_PLANNING_SCENARIO, PEER_FEEDBACK_TEMPLATES } from '@/content/scenarios/q4-planning';
 import { AcceptOfferScreen } from '@/components/game/AcceptOfferScreen';
@@ -35,6 +35,7 @@ function buildPeerFeedback(
 
 export default function Home() {
   const session = useGameSession(Q4_PLANNING_SCENARIO);
+  const [playerName, setPlayerName] = useState('You');
 
   const resolvedResult = useMemo(() => {
     if (!session.ratingResult) return null;
@@ -44,7 +45,11 @@ export default function Home() {
   if (session.phase === 'menu') {
     return (
       <AcceptOfferScreen
-        onAccept={(diff: DifficultyConfig) => session.startGame(diff)}
+        initialPlayerName={playerName === 'You' ? '' : playerName}
+        onAccept={(diff: DifficultyConfig, submittedName: string) => {
+          setPlayerName(submittedName);
+          session.startGame(diff);
+        }}
       />
     );
   }
@@ -54,6 +59,7 @@ export default function Home() {
       <ReviewScreen
         result={resolvedResult}
         stakeholders={session.stakeholders}
+        playerName={playerName}
         onPlayAgain={() => session.resetGame()}
       />
     );
@@ -72,7 +78,7 @@ export default function Home() {
       activeChannelId={activeChannel}
       messages={session.gameState.messages}
       stakeholderNames={session.stakeholderNames}
-      playerName="You"
+      playerName={playerName}
       unreadCounts={session.gameState.unreadCounts}
       mentionCounts={session.gameState.mentionCounts}
       hasDecision={hasDecision}
