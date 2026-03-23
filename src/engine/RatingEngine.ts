@@ -12,7 +12,12 @@ import {
 
 export class RatingEngine {
   computeRating(state: GameState): RatingResult {
-    const compositeScore = this.computeCompositeScore(state.variables);
+    const baseScore = this.computeCompositeScore(state.variables);
+    const behaviorAdjustment = this.computeBehaviorAdjustment(state.resolvedDecisions);
+    const compositeScore = Math.max(
+      0,
+      Math.min(100, Math.round((baseScore + behaviorAdjustment) * 100) / 100)
+    );
     const calibrationBucket = this.getBucket(compositeScore);
     const conviction = this.computeConviction(state.resolvedDecisions);
     const archetype = this.detectArchetype(state.variables, conviction);
@@ -42,10 +47,10 @@ export class RatingEngine {
   }
 
   getBucket(score: number): CalibrationBucket {
-    if (score <= 25) return 'needs_improvement';
-    if (score <= 45) return 'partially_meets';
-    if (score <= 65) return 'meets_expectations';
-    if (score <= 80) return 'exceeds_expectations';
+    if (score <= 40) return 'needs_improvement';
+    if (score <= 60) return 'partially_meets';
+    if (score <= 74) return 'meets_expectations';
+    if (score <= 88) return 'exceeds_expectations';
     return 'strongly_exceeds';
   }
 
@@ -57,10 +62,37 @@ export class RatingEngine {
 
     const score = Math.max(
       0,
-      1.0 - 0.1 * deferCount - 0.15 * contradictionCount
+      1.0 - 0.14 * deferCount - 0.2 * contradictionCount
     );
 
     return { score, deferCount, contradictionCount };
+  }
+
+  computeBehaviorAdjustment(decisions: ResolvedDecision[]): number {
+    let adjustment = 0;
+
+    for (const decision of decisions) {
+      if (decision.wasDefer) adjustment -= 2.5;
+      if (decision.contradicts) adjustment -= 3.5;
+
+      const tags = new Set(decision.tags);
+      if (
+        tags.has('overpromised') ||
+        tags.has('optimistic-dates') ||
+        tags.has('said-nothing') ||
+        tags.has('performative') ||
+        tags.has('vague-response') ||
+        tags.has('dodged-dates')
+      ) {
+        adjustment -= 1.5;
+      }
+
+      const namedOwner = (decision.addressedStakeholderIds?.length || 0) > 0;
+      const showedOwnership = decision.replySignals?.includes('ownership');
+      if (namedOwner && showedOwnership) adjustment += 1.25;
+    }
+
+    return Math.max(-14, Math.min(4, adjustment));
   }
 
   detectArchetype(
@@ -121,15 +153,15 @@ export class RatingEngine {
   generateManagerReview(bucket: CalibrationBucket): string {
     const reviews: Record<CalibrationBucket, string> = {
       needs_improvement:
-        '[Player] has shown commitment to the role this quarter and I appreciate their effort during a challenging planning cycle. There are several areas where I\'d like to see more consistent execution, particularly around stakeholder communication and proactive alignment with leadership priorities. We\'ll be putting together a focused development plan for Q1 to help build stronger operating rhythms. I remain confident in [Player]\'s long-term potential at the company.',
+        '[Player] showed effort during a challenging planning cycle, but the quarter surfaced multiple gaps in judgment, clarity, and stakeholder management. In particular, there were several moments where the organization needed conviction and instead received delay, drift, or incomplete alignment. We will be formalizing a tighter development plan for next quarter. I continue to believe [Player] can grow here with the right support and a substantially stronger operating cadence.',
       partially_meets:
-        '[Player] made meaningful contributions during Q4 planning. There is an opportunity to build stronger trust with senior leadership through increased visibility and more proactive communication. I\'d also encourage [Player] to develop a stronger point of view on prioritization — the team would benefit from more decisive leadership on tradeoffs. Promotion readiness: not in this cycle, but I see a path forward.',
+        '[Player] contributed meaningfully during Q4 planning, though their impact was inconsistent across stakeholders and moments of ambiguity. I would like to see stronger decision quality, clearer prioritization language, and more visible ownership when the room gets uncomfortable. There is a path here, but it will require a more durable point of view than we saw this quarter. Promotion readiness: not in this cycle.',
       meets_expectations:
-        '[Player] delivered solid results this quarter. Stakeholder feedback has been generally positive, with some opportunities to strengthen executive communication. [Player] demonstrates a good understanding of the problem space and has built productive relationships across the team. For next half, I\'d like to see [Player] take on more ambiguous, high-impact work to demonstrate readiness for the next level. Overall: tracking well.',
+        '[Player] delivered a generally solid quarter in a noisy environment. Stakeholders saw enough structure and follow-through to maintain confidence, though there is still room to sharpen executive communication and make tradeoffs feel more intentional. I would like to see [Player] operate with greater consistency across audiences before we discuss expanded scope. Overall: tracking in the right direction, with clear growth areas still visible.',
       exceeds_expectations:
-        '[Player] had a strong quarter. Cross-functional partners consistently highlighted [Player]\'s ability to navigate ambiguity and drive alignment. Leadership has taken note of [Player]\'s strategic instincts and communication skills. There are still growth areas — no one is done developing — but [Player] is demonstrating the competencies we look for at the next level. I\'m putting [Player] forward for promotion consideration in the next cycle.',
+        '[Player] had a strong quarter relative to the operating conditions. Cross-functional partners consistently experienced [Player] as composed, credible, and directionally useful during ambiguity. That said, we are not at a point where I want to create expectations around level movement; the next level remains highly selective and the bar there is meaningfully higher than strong execution in a difficult cycle. My guidance is to keep compounding this level of performance and revisit later.',
       strongly_exceeds:
-        '[Player] delivered exceptional results this quarter, exceeding expectations across multiple dimensions. Cross-functional partners have consistently praised [Player]\'s ability to balance strategic vision with execution rigor. I am sponsoring [Player]\'s promotion case for this cycle.',
+        '[Player] was one of the stronger operators in a messy quarter and built unusual confidence across multiple stakeholders. Their communication style, prioritization instincts, and visible ownership all stand out positively. Even so, promotion remains a separate calibration conversation with limited headcount and unusually high scrutiny this half, so I do not want to over-interpret one strong cycle. The signal is encouraging; the answer is still not this cycle.',
     };
     return reviews[bucket];
   }
@@ -141,11 +173,11 @@ export class RatingEngine {
       partially_meets:
         'Comp adjustment: 2.1% (cost of living). Promotion timeline: your manager would like to see more consistent execution before having that conversation.',
       meets_expectations:
-        'Comp adjustment: 3.5%. Promotion timeline: your manager believes you\'re building the right skills. Let\'s revisit in H2.',
+        'Comp adjustment: 3.2%. Promotion timeline: your manager believes you are building useful skills, but the org is prioritizing sustained signal over isolated strong moments. Let\'s revisit later.',
       exceeds_expectations:
-        'Comp adjustment: 8%. Your manager is planning to put your name forward for promotion next cycle. There\'s a lot of competition at the next level and headcount will depend on budget, but you\'re well-positioned.',
+        'Comp adjustment: 6.4%. Your manager sees positive momentum, though there is not enough calibration support to turn that into a promotion conversation right now. Headcount remains constrained and the expectation is additional proof over time.',
       strongly_exceeds:
-        'Comp adjustment: 12%. Your manager is actively advocating for your promotion. Based on current level headcount availability and calibration outcomes across the org, there\'s a strong chance — though nothing is guaranteed until the committee meets.',
+        'Comp adjustment: 8.1%. Your manager is advocating strongly, but current headcount, calibration compression, and cross-org leveling discipline mean the outcome is still no promotion this cycle. Please interpret this as encouragement, not a promise.',
     };
     return outcomes[bucket];
   }

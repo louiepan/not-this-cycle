@@ -38,9 +38,9 @@ describe('RatingEngine', () => {
   describe('calibration buckets', () => {
     it('maps scores to correct buckets', () => {
       expect(engine.getBucket(20)).toBe('needs_improvement');
-      expect(engine.getBucket(35)).toBe('partially_meets');
-      expect(engine.getBucket(55)).toBe('meets_expectations');
-      expect(engine.getBucket(75)).toBe('exceeds_expectations');
+      expect(engine.getBucket(50)).toBe('partially_meets');
+      expect(engine.getBucket(70)).toBe('meets_expectations');
+      expect(engine.getBucket(80)).toBe('exceeds_expectations');
       expect(engine.getBucket(90)).toBe('strongly_exceeds');
     });
   });
@@ -61,7 +61,7 @@ describe('RatingEngine', () => {
       ];
       const result = engine.computeConviction(decisions);
       expect(result.deferCount).toBe(2);
-      expect(result.score).toBe(0.8);
+      expect(result.score).toBe(0.72);
     });
 
     it('penalizes contradictions', () => {
@@ -70,7 +70,7 @@ describe('RatingEngine', () => {
       ];
       const result = engine.computeConviction(decisions);
       expect(result.contradictionCount).toBe(1);
-      expect(result.score).toBe(0.85);
+      expect(result.score).toBe(0.8);
     });
 
     it('floors at 0', () => {
@@ -117,5 +117,45 @@ describe('RatingEngine', () => {
       const conviction = engine.computeConviction([]);
       expect(engine.detectArchetype(vars, conviction)).toBe('the_survivor');
     });
+  });
+
+  describe('behavior adjustment', () => {
+    it('penalizes defer-heavy and contradictory behavior', () => {
+      const adjustment = engine.computeBehaviorAdjustment([
+        makeDecision({ wasDefer: true }),
+        makeDecision({ decisionId: 'dec-2', contradicts: 'prev-choice' }),
+      ]);
+
+      expect(adjustment).toBeLessThan(0);
+    });
+
+    it('rewards naming an owner with ownership language modestly', () => {
+      const adjustment = engine.computeBehaviorAdjustment([
+        makeDecision({
+          addressedStakeholderIds: ['the-staff-eng'],
+          replySignals: ['ownership'],
+        }),
+      ]);
+
+      expect(adjustment).toBe(1.25);
+    });
+  });
+
+  it('keeps default state below meets expectations under harsher calibration', () => {
+    const result = engine.computeRating({
+      variables: INITIAL_VARIABLES,
+      clock: 0,
+      phase: 'review',
+      deliveredEvents: [],
+      pendingDecisions: [],
+      resolvedDecisions: [],
+      messages: [],
+      unreadCounts: {},
+      mentionCounts: {},
+      activeChannel: 'product',
+    });
+
+    expect(result.calibrationBucket).toBe('partially_meets');
+    expect(result.calibrationOutcome.toLowerCase()).toContain('promotion timeline');
   });
 });

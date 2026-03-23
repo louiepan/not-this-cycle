@@ -8,6 +8,7 @@ interface MessageGroupProps {
   stakeholderNames: Record<string, string>;
   playerName: string;
   formatTime: (ms: number) => string;
+  onProfileOpen?: (stakeholderId: string) => void;
 }
 
 /**
@@ -19,6 +20,7 @@ export function MessageGroup({
   stakeholderNames,
   playerName,
   formatTime,
+  onProfileOpen,
 }: MessageGroupProps) {
   if (messages.length === 0) return null;
 
@@ -48,13 +50,17 @@ export function MessageGroup({
           return (
             <Message
               key={msg.id}
+              senderId={msg.from}
               senderName={senderName}
               content={msg.content}
               timestamp={formatTime(msg.timestamp)}
+              playerName={playerName}
+              stakeholderNames={stakeholderNames}
               isPlayer={msg.isPlayerMessage}
               mentionsPlayer={msg.mentionsPlayer}
               showAvatar={idx === 0}
               showHeader={idx === 0}
+              onProfileOpen={onProfileOpen}
             />
           );
         })

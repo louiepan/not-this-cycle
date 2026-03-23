@@ -1,25 +1,40 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import type { Stakeholder } from '@/engine/types';
 
 interface MessageComposerProps {
   channelName: string;
   channelType: 'channel' | 'dm';
+  stakeholders: Stakeholder[];
   hasDecision: boolean;
   nudge: string | null;
   onSubmit: (text: string) => void;
   disabled?: boolean;
 }
 
+interface MentionState {
+  start: number;
+  end: number;
+  query: string;
+}
+
+function normalizeMentionValue(value: string): string {
+  return value.toLowerCase().replace(/[\s-]+/g, '');
+}
+
 export function MessageComposer({
   channelName,
   channelType,
+  stakeholders,
   hasDecision,
   nudge,
   onSubmit,
   disabled = false,
 }: MessageComposerProps) {
   const [text, setText] = useState('');
+  const [mentionState, setMentionState] = useState<MentionState | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,14 +43,90 @@ export function MessageComposer({
     }
   }, [hasDecision]);
 
+  const mentionSuggestions = useMemo(() => {
+    if (!mentionState) return [];
+    const query = normalizeMentionValue(mentionState.query);
+
+    return stakeholders.filter((stakeholder) => {
+      if (!query) return true;
+      const full = normalizeMentionValue(stakeholder.name);
+      const first = normalizeMentionValue(stakeholder.name.split(' ')[0]);
+      return full.includes(query) || first.includes(query);
+    });
+  }, [mentionState, stakeholders]);
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [mentionState?.query]);
+
   function handleSubmit() {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
     onSubmit(trimmed);
     setText('');
+    setMentionState(null);
+    setHighlightedIndex(0);
+  }
+
+  function updateMentionState(nextText: string, cursor: number) {
+    const prefix = nextText.slice(0, cursor);
+    const match = prefix.match(/(?:^|\s)@([a-zA-Z][a-zA-Z\s-]*)$/);
+    if (!match) {
+      setMentionState(null);
+      return;
+    }
+
+    const start = prefix.lastIndexOf('@');
+    setMentionState({
+      start,
+      end: cursor,
+      query: match[1],
+    });
+  }
+
+  function insertMention(stakeholder: Stakeholder) {
+    if (!inputRef.current || !mentionState) return;
+
+    const mentionText = `@${stakeholder.name} `;
+    const nextText =
+      `${text.slice(0, mentionState.start)}${mentionText}${text.slice(mentionState.end)}`;
+    const nextCursor = mentionState.start + mentionText.length;
+
+    setText(nextText);
+    setMentionState(null);
+    setHighlightedIndex(0);
+
+    requestAnimationFrame(() => {
+      if (!inputRef.current) return;
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(nextCursor, nextCursor);
+    });
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
+    if (mentionSuggestions.length > 0 && mentionState) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev + 1) % mentionSuggestions.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length);
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        insertMention(mentionSuggestions[highlightedIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionState(null);
+        return;
+      }
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -64,13 +155,52 @@ export function MessageComposer({
             ref={inputRef}
             type="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              const nextText = e.target.value;
+              setText(nextText);
+              updateMentionState(nextText, e.target.selectionStart ?? nextText.length);
+            }}
+            onClick={(e) => updateMentionState(text, e.currentTarget.selectionStart ?? text.length)}
             onKeyDown={handleKeyDown}
             placeholder={`Message ${channelType === 'channel' ? '#' : ''}${channelName}`}
             disabled={disabled}
             className="w-full bg-transparent text-[#1d1c1d] text-[15px] leading-6 placeholder:text-slack-composer-placeholder
               outline-none disabled:opacity-50"
           />
+          {mentionState && mentionSuggestions.length > 0 && (
+            <div className="mt-3 overflow-hidden rounded-xl border border-black/8 bg-white shadow-[0_14px_32px_rgba(0,0,0,0.14)]">
+              <div className="border-b border-black/6 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slack-composer-icon/70">
+                Mention someone
+              </div>
+              <div className="max-h-56 overflow-y-auto py-1">
+                {mentionSuggestions.map((stakeholder, index) => (
+                  <button
+                    key={stakeholder.id}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      insertMention(stakeholder);
+                    }}
+                    className={`flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${
+                      highlightedIndex === index ? 'bg-[#f3f3f5]' : 'hover:bg-[#f7f7f8]'
+                    }`}
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/8 bg-[linear-gradient(180deg,#f4f4f7_0%,#e7e7eb_100%)] text-xs font-bold uppercase text-[#616061]">
+                      IMG
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-[#1d1c1d]">
+                        {stakeholder.name}
+                      </div>
+                      <div className="truncate text-xs text-slack-composer-icon/75">
+                        {stakeholder.role}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-center justify-between border-t border-black/6 bg-slack-composer-footer px-3 py-2">
           <div className="flex items-center gap-0.5">

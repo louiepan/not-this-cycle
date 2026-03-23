@@ -7,6 +7,8 @@ import {
   type Stakeholder,
   type DeliveredMessage,
   type ResolvedDecision,
+  type PlayerReplyAnalysis,
+  type ReactiveFollowUpTemplate,
   DIFFICULTIES,
 } from './types';
 import { StateManager } from './StateManager';
@@ -102,7 +104,12 @@ export class GameEngine {
    * Player resolves a decision by selecting a choice.
    * If playerText is provided, it replaces the choice's canned message in the chat.
    */
-  resolve(decisionId: string, choiceId: string, playerText?: string): EngineAction[] {
+  resolve(
+    decisionId: string,
+    choiceId: string,
+    playerText?: string,
+    replyAnalysis?: PlayerReplyAnalysis
+  ): EngineAction[] {
     const pending = this.stateManager.getPendingDecision(decisionId);
     if (!pending) return [];
 
@@ -121,6 +128,10 @@ export class GameEngine {
       tags: choice.effects.map((e) => e.tag),
       wasDefer: choice.isDefer ?? false,
       contradicts: choice.contradicts ?? null,
+      playerText,
+      matchedTone: replyAnalysis?.matchedTone ?? null,
+      replySignals: replyAnalysis?.signals ?? [],
+      addressedStakeholderIds: replyAnalysis?.addressedStakeholderIds ?? [],
     };
     this.stateManager.addResolvedDecision(resolved);
 
@@ -170,6 +181,20 @@ export class GameEngine {
           });
         }
       }
+    }
+
+    const reactiveFollowUp = this.selectReactiveFollowUp(
+      choice.reactions,
+      replyAnalysis
+    );
+    if (reactiveFollowUp) {
+      this.scheduler.addEvent({
+        id: `react-${decisionId}-${choiceId}-${elapsed}`,
+        channel: pending.channel,
+        triggerAt: elapsed,
+        messages: [reactiveFollowUp],
+        priority: 'decision',
+      });
     }
 
     return actions;
@@ -222,6 +247,58 @@ export class GameEngine {
   isComplete(): boolean {
     return this.stateManager.getState().phase === 'review';
   }
+
+  private selectReactiveFollowUp(
+    reactions: ReactiveFollowUpTemplate[] | undefined,
+    replyAnalysis?: PlayerReplyAnalysis
+  ) {
+    if (!reactions || reactions.length === 0) return null;
+
+    for (const reaction of reactions) {
+      if (this.matchesReaction(reaction, replyAnalysis)) {
+        return reaction;
+      }
+    }
+
+    return null;
+  }
+
+  private matchesReaction(
+    reaction: ReactiveFollowUpTemplate,
+    replyAnalysis?: PlayerReplyAnalysis
+  ): boolean {
+    if (!reaction.when) return true;
+    if (!replyAnalysis) return false;
+
+    const { matchedTones, hasAnySignals, addressedStakeholderIds } = reaction.when;
+
+    if (
+      matchedTones &&
+      (replyAnalysis.matchedTone === null ||
+        !matchedTones.includes(replyAnalysis.matchedTone))
+    ) {
+      return false;
+    }
+
+    if (
+      hasAnySignals &&
+      !hasAnySignals.some((signal) => replyAnalysis.signals.includes(signal))
+    ) {
+      return false;
+    }
+
+    if (
+      addressedStakeholderIds &&
+      !addressedStakeholderIds.some((stakeholderId) =>
+        replyAnalysis.addressedStakeholderIds.includes(stakeholderId)
+      )
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
   private shouldEnd(elapsed: number): boolean {
     const endCondition = this.scenario.endCondition;
     if (endCondition.type === 'clock') {

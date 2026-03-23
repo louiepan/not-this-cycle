@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import type { ChannelDef, DeliveredMessage } from '@/engine/types';
+import type { ChannelDef, DeliveredMessage, Stakeholder } from '@/engine/types';
 import { ChannelHeader } from './ChannelHeader';
 import { MessageGroup } from './MessageGroup';
 import { MessageComposer } from './MessageComposer';
@@ -10,24 +10,28 @@ import { TypingIndicator } from './TypingIndicator';
 interface ChannelViewProps {
   channel: ChannelDef;
   messages: DeliveredMessage[];
+  stakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
   playerName: string;
   hasDecision: boolean;
   nudge: string | null;
   typingNames: string[];
   onMessageSubmit: (text: string) => void;
+  onProfileOpen?: (stakeholderId: string) => void;
   formatTime: (ms: number) => string;
 }
 
 export function ChannelView({
   channel,
   messages,
+  stakeholders,
   stakeholderNames,
   playerName,
   hasDecision,
   nudge,
   typingNames,
   onMessageSubmit,
+  onProfileOpen,
   formatTime,
 }: ChannelViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -66,6 +70,7 @@ export function ChannelView({
           stakeholderNames={stakeholderNames}
           playerName={playerName}
           formatTime={formatTime}
+          onProfileOpen={onProfileOpen}
         />
         {messages.length === 0 && typingNames.length === 0 && (
           <div className="px-8 py-16 text-center">
@@ -81,6 +86,7 @@ export function ChannelView({
         <MessageComposer
           channelName={channel.name}
           channelType={channel.type}
+          stakeholders={stakeholders}
           hasDecision={hasDecision}
           nudge={nudge}
           onSubmit={onMessageSubmit}

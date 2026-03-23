@@ -1,4 +1,10 @@
-import type { Choice } from './types';
+import type {
+  Choice,
+  PlayerReplyAnalysis,
+  PlayerReplySignal,
+  Stakeholder,
+  Tone,
+} from './types';
 
 /**
  * Matches freeform player text to the closest available choice
@@ -22,7 +28,7 @@ const STOP_WORDS = new Set([
   'not', 'no', 'just', 'about', 'up', 'out', 'as', 'into', 'also',
 ]);
 
-const TONE_SIGNALS: Record<string, string> = {
+const TONE_SIGNALS: Record<string, Tone> = {
   'absolutely': 'committing',
   'definitely': 'committing',
   'sure': 'committing',
@@ -78,8 +84,84 @@ export const CONFIDENCE_THRESHOLD = 0.15;
 export interface MatchResult {
   choice: Choice;
   confidence: number;
-  matchedTone: string | null;
+  matchedTone: Tone | null;
 }
+
+const SIGNAL_PATTERNS: Record<PlayerReplySignal, string[]> = {
+  ownership: [
+    'i will',
+    'ill',
+    'i ll',
+    'on it',
+    'i own',
+    'i ll handle',
+    'i will handle',
+    'i ll figure out',
+    'i can take',
+  ],
+  collaboration: [
+    'we should',
+    'lets',
+    'let s',
+    'together',
+    'sync',
+    'align',
+    'partner',
+    'work with',
+    'keep you in the loop',
+  ],
+  risk: [
+    'risk',
+    'risky',
+    'concern',
+    'capacity',
+    'tight',
+    'tradeoff',
+    'tradeoffs',
+    'p0',
+    'tech debt',
+    'blocker',
+    'dependency',
+    'realistic',
+  ],
+  deferral: [
+    'later',
+    'tomorrow',
+    'circle back',
+    'get back',
+    'need time',
+    'let me think',
+    'not sure yet',
+    'after i talk',
+  ],
+  help_request: [
+    'help',
+    'advice',
+    'back me',
+    'support me',
+    'can i count on you',
+    'can you help',
+    'need your help',
+    'air cover',
+  ],
+  boundary_setting: [
+    'should go through',
+    'as a group',
+    'core to',
+    'stay cohesive',
+    'keep ownership',
+    'not a lunch conversation',
+    'not offline',
+  ],
+  transparency: [
+    'honestly',
+    'being transparent',
+    'to be transparent',
+    'the truth is',
+    'i want to be clear',
+    'realistically',
+  ],
+};
 
 function normalize(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -107,7 +189,7 @@ function keywordOverlap(playerWords: string[], choiceWords: string[]): number {
   return matches / Math.max(playerWords.length, choiceWords.length);
 }
 
-function detectTone(text: string): string | null {
+function detectTone(text: string): Tone | null {
   const normalized = normalize(text);
   // Check multi-word signals first (more specific)
   const sortedSignals = Object.entries(TONE_SIGNALS).sort(
@@ -117,6 +199,49 @@ function detectTone(text: string): string | null {
     if (normalized.includes(signal)) return tone;
   }
   return null;
+}
+
+function detectSignals(text: string): PlayerReplySignal[] {
+  const normalized = normalize(text);
+  return (Object.entries(SIGNAL_PATTERNS) as [PlayerReplySignal, string[]][])
+    .filter(([, patterns]) => patterns.some((pattern) => normalized.includes(pattern)))
+    .map(([signal]) => signal);
+}
+
+function detectAddressedStakeholders(
+  text: string,
+  stakeholders: Stakeholder[]
+): string[] {
+  const lowered = text.toLowerCase();
+  return stakeholders
+    .filter((stakeholder) => {
+      const [firstName, ...rest] = stakeholder.name.split(' ');
+      const lastName = rest.join(' ');
+      const fullName = normalize(stakeholder.name);
+      const first = normalize(firstName);
+      const last = normalize(lastName);
+
+      return (
+        lowered.includes(`@${first}`) ||
+        lowered.includes(`@${fullName.replace(/\s+/g, '')}`) ||
+        lowered.includes(`@${fullName}`) ||
+        (last.length > 1 && lowered.includes(`@${last}`))
+      );
+    })
+    .map((stakeholder) => stakeholder.id);
+}
+
+export function analyzePlayerReply(
+  playerText: string,
+  stakeholders: Stakeholder[],
+  matchedTone?: Tone | null
+): PlayerReplyAnalysis {
+  return {
+    rawText: playerText,
+    matchedTone: matchedTone ?? detectTone(playerText),
+    signals: detectSignals(playerText),
+    addressedStakeholderIds: detectAddressedStakeholders(playerText, stakeholders),
+  };
 }
 
 export function matchChoice(playerText: string, choices: Choice[]): MatchResult {

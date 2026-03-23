@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { GameEngine } from '../GameEngine';
+import { analyzePlayerReply } from '../ChoiceMatcher';
 import { DIFFICULTIES } from '../types';
 import type { Scenario } from '../types';
 
@@ -69,6 +70,21 @@ const TEST_SCENARIO: Scenario = {
             message: "Sure, let's discuss. I've been thinking about this.",
             effects: [
               { variable: 'execTrust', delta: 10, tag: 'engage-vp' },
+            ],
+            reactions: [
+              {
+                id: 'react-risk',
+                from: 'the-vp',
+                delay: 1000,
+                content: 'Bring me the risks and the recommendation.',
+                when: { hasAnySignals: ['risk'] },
+              },
+              {
+                id: 'react-default',
+                from: 'the-vp',
+                delay: 1000,
+                content: 'Great. Keep it moving.',
+              },
             ],
             tone: 'diplomatic',
           },
@@ -158,6 +174,38 @@ describe('GameEngine Integration', () => {
       const after = engine.getState().variables.execTrust;
       expect(after).toBe(before + 10);
     }
+  });
+
+  it('schedules reactive follow-ups based on player intent', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    engine.tick(0);
+    engine.tick(600);
+
+    const pending = engine.getState().pendingDecisions[0];
+    const analysis = analyzePlayerReply(
+      'Sure, but I want to be realistic about the risks here.',
+      engine.getStakeholders(),
+      'direct'
+    );
+
+    engine.resolve(
+      pending.decisionId,
+      'choice-engage',
+      'Sure, but I want to be realistic about the risks here.',
+      analysis
+    );
+
+    engine.tick(2000);
+    const actions = engine.tick(3200);
+    const followUp = actions.find(
+      (action) =>
+        action.type === 'deliver_message' &&
+        action.message.content === 'Bring me the risks and the recommendation.'
+    );
+
+    expect(followUp).toBeTruthy();
   });
 
   it('escalates unanswered decisions', () => {

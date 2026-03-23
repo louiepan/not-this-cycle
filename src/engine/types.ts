@@ -15,6 +15,14 @@ export type GamePhase = 'intro' | 'active' | 'review';
 export type Difficulty = 'junior' | 'senior' | 'principal';
 
 export type Tone = 'diplomatic' | 'direct' | 'deflecting' | 'committing';
+export type PlayerReplySignal =
+  | 'ownership'
+  | 'collaboration'
+  | 'risk'
+  | 'deferral'
+  | 'help_request'
+  | 'boundary_setting'
+  | 'transparency';
 
 export type ConflictStyle = 'confront' | 'withdraw' | 'triangulate' | 'absorb';
 
@@ -127,6 +135,10 @@ export interface ResolvedDecision {
   tags: string[];
   wasDefer: boolean;
   contradicts: string | null;
+  playerText?: string;
+  matchedTone?: Tone | null;
+  replySignals?: PlayerReplySignal[];
+  addressedStakeholderIds?: string[];
 }
 
 export interface DeliveredMessage {
@@ -195,9 +207,31 @@ export interface Choice {
   message: string;
   effects: StateEffect[];
   triggers?: string[];
+  reactions?: ReactiveFollowUpTemplate[];
   tone: Tone;
   isDefer?: boolean;
   contradicts?: string;
+}
+
+export interface PlayerReplyAnalysis {
+  rawText: string;
+  matchedTone: Tone | null;
+  signals: PlayerReplySignal[];
+  addressedStakeholderIds: string[];
+}
+
+export interface ReactiveFollowUpTemplate {
+  id: string;
+  from: string;
+  content: string;
+  delay: number;
+  mentionsPlayer?: boolean;
+  contextValue?: MessageContextValue;
+  when?: {
+    matchedTones?: Tone[];
+    hasAnySignals?: PlayerReplySignal[];
+    addressedStakeholderIds?: string[];
+  };
 }
 
 export interface EscalationStage {
@@ -273,6 +307,7 @@ export interface ChannelDef {
   name: string;
   type: 'channel' | 'dm';
   description?: string;
+  isNoise?: boolean;
 }
 
 export interface Scenario {

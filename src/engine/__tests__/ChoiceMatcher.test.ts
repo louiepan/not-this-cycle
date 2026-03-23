@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { matchChoice, CONFIDENCE_THRESHOLD } from '../ChoiceMatcher';
-import type { Choice } from '../types';
+import {
+  analyzePlayerReply,
+  matchChoice,
+  CONFIDENCE_THRESHOLD,
+} from '../ChoiceMatcher';
+import type { Choice, Stakeholder } from '../types';
 
 function makeChoice(overrides: Partial<Choice> & { id: string }): Choice {
   return {
@@ -32,6 +36,33 @@ const VP_ROADMAP_CHOICES: Choice[] = [
     tone: 'deflecting',
     isDefer: true,
   }),
+];
+
+const STAKEHOLDERS: Stakeholder[] = [
+  {
+    id: 'the-staff-eng',
+    name: 'Riley Chen',
+    role: 'Staff Engineer',
+    seniority: 'ic',
+    statusEmoji: '🛠️',
+    statusText: 'In code',
+    personality: {
+      mbtiType: 'INTJ',
+      enneagramType: 5,
+      enneagramWing: 6,
+      stressDirection: 7,
+      coreFear: 'Being incompetent',
+      coreDesire: 'Mastery',
+      communicationStyle: 'Precise and skeptical',
+    },
+    mechanics: {
+      patience: 0.5,
+      directness: 0.9,
+      conflictStyle: 'confront',
+      politicalAwareness: 0.6,
+      escalationPattern: 'go-public',
+    },
+  },
 ];
 
 describe('matchChoice', () => {
@@ -223,5 +254,31 @@ describe('matchChoice', () => {
       const result = matchChoice("I'm not sure about this", VP_ROADMAP_CHOICES);
       expect(result.matchedTone).toBe('deflecting');
     });
+  });
+});
+
+describe('analyzePlayerReply', () => {
+  it('extracts reply signals from player text', () => {
+    const analysis = analyzePlayerReply(
+      'Honestly this feels risky, but I will take point and sync with the team.',
+      STAKEHOLDERS,
+      'direct'
+    );
+
+    expect(analysis.matchedTone).toBe('direct');
+    expect(analysis.signals).toContain('risk');
+    expect(analysis.signals).toContain('ownership');
+    expect(analysis.signals).toContain('collaboration');
+    expect(analysis.signals).toContain('transparency');
+  });
+
+  it('detects explicitly addressed stakeholders', () => {
+    const analysis = analyzePlayerReply(
+      '@riley can you help me frame the risks?',
+      STAKEHOLDERS,
+      'direct'
+    );
+
+    expect(analysis.addressedStakeholderIds).toEqual(['the-staff-eng']);
   });
 });

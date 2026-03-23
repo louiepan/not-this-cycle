@@ -72,6 +72,10 @@ export class StaticContentProvider implements ContentProvider {
               ...choice,
               label: this.resolveTemplate(choice.label, this.stakeholders),
               message: this.resolveTemplate(choice.message, this.stakeholders),
+              reactions: choice.reactions?.map((reaction) => ({
+                ...reaction,
+                content: this.resolveTemplate(reaction.content, this.stakeholders),
+              })),
             })),
           }
         : undefined,

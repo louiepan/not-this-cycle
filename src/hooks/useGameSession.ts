@@ -3,7 +3,11 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { GameEngine } from '@/engine/GameEngine';
 import { RatingEngine } from '@/engine/RatingEngine';
-import { matchChoice, CONFIDENCE_THRESHOLD } from '@/engine/ChoiceMatcher';
+import {
+  analyzePlayerReply,
+  matchChoice,
+  CONFIDENCE_THRESHOLD,
+} from '@/engine/ChoiceMatcher';
 import type {
   Scenario,
   ChannelDef,
@@ -184,11 +188,16 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   }, [stopClock]);
 
   const resolveDecision = useCallback(
-    (decisionId: string, choice: Choice, playerText?: string) => {
+    (
+      decisionId: string,
+      choice: Choice,
+      playerText?: string,
+      analysis?: ReturnType<typeof analyzePlayerReply>
+    ) => {
       const engine = engineRef.current;
       if (!engine) return;
 
-      engine.resolve(decisionId, choice.id, playerText);
+      engine.resolve(decisionId, choice.id, playerText, analysis);
       setGameState(engine.getState());
       setNudgeMessage(null);
       nudgeActiveRef.current = false;
@@ -233,7 +242,8 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       }
 
       // Accept the match (either good confidence or second attempt)
-      resolveDecision(pending.decisionId, result.choice, text);
+      const analysis = analyzePlayerReply(text, engine.getStakeholders(), result.matchedTone);
+      resolveDecision(pending.decisionId, result.choice, text, analysis);
     },
     [gameState, resolveDecision]
   );

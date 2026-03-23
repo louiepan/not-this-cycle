@@ -1,13 +1,15 @@
 'use client';
 
-import type { ChannelDef, DeliveredMessage } from '@/engine/types';
+import type { ChannelDef, DeliveredMessage, Stakeholder } from '@/engine/types';
 import { Sidebar } from './Sidebar';
 import { ChannelView } from './ChannelView';
+import { ProfilePanel } from './ProfilePanel';
 
 interface WorkspaceProps {
   channels: ChannelDef[];
   activeChannelId: string;
   messages: DeliveredMessage[];
+  stakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
   playerName: string;
   unreadCounts: Record<string, number>;
@@ -16,8 +18,11 @@ interface WorkspaceProps {
   nudge: string | null;
   typingNames: string[];
   gameClock: string;
+  selectedProfileId: string | null;
   onChannelSelect: (channelId: string) => void;
   onMessageSubmit: (text: string) => void;
+  onProfileOpen: (stakeholderId: string) => void;
+  onProfileClose: () => void;
   formatTime: (ms: number) => string;
 }
 
@@ -25,6 +30,7 @@ export function Workspace({
   channels,
   activeChannelId,
   messages,
+  stakeholders,
   stakeholderNames,
   playerName,
   unreadCounts,
@@ -33,14 +39,18 @@ export function Workspace({
   nudge,
   typingNames,
   gameClock,
+  selectedProfileId,
   onChannelSelect,
   onMessageSubmit,
+  onProfileOpen,
+  onProfileClose,
   formatTime,
 }: WorkspaceProps) {
   const activeChannel = channels.find((c) => c.id === activeChannelId);
   const channelMessages = messages.filter(
     (m) => m.channel === activeChannelId
   );
+  const selectedStakeholder = stakeholders.find((stakeholder) => stakeholder.id === selectedProfileId) ?? null;
 
   if (!activeChannel) return null;
 
@@ -60,9 +70,10 @@ export function Workspace({
             <div className="text-xs font-mono tabular-nums text-slack-text-secondary">{gameClock}</div>
           </div>
 
-          <div className="flex min-h-0 flex-1 overflow-hidden border-t border-slack-window-inset bg-slack-bg">
+          <div className="relative flex min-h-0 flex-1 overflow-hidden border-t border-slack-window-inset bg-slack-bg">
             <Sidebar
               channels={channels}
+              messages={messages}
               activeChannelId={activeChannelId}
               unreadCounts={unreadCounts}
               mentionCounts={mentionCounts}
@@ -73,14 +84,17 @@ export function Workspace({
             <ChannelView
               channel={activeChannel}
               messages={channelMessages}
+              stakeholders={stakeholders}
               stakeholderNames={stakeholderNames}
               playerName={playerName}
               hasDecision={hasDecision}
               nudge={nudge}
               typingNames={typingNames}
               onMessageSubmit={onMessageSubmit}
+              onProfileOpen={onProfileOpen}
               formatTime={formatTime}
             />
+            <ProfilePanel stakeholder={selectedStakeholder} onClose={onProfileClose} />
           </div>
         </div>
       </div>

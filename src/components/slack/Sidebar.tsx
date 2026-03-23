@@ -1,10 +1,12 @@
 'use client';
 
-import type { ChannelDef } from '@/engine/types';
+import { useMemo } from 'react';
+import type { ChannelDef, DeliveredMessage } from '@/engine/types';
 import { Avatar } from './Avatar';
 
 interface SidebarProps {
   channels: ChannelDef[];
+  messages: DeliveredMessage[];
   activeChannelId: string;
   unreadCounts: Record<string, number>;
   mentionCounts: Record<string, number>;
@@ -15,6 +17,7 @@ interface SidebarProps {
 
 export function Sidebar({
   channels,
+  messages,
   activeChannelId,
   unreadCounts,
   mentionCounts,
@@ -22,7 +25,31 @@ export function Sidebar({
   workspaceName,
   gameClock,
 }: SidebarProps) {
-  const publicChannels = channels.filter((c) => c.type === 'channel');
+  const publicChannels = useMemo(() => {
+    const lastActivity = new Map<string, number>();
+    for (const message of messages) {
+      lastActivity.set(
+        message.channel,
+        Math.max(lastActivity.get(message.channel) ?? -1, message.timestamp)
+      );
+    }
+
+    return channels
+      .filter((c) => c.type === 'channel')
+      .sort((a, b) => {
+        const mentionDiff = (mentionCounts[b.id] || 0) - (mentionCounts[a.id] || 0);
+        if (mentionDiff !== 0) return mentionDiff;
+
+        const unreadDiff = (unreadCounts[b.id] || 0) - (unreadCounts[a.id] || 0);
+        if (unreadDiff !== 0) return unreadDiff;
+
+        const activityDiff = (lastActivity.get(b.id) ?? -1) - (lastActivity.get(a.id) ?? -1);
+        if (activityDiff !== 0) return activityDiff;
+
+        return channels.findIndex((channel) => channel.id === a.id) -
+          channels.findIndex((channel) => channel.id === b.id);
+      });
+  }, [channels, mentionCounts, messages, unreadCounts]);
   const dmChannels = channels.filter((c) => c.type === 'dm');
 
   return (
