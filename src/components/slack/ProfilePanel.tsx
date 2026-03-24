@@ -1,6 +1,7 @@
 'use client';
 
 import type { Stakeholder } from '@/engine/types';
+import { Avatar } from './Avatar';
 
 interface ProfilePanelProps {
   stakeholder: Stakeholder | null;
@@ -30,22 +31,39 @@ export function ProfilePanel({ stakeholder, onClose }: ProfilePanelProps) {
 
       <div className="flex-1 overflow-y-auto px-5 py-5">
         <div className="rounded-[1.25rem] border border-white/8 bg-[#1e2026] p-5">
-          <div className="flex h-40 items-center justify-center rounded-[1.125rem] border border-dashed border-white/12 bg-[radial-gradient(circle_at_top,#2b3039_0%,#181b21_70%)] text-sm font-semibold uppercase tracking-[0.16em] text-slack-text-secondary">
-            Placeholder Photo
+          <div className="flex items-start gap-4 rounded-[1.125rem] border border-white/10 bg-[radial-gradient(circle_at_top,#2b3039_0%,#181b21_70%)] p-4">
+            <div className="relative shrink-0">
+              <Avatar name={stakeholder.name} size="lg" />
+              <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#181b21] bg-[#0f1116] text-sm">
+                {stakeholder.statusEmoji}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-xl font-bold text-slack-white">{stakeholder.name}</div>
+              <div className="mt-1 text-sm leading-6 text-slack-text">{stakeholder.role}</div>
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-slack-text-secondary">
+                <span>{stakeholder.statusEmoji}</span>
+                <span>{stakeholder.statusText}</span>
+              </div>
+            </div>
           </div>
 
           <div className="mt-5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slack-text-secondary">
-              Name
+              Slack Read
             </div>
-            <div className="mt-2 text-xl font-bold text-slack-white">{stakeholder.name}</div>
+            <div className="mt-2 rounded-xl border border-white/8 bg-[#15181d] px-4 py-3 text-sm leading-6 text-slack-text">
+              {stakeholder.personality.communicationStyle}
+            </div>
           </div>
 
           <div className="mt-5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slack-text-secondary">
-              Title
+              What Usually Lands
             </div>
-            <div className="mt-2 text-sm leading-6 text-slack-text">{stakeholder.role}</div>
+            <div className="mt-2 rounded-xl border border-white/8 bg-[#15181d] px-4 py-3 text-sm leading-6 text-slack-text">
+              Replies tend to track whatever room this person is already managing: the work, the optics, or both.
+            </div>
           </div>
         </div>
       </div>

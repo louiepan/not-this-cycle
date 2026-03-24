@@ -7,31 +7,43 @@ import { AcceptOfferScreen } from '@/components/game/AcceptOfferScreen';
 import { MorningBrief } from '@/components/game/MorningBrief';
 import { Workspace } from '@/components/slack/Workspace';
 import { ReviewScreen } from '@/components/review/ReviewScreen';
-import type { DifficultyConfig, RatingResult, VariableName } from '@/engine/types';
+import type { DifficultyConfig, PendingDecision, RatingResult, VariableName } from '@/engine/types';
 
 function buildPeerFeedback(
   result: RatingResult,
 ): RatingResult {
-  const feedback: { stakeholderId: string; feedback: string }[] = [];
+  const feedback: { stakeholderId: string; feedback: string; severity: number }[] = [];
 
   for (const [stakeholderId, template] of Object.entries(PEER_FEEDBACK_TEMPLATES)) {
     const variable = template.variable as VariableName;
     const value = result.variables[variable];
 
     let tier: 'polite' | 'pointed' | 'maskOff';
+    let severity: number;
     if (variable === 'techDebt' || variable === 'responsivenessDebt') {
       tier = value <= 30 ? 'polite' : value <= 60 ? 'pointed' : 'maskOff';
+      severity = value;
     } else {
       tier = value >= 60 ? 'polite' : value >= 40 ? 'pointed' : 'maskOff';
+      severity = 100 - value;
     }
 
     feedback.push({
       stakeholderId,
       feedback: template[tier],
+      severity,
     });
   }
 
-  return { ...result, peerFeedback: feedback };
+  feedback.sort((a, b) => b.severity - a.severity);
+
+  return {
+    ...result,
+    peerFeedback: feedback.map(({ stakeholderId, feedback: copy }) => ({
+      stakeholderId,
+      feedback: copy,
+    })),
+  };
 }
 
 export default function Home() {
@@ -93,6 +105,15 @@ export default function Home() {
   if (!session.gameState) return null;
 
   const activeChannel = session.gameState.activeChannel;
+  const pendingDecisionCounts = session.gameState.pendingDecisions.reduce<Record<string, number>>(
+    (counts, decision) => {
+      counts[decision.channel] = (counts[decision.channel] || 0) + 1;
+      return counts;
+    },
+    {}
+  );
+  const activePendingDecision: PendingDecision | null =
+    session.gameState.pendingDecisions.find((decision) => decision.channel === activeChannel) ?? null;
   const hasDecision = session.gameState.pendingDecisions.some(
     (d) => d.channel === activeChannel
   );
@@ -107,6 +128,8 @@ export default function Home() {
       playerName={playerName}
       unreadCounts={session.gameState.unreadCounts}
       mentionCounts={session.gameState.mentionCounts}
+      pendingDecisionCounts={pendingDecisionCounts}
+      activePendingDecision={activePendingDecision}
       hasDecision={hasDecision}
       nudge={session.nudgeMessage}
       typingNames={session.typingNames}

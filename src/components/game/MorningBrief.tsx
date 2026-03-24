@@ -38,7 +38,8 @@ export function MorningBrief({
               <p className="screen-subtitle mt-4">
                 {playerName}, this extra brief is only here because you picked{' '}
                 <span className="font-semibold text-slack-white">{difficulty.label}</span>.
-                At higher levels, people expect you to reverse-engineer the situation from incomplete messages.
+                Once you enter, assume the day is already in progress. Read fast, answer cleanly, and remember
+                that public channels are partly for solving things and partly for being seen solving them.
               </p>
             </div>
 
@@ -46,16 +47,16 @@ export function MorningBrief({
               <div className="panel stack-md">
                 <div className="section-label">What Is Happening</div>
                 <div className="content-measure text-[15px] leading-7 text-slack-text">
-                  Q4 planning is already in motion. Leadership wants a polished story for the next all-hands,
-                  engineering thinks the foundation is brittle, design thinks the scope is incoherent, and
-                  everyone assumes you will turn that into a plan before end of day.
+                  Q4 planning is already underway. Leadership wants a clean story for the all-hands, engineering
+                  thinks the foundation is shaky, design thinks the scope is collapsing into sludge, and everyone
+                  assumes you will turn that into a credible plan by end of day.
                 </div>
 
                 <div className="section-label pt-2">What Success Actually Looks Like</div>
                 <div className="content-measure text-[15px] leading-7 text-slack-text">
-                  There is no clean win condition. Your job is to keep the story credible, make decisions fast
-                  enough that people do not route around you, and avoid sounding so certain that the whole thing
-                  collapses under its own optimism.
+                  There is no clean win condition. Your job is to keep the story credible, answer quickly enough
+                  that people do not route around you, and sound decisive without promising a version of reality
+                  the team cannot survive.
                 </div>
 
                 <div className="section-label pt-2">Who Matters First</div>
@@ -88,16 +89,23 @@ export function MorningBrief({
               </div>
 
               <div className="panel panel-muted stack-md">
-                <div className="section-label">Operating Advice</div>
+                <div className="section-label">How Slack Signals Trouble</div>
                 <div className="stack-sm text-sm leading-6 text-slack-text">
-                  <p>Answer direct asks quickly, even if the answer is uncomfortable.</p>
-                  <p>Use DMs to gather context, but pull decisions into the right shared channel when needed.</p>
-                  <p>If you tag someone, make it clear why. The game now notices accountability language.</p>
-                  <p>People will remember your confidence even when they forget your reasoning.</p>
+                  <p><span className="font-semibold text-slack-white">@mentions</span> usually mean someone wants an answer, not a thought process.</p>
+                  <p><span className="font-semibold text-slack-white">Unread dots</span> are often noise until one of them quietly becomes your problem.</p>
+                  <p><span className="font-semibold text-slack-white">DMs</span> are where people admit what they do not want attached to a public channel.</p>
+                  <p><span className="font-semibold text-slack-white">Profiles</span> help with titles and vibes, not motives.</p>
+                </div>
+
+                <div className="section-label pt-2">Operating Advice</div>
+                <div className="stack-sm text-sm leading-6 text-slack-text">
+                  <p>Answer direct asks quickly, even when the answer is uncomfortable.</p>
+                  <p>Use DMs to gather context, but pull real decisions back into the room that will remember them.</p>
+                  <p>If you tag someone, make it clear why. Accountability language now matters.</p>
                 </div>
 
                 <div className="rounded-2xl border border-slack-link/20 bg-slack-link/8 px-4 py-4 text-sm leading-6 text-slack-text-secondary">
-                  You can click on people once you are in Slack to view their title. Nobody is going to volunteer the org chart for you.
+                  If a message looks like a real ask, assume your next reply may become the version of the plan people repeat.
                 </div>
 
                 <div className="actions-row text-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChannelDef, DeliveredMessage, Stakeholder } from '@/engine/types';
+import type { ChannelDef, DeliveredMessage, PendingDecision, Stakeholder } from '@/engine/types';
 import { Sidebar } from './Sidebar';
 import { ChannelView } from './ChannelView';
 import { ProfilePanel } from './ProfilePanel';
@@ -14,6 +14,8 @@ interface WorkspaceProps {
   playerName: string;
   unreadCounts: Record<string, number>;
   mentionCounts: Record<string, number>;
+  pendingDecisionCounts: Record<string, number>;
+  activePendingDecision: PendingDecision | null;
   hasDecision: boolean;
   nudge: string | null;
   typingNames: string[];
@@ -35,6 +37,8 @@ export function Workspace({
   playerName,
   unreadCounts,
   mentionCounts,
+  pendingDecisionCounts,
+  activePendingDecision,
   hasDecision,
   nudge,
   typingNames,
@@ -50,6 +54,7 @@ export function Workspace({
   const channelMessages = messages.filter(
     (m) => m.channel === activeChannelId
   );
+  const activeDecisionCount = pendingDecisionCounts[activeChannelId] || 0;
   const selectedStakeholder = stakeholders.find((stakeholder) => stakeholder.id === selectedProfileId) ?? null;
 
   if (!activeChannel) return null;
@@ -77,6 +82,7 @@ export function Workspace({
               activeChannelId={activeChannelId}
               unreadCounts={unreadCounts}
               mentionCounts={mentionCounts}
+              pendingDecisionCounts={pendingDecisionCounts}
               onChannelSelect={onChannelSelect}
               workspaceName="TechCorp HQ"
               gameClock={gameClock}
@@ -88,6 +94,8 @@ export function Workspace({
               stakeholderNames={stakeholderNames}
               playerName={playerName}
               hasDecision={hasDecision}
+              decisionCount={activeDecisionCount}
+              activePendingDecision={activePendingDecision}
               nudge={nudge}
               typingNames={typingNames}
               onMessageSubmit={onMessageSubmit}

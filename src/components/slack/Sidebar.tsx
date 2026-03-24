@@ -10,6 +10,7 @@ interface SidebarProps {
   activeChannelId: string;
   unreadCounts: Record<string, number>;
   mentionCounts: Record<string, number>;
+  pendingDecisionCounts: Record<string, number>;
   onChannelSelect: (channelId: string) => void;
   workspaceName: string;
   gameClock: string;
@@ -21,6 +22,7 @@ export function Sidebar({
   activeChannelId,
   unreadCounts,
   mentionCounts,
+  pendingDecisionCounts,
   onChannelSelect,
   workspaceName,
   gameClock,
@@ -75,6 +77,7 @@ export function Sidebar({
               isActive={channel.id === activeChannelId}
               unreadCount={unreadCounts[channel.id] || 0}
               mentionCount={mentionCounts[channel.id] || 0}
+              pendingDecisionCount={pendingDecisionCounts[channel.id] || 0}
               onSelect={() => onChannelSelect(channel.id)}
             />
           ))}
@@ -93,6 +96,7 @@ export function Sidebar({
                 isActive={channel.id === activeChannelId}
                 unreadCount={unreadCounts[channel.id] || 0}
                 mentionCount={mentionCounts[channel.id] || 0}
+                pendingDecisionCount={pendingDecisionCounts[channel.id] || 0}
                 onSelect={() => onChannelSelect(channel.id)}
               />
             ))}
@@ -108,16 +112,19 @@ function ChannelItem({
   isActive,
   unreadCount,
   mentionCount,
+  pendingDecisionCount,
   onSelect,
 }: {
   channel: ChannelDef;
   isActive: boolean;
   unreadCount: number;
   mentionCount: number;
+  pendingDecisionCount: number;
   onSelect: () => void;
 }) {
   const hasUnread = unreadCount > 0;
   const hasMention = mentionCount > 0;
+  const hasPendingDecision = pendingDecisionCount > 0;
 
   return (
     <button
@@ -125,21 +132,29 @@ function ChannelItem({
       className={`flex w-full items-center justify-between px-4 py-[7px] text-left text-[15px]
         transition-colors cursor-pointer
         ${isActive ? 'bg-slack-sidebar-active/95 text-white shadow-[inset_3px_0_0_rgba(255,255,255,0.18)]' : 'hover:bg-slack-sidebar-hover'}
-        ${hasUnread && !isActive ? 'text-white font-semibold' : ''}
-        ${!hasUnread && !isActive ? 'text-slack-text-secondary' : ''}`}
+        ${hasPendingDecision && !isActive ? 'bg-white/[0.05] text-white font-semibold shadow-[inset_3px_0_0_rgba(29,155,209,0.7)]' : ''}
+        ${hasUnread && !hasPendingDecision && !isActive ? 'text-white font-semibold' : ''}
+        ${!hasUnread && !hasPendingDecision && !isActive ? 'text-slack-text-secondary' : ''}`}
     >
       <span className="truncate">
         <span className="mr-1 text-slack-text-secondary">#</span>
         {channel.name}
       </span>
-      {hasMention && !isActive && (
-        <span className="ml-2 bg-slack-badge-red text-white text-xs font-bold px-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full">
-          {mentionCount}
-        </span>
-      )}
-      {hasUnread && !hasMention && !isActive && (
-        <span className="ml-2 w-2 h-2 bg-slack-text-secondary rounded-full shrink-0" />
-      )}
+      <div className="ml-2 flex shrink-0 items-center gap-1.5">
+        {hasPendingDecision && !isActive && (
+          <span className="rounded-full border border-slack-link/30 bg-slack-link/12 px-2 py-[2px] text-[10px] font-bold uppercase tracking-[0.14em] text-slack-link">
+            Reply
+          </span>
+        )}
+        {hasMention && !isActive && (
+          <span className="bg-slack-badge-red text-white text-xs font-bold px-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full">
+            {mentionCount}
+          </span>
+        )}
+        {hasUnread && !hasMention && !hasPendingDecision && !isActive && (
+          <span className="w-2 h-2 bg-slack-text-secondary rounded-full shrink-0" />
+        )}
+      </div>
     </button>
   );
 }
@@ -149,16 +164,19 @@ function DMItem({
   isActive,
   unreadCount,
   mentionCount,
+  pendingDecisionCount,
   onSelect,
 }: {
   channel: ChannelDef;
   isActive: boolean;
   unreadCount: number;
   mentionCount: number;
+  pendingDecisionCount: number;
   onSelect: () => void;
 }) {
   const hasUnread = unreadCount > 0;
   const hasMention = mentionCount > 0;
+  const hasPendingDecision = pendingDecisionCount > 0;
   const displayName = channel.name;
 
   return (
@@ -167,8 +185,9 @@ function DMItem({
       className={`flex w-full items-center justify-between gap-2 px-4 py-[7px] text-left text-[15px]
         transition-colors cursor-pointer
         ${isActive ? 'bg-slack-sidebar-active/95 text-white shadow-[inset_3px_0_0_rgba(255,255,255,0.18)]' : 'hover:bg-slack-sidebar-hover'}
-        ${hasUnread && !isActive ? 'text-white font-semibold' : ''}
-        ${!hasUnread && !isActive ? 'text-slack-text-secondary' : ''}`}
+        ${hasPendingDecision && !isActive ? 'bg-white/[0.05] text-white font-semibold shadow-[inset_3px_0_0_rgba(29,155,209,0.7)]' : ''}
+        ${hasUnread && !hasPendingDecision && !isActive ? 'text-white font-semibold' : ''}
+        ${!hasUnread && !hasPendingDecision && !isActive ? 'text-slack-text-secondary' : ''}`}
     >
       <div className="flex items-center gap-2 min-w-0">
         <div className="relative shrink-0">
@@ -177,14 +196,21 @@ function DMItem({
         </div>
         <span className="truncate">{displayName}</span>
       </div>
-      {hasMention && !isActive && (
-        <span className="ml-1 bg-slack-badge-red text-white text-xs font-bold px-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full shrink-0">
-          {mentionCount}
-        </span>
-      )}
-      {hasUnread && !hasMention && !isActive && (
-        <span className="ml-1 w-2 h-2 bg-slack-text-secondary rounded-full shrink-0" />
-      )}
+      <div className="ml-1 flex shrink-0 items-center gap-1.5">
+        {hasPendingDecision && !isActive && (
+          <span className="rounded-full border border-slack-link/30 bg-slack-link/12 px-2 py-[2px] text-[10px] font-bold uppercase tracking-[0.14em] text-slack-link">
+            Reply
+          </span>
+        )}
+        {hasMention && !isActive && (
+          <span className="bg-slack-badge-red text-white text-xs font-bold px-1.5 min-w-[20px] h-5 flex items-center justify-center rounded-full shrink-0">
+            {mentionCount}
+          </span>
+        )}
+        {hasUnread && !hasMention && !hasPendingDecision && !isActive && (
+          <span className="w-2 h-2 bg-slack-text-secondary rounded-full shrink-0" />
+        )}
+      </div>
     </button>
   );
 }

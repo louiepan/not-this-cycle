@@ -11,12 +11,12 @@ export function UnreadBanner({ count, onClick }: UnreadBannerProps) {
   return (
     <button
       onClick={onClick}
-      className="absolute top-12 left-0 right-0 z-10 mx-4 mt-2 px-3 py-1.5 
-        bg-slack-sidebar-active text-white text-sm rounded-full text-center
-        cursor-pointer hover:bg-slack-sidebar-active/90 transition-colors
-        shadow-lg"
+      className="absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 rounded-full border border-white/10
+        bg-slack-sidebar-active px-4 py-2 text-xs font-semibold text-white
+        cursor-pointer transition-colors hover:bg-slack-sidebar-active/90
+        shadow-[0_14px_30px_rgba(0,0,0,0.28)]"
     >
-      {count} new message{count > 1 ? 's' : ''} ↓
+      Jump to latest • {count} new message{count > 1 ? 's' : ''}
     </button>
   );
 }

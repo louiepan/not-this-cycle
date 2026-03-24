@@ -72,8 +72,7 @@ export function ReviewScreen({ result, stakeholders, playerName, onPlayAgain }: 
   const managerStakeholder = stakeholders.find((s) => s.id === 'the-manager');
   const managerName = managerStakeholder?.name || 'Your Manager';
 
-  const firstFeedback = result.peerFeedback[0];
-  const additionalFeedbackCount = Math.max(result.peerFeedback.length - 1, 0);
+  const visibleFeedback = result.peerFeedback;
 
   const variables: { label: string; value: number; inverted: boolean }[] = [
     { label: 'EXEC TRUST', value: result.variables.execTrust, inverted: false },
@@ -205,7 +204,7 @@ export function ReviewScreen({ result, stakeholders, playerName, onPlayAgain }: 
                 Review Commentary
               </div>
               <p className="mt-1 text-sm text-slack-text-secondary">
-                Manager framing up top, anonymous subtext underneath.
+                Official framing up top, calibration excerpts underneath.
               </p>
 
               <div className="mt-5 space-y-4">
@@ -222,18 +221,36 @@ export function ReviewScreen({ result, stakeholders, playerName, onPlayAgain }: 
                 <div className="panel content-measure">
                   <div className="flex items-center justify-between gap-4">
                     <div className="section-label text-white/70">
-                      Anonymous Peer Feedback
+                      Peer Feedback Excerpts
                     </div>
-                    {additionalFeedbackCount > 0 && (
-                      <div className="text-[11px] uppercase tracking-[0.2em] text-slack-text-secondary">
-                        +{additionalFeedbackCount} more withheld
-                      </div>
+                    <div className="text-[11px] uppercase tracking-[0.2em] text-slack-text-secondary">
+                      {visibleFeedback.length} total
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    {visibleFeedback.length > 0 ? (
+                      visibleFeedback.map((feedback, index) => (
+                        <div
+                          key={`${feedback.stakeholderId}-${index}`}
+                          className="rounded-xl border border-white/8 bg-[#15181d] px-4 py-4"
+                        >
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slack-text-secondary">
+                            Excerpt {String(index + 1).padStart(2, '0')}
+                          </div>
+                          <p className="mt-2 text-sm italic leading-6 text-slack-text">
+                            &ldquo;{feedback.feedback}&rdquo;
+                          </p>
+                          <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slack-text-secondary">
+                            — Redacted in calibration packet
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-base italic leading-relaxed text-slack-text">
+                        &ldquo;No feedback collected.&rdquo;
+                      </p>
                     )}
                   </div>
-                  <p className="mt-3 text-base italic leading-relaxed text-slack-text">
-                    &ldquo;{firstFeedback?.feedback || 'No feedback collected.'}&rdquo;
-                  </p>
-                  <p className="mt-3 text-sm text-slack-text-secondary">— [Redacted]</p>
                 </div>
               </div>
             </section>
