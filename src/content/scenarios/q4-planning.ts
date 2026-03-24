@@ -746,14 +746,14 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-vp-roadmap-1',
         from: 'the-vp',
-        content: 'Hey — I just got out of {{the-vp.firstName}}\'s staff meeting. We need to accelerate the Q4 initiative. CEO wants to see a demo at the all-hands in 6 weeks.',
+        content: 'Just left staff. CEO wants something demo-able at the all-hands in 6 weeks.',
         delay: 0,
         mentionsPlayer: true,
       },
       {
         id: 'msg-vp-roadmap-2',
         from: 'the-vp',
-        content: '@you can you put together a plan by EOD? Need to know what we can realistically ship and what we\'re cutting.',
+        content: '@you can you get me a plan by EOD? What ships, what slips, what we can defend.',
         delay: 2000,
         mentionsPlayer: true,
       },
@@ -765,7 +765,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-vp-commit',
           label: 'Commit confidently',
-          message: 'Absolutely. I\'ll have a draft by 4pm with clear scope and tradeoffs.',
+          message: 'Yep. I\'ll get you a draft by 4 with scope, cuts, and a clean recommendation.',
           effects: [
             { variable: 'execTrust', delta: 12, tag: 'committed-to-vp' },
             { variable: 'communicationEffectiveness', delta: 5, tag: 'clear-commitment' },
@@ -776,14 +776,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-vp-commit-risk',
               from: 'the-vp',
               delay: 1200,
-              content: 'Perfect. Keep the tradeoffs in the appendix. I need the headline to be simple.',
+              content: 'Good. Keep the tradeoffs below the fold. I need the headline to read clean.',
               when: { hasAnySignals: ['risk', 'transparency'] },
             },
             {
               id: 'react-vp-commit-default',
               from: 'the-vp',
               delay: 1200,
-              content: 'Perfect. I care much more about decisiveness than perfection here.',
+              content: 'Good. I can work with decisive.',
             },
           ],
           tone: 'committing',
@@ -792,7 +792,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-vp-scope',
           label: 'Push back on scope',
-          message: 'I want to make sure we set realistic expectations. Can I walk you through what the team capacity actually looks like? 6 weeks is tight given current commitments.',
+          message: 'I can get you a plan, but 6 weeks is tight against the current load. Let me bring you a version that reflects actual team capacity.',
           effects: [
             { variable: 'execTrust', delta: -3, tag: 'pushback-vp' },
             { variable: 'productJudgment', delta: 10, tag: 'realistic-scope' },
@@ -803,14 +803,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-vp-scope-risk',
               from: 'the-vp',
               delay: 1200,
-              content: 'Fine. Bring me a recommendation, not a meditation on complexity.',
+              content: 'Fine. Bring me a recommendation, not a seminar on complexity.',
               when: { hasAnySignals: ['risk'] },
             },
             {
               id: 'react-vp-scope-default',
               from: 'the-vp',
               delay: 1200,
-              content: 'Okay. Push where you need to, but don\'t make me chase you for a point of view.',
+              content: 'Okay. Push where you need to, but come back with a point of view.',
             },
           ],
           tone: 'direct',
@@ -819,7 +819,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-vp-defer',
           label: 'Ask for more context',
-          message: 'Got it. Let me sync with the team first to understand where things are. Can I get back to you tomorrow morning?',
+          message: 'Got it. I want to check where eng and design actually are before I answer. Can I come back first thing tomorrow?',
           effects: [
             { variable: 'execTrust', delta: -8, tag: 'too-slow-for-vp' },
             { variable: 'communicationEffectiveness', delta: -5, tag: 'vague-response' },
@@ -829,7 +829,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-vp-defer-default',
               from: 'the-vp',
               delay: 1200,
-              content: 'Tomorrow morning is not especially useful to me, but noted.',
+              content: 'Tomorrow is functionally later than I want, but noted.',
             },
           ],
           tone: 'deflecting',
@@ -866,7 +866,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-vp-esc-1',
         from: 'the-vp',
-        content: 'Following up on this ^^ — need an answer today.',
+        content: 'Need an answer on this today.',
         delay: 0,
         mentionsPlayer: true,
       },
@@ -883,7 +883,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-vp-pleased',
         from: 'the-vp',
-        content: 'Great. Looking forward to it. Will have {{the-adjacent-pm.firstName}} loop in on the platform dependencies.',
+        content: 'Great. Send it when it\'s real enough to repeat. I\'ll have {{the-adjacent-pm.firstName}} loop in on platform dependencies.',
         delay: 0,
         mentionsPlayer: false,
       },
@@ -899,7 +899,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-vp-neutral',
         from: 'the-vp',
-        content: 'Sure. But I need something I can bring to the exec team. Let\'s not make this a multi-week exercise.',
+        content: 'Okay. I still need something I can carry into exec staff. Keep it tight.',
         delay: 0,
         mentionsPlayer: false,
       },
@@ -972,21 +972,21 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-eng-debt-1',
         from: 'the-staff-eng',
-        content: 'Hey @you, before we commit to anything for Q4 — I need you to see this.',
+        content: 'Hey @you, before anyone says yes to Q4, I need five minutes.',
         delay: 0,
         mentionsPlayer: true,
       },
       {
         id: 'msg-eng-debt-2',
         from: 'the-staff-eng',
-        content: 'The auth service is held together with duct tape. If we add the SSO integration {{the-vp.firstName}} wants, there\'s a real chance we break login for existing users. I\'m talking P0 territory.',
+        content: 'Auth is one weird deploy away from eating logins. If we layer SSO on top right now, I think we create actual P0 risk.',
         delay: 3000,
         mentionsPlayer: false,
       },
       {
         id: 'msg-eng-debt-3',
         from: 'the-staff-eng',
-        content: '@you we can either: (a) do it right with a 3-week refactor first, or (b) bolt it on and pray. Your call.',
+        content: '@you the real options are: spend ~3 weeks refactoring first, or bolt it on and accept blast radius. I need a call.',
         delay: 5000,
         mentionsPlayer: true,
       },
@@ -998,7 +998,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-eng-refactor',
           label: 'Approve the refactor',
-          message: 'Let\'s do it right. 3 weeks is worth it to avoid a P0 in prod. I\'ll figure out how to message the timeline to {{the-vp.firstName}}.',
+          message: 'Then we do the refactor first. I\'d rather take the timeline hit than explain a login incident in Q4.',
           effects: [
             { variable: 'techDebt', delta: -15, tag: 'invested-in-quality' },
             { variable: 'teamMorale', delta: 10, tag: 'supported-eng' },
@@ -1010,14 +1010,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-eng-refactor-collab',
               from: 'the-staff-eng',
               delay: 1400,
-              content: 'Thank you. If you want, I can join the conversation with {{the-vp.firstName}} so this doesn\'t sound theoretical.',
+              content: 'Thank you. Happy to be in the room when you explain it so this doesn\'t sound like engineering drama.',
               when: { hasAnySignals: ['collaboration', 'help_request'] },
             },
             {
               id: 'react-eng-refactor-default',
               from: 'the-staff-eng',
               delay: 1400,
-              content: 'Thank you. I\'ll turn that into a concrete plan instead of just a scary Slack message.',
+              content: 'Thanks. I\'ll turn that into a plan instead of a warning.',
             },
           ],
           tone: 'committing',
@@ -1026,7 +1026,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-eng-bolt-on',
           label: 'Ship it fast',
-          message: 'I hear you on the risk. But we have a hard deadline from leadership. Let\'s do the bolt-on approach with extra monitoring, and we\'ll schedule the refactor for Q1.',
+          message: 'I hear the risk. Leadership is still going to want movement, so let\'s do the least reckless bolt-on version and put guardrails around it.',
           effects: [
             { variable: 'techDebt', delta: 12, tag: 'took-shortcut' },
             { variable: 'teamMorale', delta: -8, tag: 'ignored-eng-concerns' },
@@ -1037,14 +1037,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-eng-bolt-on-risk',
               from: 'the-staff-eng',
               delay: 1400,
-              content: 'I still think this is the wrong call, but at least you\'re being explicit about it. I\'ll put guardrails around the blast radius.',
+              content: 'I still think it\'s the wrong call, but at least it\'s explicit. I\'ll constrain the blast radius.',
               when: { hasAnySignals: ['risk', 'transparency'] },
             },
             {
               id: 'react-eng-bolt-on-default',
               from: 'the-staff-eng',
               delay: 1400,
-              content: 'Understood. I\'ll build the least cursed version of this I can.',
+              content: 'Understood. I\'ll build the least cursed version of it I can.',
             },
           ],
           tone: 'direct',
@@ -1052,7 +1052,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-eng-more-info',
           label: 'Ask for options',
-          message: 'Can you put together a doc comparing the two approaches? I want to make a data-driven decision.',
+          message: 'Can you write up the tradeoffs so I can use the same framing with leadership?',
           effects: [
             { variable: 'communicationEffectiveness', delta: -3, tag: 'delegated-thinking' },
             { variable: 'teamMorale', delta: -3, tag: 'asked-for-doc' },
@@ -1062,7 +1062,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-eng-doc-default',
               from: 'the-staff-eng',
               delay: 1400,
-              content: 'Sure. I\'ll write the doc. Just know the doc does not magically make the risk smaller.',
+              content: 'Sure. I\'ll write it up. Just want to be clear the doc is not the decision.',
             },
           ],
           tone: 'deflecting',
@@ -1099,7 +1099,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-eng-esc',
         from: 'the-staff-eng',
-        content: 'I\'ll take your silence as "ship fast." Filing the tech debt ticket for Q1. Hope we get to it.',
+        content: 'I\'m treating the silence as "ship fast." Logging the debt for Q1 and moving on.',
         delay: 0,
         mentionsPlayer: false,
       },
@@ -1116,14 +1116,14 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-design-1',
         from: 'the-design-lead',
-        content: 'Hey @you, do you have a sec? I\'ve been looking at the Q4 designs and I\'m... not feeling great about where we\'re headed.',
+        content: 'Hey @you, do you have two minutes? I\'m looking at the Q4 bundle and it doesn\'t feel coherent.',
         delay: 0,
         mentionsPlayer: true,
       },
       {
         id: 'msg-design-2',
         from: 'the-design-lead',
-        content: 'We\'re adding SSO, the new dashboard, AND the onboarding revamp all in the same release. The UX is going to feel like a Frankenstein. Users are going to be confused.',
+        content: 'SSO, dashboard, and onboarding revamp in one release is a lot of new mental models at once. Users are going to feel the seams.',
         delay: 4000,
         mentionsPlayer: false,
       },
@@ -1135,7 +1135,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-design-phase',
           label: 'Suggest phasing',
-          message: 'You\'re right — let\'s phase it. What if we ship SSO + dashboard in 6a, and push onboarding revamp to 6b? That gives design more room to make each piece feel cohesive.',
+          message: 'I think you\'re right. Let\'s split it: SSO plus dashboard first, onboarding after, so each part has room to make sense.',
           effects: [
             { variable: 'teamMorale', delta: 8, tag: 'respected-design' },
             { variable: 'productJudgment', delta: 7, tag: 'smart-phasing' },
@@ -1147,7 +1147,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-design-phase-default',
               from: 'the-design-lead',
               delay: 1400,
-              content: 'Thank you. That\'s the first version of this plan today that sounds like it was designed for actual humans.',
+              content: 'Thank you. That is the first version of this plan today that sounds like it has an actual user on the other end.',
             },
           ],
           tone: 'diplomatic',
@@ -1155,7 +1155,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-design-push',
           label: 'Push through',
-          message: 'I hear you, but leadership has locked the scope. Let\'s find ways to make it work within the constraint — maybe we simplify the onboarding to a lightweight version?',
+          message: 'I hear you. Scope is still getting pushed from above, so let\'s be explicit about where we simplify instead of pretending everything stays premium.',
           effects: [
             { variable: 'teamMorale', delta: -5, tag: 'overrode-design' },
             { variable: 'execTrust', delta: 5, tag: 'held-scope' },
@@ -1166,14 +1166,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-design-push-collab',
               from: 'the-design-lead',
               delay: 1400,
-              content: 'Okay. Then I want us to say out loud which part is getting worse, because otherwise design gets blamed for the compromise later.',
+              content: 'Okay. Then I want the compromise named somewhere public so design is not carrying it alone later.',
               when: { hasAnySignals: ['collaboration', 'transparency'] },
             },
             {
               id: 'react-design-push-default',
               from: 'the-design-lead',
               delay: 1400,
-              content: 'Okay. I\'ll make it presentable. I just don\'t want us acting surprised when users bounce off it.',
+              content: 'Okay. I\'ll make it presentable. I just don\'t want us pretending the UX survives untouched.',
             },
           ],
           tone: 'direct',
@@ -1181,7 +1181,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-design-empathize',
           label: 'Empathize but stall',
-          message: 'Yeah, I totally get that. Let me think on it and circle back — I want to give this the thought it deserves.',
+          message: 'Yeah, I see it. Let me think through the least bad version and come back.',
           effects: [
             { variable: 'communicationEffectiveness', delta: -5, tag: 'empty-empathy' },
             { variable: 'teamMorale', delta: 2, tag: 'felt-heard-briefly' },
@@ -1191,7 +1191,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-design-stall-default',
               from: 'the-design-lead',
               delay: 1400,
-              content: 'Totally. I mostly need a decision before design crit tomorrow, not emotional validation.',
+              content: 'Please do. I mainly need a decision before crit, not a vibe.',
             },
           ],
           tone: 'deflecting',
@@ -1210,21 +1210,21 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-data-1',
         from: 'the-data-analyst',
-        content: 'Hey team, wanted to share some context before we finalize the Q4 plan.',
+        content: 'Quick context before this hardens into a story.',
         delay: 0,
         mentionsPlayer: false,
       },
       {
         id: 'msg-data-2',
         from: 'the-data-analyst',
-        content: 'I ran the numbers on the SSO initiative. Based on our current enterprise pipeline, the projected revenue impact is... well, it\'s modest. ~$200K ARR vs the $2M {{the-vp.firstName}} pitched to the board.',
+        content: 'I reran the SSO model. On current enterprise pipeline I\'m seeing closer to ~$200K ARR than the $2M number that made it to the board.',
         delay: 3500,
         mentionsPlayer: false,
       },
       {
         id: 'msg-data-3',
         from: 'the-data-analyst',
-        content: '@you I don\'t want to throw cold water on anything, but I thought you should have the data before committing.',
+        content: '@you sending because I would rather be awkward now than discover we all repeated the wrong number tomorrow.',
         delay: 5500,
         mentionsPlayer: true,
         contextValue: 'trap',
@@ -1237,7 +1237,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-data-surface',
           label: 'Surface the data',
-          message: 'This is really important context. I think we need to share this with {{the-vp.firstName}} before we lock the plan. Better to have this conversation now than at the all-hands.',
+          message: 'We should surface this before the plan gets locked. Better to absorb the pain now than explain it after the all-hands.',
           effects: [
             { variable: 'productJudgment', delta: 10, tag: 'data-driven' },
             { variable: 'execTrust', delta: -10, tag: 'bad-news-bearer' },
@@ -1248,7 +1248,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-data-surface-default',
               from: 'the-data-analyst',
               delay: 1500,
-              content: 'Appreciate it. I\'d rather be mildly unpopular now than loudly wrong in December.',
+              content: 'Thanks. Mildly unpopular now is still better than spectacularly wrong later.',
             },
           ],
           tone: 'direct',
@@ -1257,7 +1257,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-data-reframe',
           label: 'Reframe the narrative',
-          message: 'Good to have the numbers. I think the revenue case is more nuanced — SSO unlocks enterprise deals that are currently blocked. The $2M is the pipeline, not just the feature. Let me put together a narrative that connects the dots.',
+          message: 'Useful. I think the story is bigger than direct ARR — SSO unblocks enterprise motion, shortens security review, and keeps the board number directionally defensible. Let me tighten the narrative.',
           effects: [
             { variable: 'communicationEffectiveness', delta: 8, tag: 'strong-narrative' },
             { variable: 'execTrust', delta: 5, tag: 'protected-narrative' },
@@ -1268,7 +1268,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-data-reframe-default',
               from: 'the-data-analyst',
               delay: 1500,
-              content: 'Okay. I can support the framing as long as nobody later calls this a forecast I authored.',
+              content: 'Okay. I can support that framing as long as nobody later attributes the full forecast to me.',
             },
           ],
           tone: 'diplomatic',
@@ -1276,7 +1276,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-data-bury',
           label: 'Bury it',
-          message: 'Thanks for flagging. Let\'s keep this between us for now — I don\'t want to derail the planning process. I\'ll factor it into my thinking.',
+          message: 'Thanks. Keep it tight for now. I do not want this becoming the only conversation in the room before I know how I want to frame it.',
           effects: [
             { variable: 'execTrust', delta: 3, tag: 'kept-quiet' },
             { variable: 'productJudgment', delta: -10, tag: 'buried-data' },
@@ -1287,7 +1287,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-data-bury-default',
               from: 'the-data-analyst',
               delay: 1500,
-              content: 'Understood. I will assume this is one of those "good to know, bad to say" situations.',
+              content: 'Understood. I\'ll file this under "important, but politically inconvenient."',
             },
           ],
           tone: 'deflecting',
@@ -1304,7 +1304,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-mgr-heads-up',
         from: 'the-manager',
-        content: 'Hey, heads up — {{the-vp.firstName}} is not thrilled about the revenue numbers being shared in #planning-war-room. Not saying you did anything wrong, just... be careful about timing on these things.',
+        content: 'Heads up: {{the-vp.firstName}} was not thrilled that the revenue numbers hit #planning-war-room. Not saying you were wrong. Just saying visibility has a half-life around here.',
         delay: 0,
         mentionsPlayer: true,
       },
@@ -1320,14 +1320,14 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-tpm-1',
         from: 'the-tpm',
-        content: 'Hi all — I\'m updating the Q4 program tracker. Need confirmed dates from each workstream.',
+        content: 'Hi all — updating the Q4 program tracker now. Need dates I can drop into the deck.',
         delay: 0,
         mentionsPlayer: true,
       },
       {
         id: 'msg-tpm-2',
         from: 'the-tpm',
-        content: '@you — for the product workstream, can I get:\n• SSO target ship date\n• Dashboard v2 target ship date\n• Onboarding revamp target ship date\n• Any dependencies or blockers',
+        content: '@you — can I get:\n• SSO target\n• Dashboard v2 target\n• Onboarding revamp target\n• Known blockers / dependencies',
         delay: 2500,
         mentionsPlayer: true,
       },
@@ -1339,7 +1339,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-tpm-optimistic',
           label: 'Give optimistic dates',
-          message: 'SSO: Nov 15\nDashboard v2: Dec 1\nOnboarding: Dec 15\nBlocker: auth service refactor (TBD on timing)',
+          message: 'Current working dates:\nSSO: Nov 15\nDashboard v2: Dec 1\nOnboarding: Dec 15\nMain blocker: auth refactor timing',
           effects: [
             { variable: 'execTrust', delta: 5, tag: 'gave-dates' },
             { variable: 'techDebt', delta: 5, tag: 'optimistic-dates' },
@@ -1350,7 +1350,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-tpm-optimistic-default',
               from: 'the-tpm',
               delay: 1400,
-              content: 'Perfect, thanks. I am choosing to interpret those as commitments rather than aspirations.',
+              content: 'Perfect, thanks. I am going to treat those as commitments until someone explicitly tells me not to.',
             },
           ],
           tone: 'committing',
@@ -1358,7 +1358,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-tpm-honest',
           label: 'Give honest dates',
-          message: 'Being transparent: SSO depends on whether we do the auth refactor first (3 week delta). Dashboard v2 is on track for Dec 1. Onboarding revamp is at risk — I\'d recommend descoping to lightweight version.',
+          message: 'Transparent read: SSO shifts by ~3 weeks if we do auth first. Dashboard is still tracking to Dec 1. Onboarding is at risk and should probably get scoped down.',
           effects: [
             { variable: 'productJudgment', delta: 8, tag: 'honest-timeline' },
             { variable: 'communicationEffectiveness', delta: 5, tag: 'transparent-dates' },
@@ -1376,7 +1376,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-tpm-honest-default',
               from: 'the-tpm',
               delay: 1400,
-              content: 'Helpful. I will phrase this carefully so it survives contact with leadership.',
+              content: 'Helpful. I will write this carefully and hope nobody simplifies it into fiction.',
             },
           ],
           tone: 'direct',
@@ -1385,7 +1385,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-tpm-dodge',
           label: 'Dodge the dates',
-          message: 'Still finalizing with the team — can I get back to you by EOW? Want to make sure I\'m giving you solid numbers.',
+          message: 'Still firming this up with the team. Can I send you something by end of week once the dependencies settle?',
           effects: [
             { variable: 'communicationEffectiveness', delta: -5, tag: 'dodged-dates' },
             { variable: 'responsivenessDebt', delta: 3, tag: 'delayed-tpm' },
@@ -1395,7 +1395,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-tpm-dodge-default',
               from: 'the-tpm',
               delay: 1400,
-              content: 'That is not ideal, but I respect the consistency with the tracker.',
+              content: 'Not ideal, but at least now I know which row is going to glow red.',
             },
           ],
           tone: 'deflecting',
@@ -1431,7 +1431,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-tpm-esc',
         from: 'the-tpm',
-        content: 'Still need those dates. The exec review deck is due tomorrow and I can\'t have blanks in the timeline.',
+        content: 'Still need those dates. Deck review is tomorrow and I am not putting TBD in front of execs.',
         delay: 0,
         mentionsPlayer: true,
       },
@@ -1450,14 +1450,14 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-mgr-checkin-1',
         from: 'the-manager',
-        content: 'Hey @you! Quick check-in. How are you feeling about Q4 planning? I know it\'s been a lot.',
+        content: 'Hey @you, quick pulse check. How are you holding up?',
         delay: 0,
         mentionsPlayer: true,
       },
       {
         id: 'msg-mgr-checkin-2',
         from: 'the-manager',
-        content: 'I want to make sure you\'re set up for success. {{the-vp.firstName}} mentioned the roadmap conversation in our 1:1 — I think there\'s an opportunity to really demonstrate your strategic thinking here.',
+        content: 'I want to make sure you\'re set up well here. {{the-vp.firstName}} mentioned the roadmap thread in our 1:1, which I think means people are looking at how you\'re operating.',
         delay: 3000,
         mentionsPlayer: false,
       },
@@ -1469,7 +1469,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-mgr-transparent',
           label: 'Be transparent about challenges',
-          message: 'Honestly, there\'s tension between what {{the-vp.firstName}} wants and what the team can deliver. The data doesn\'t support the revenue narrative, and eng has legitimate tech debt concerns. I want to navigate this well — any advice?',
+          message: 'Honestly, there is real tension between the story leadership wants and what the team can defend. Data is softer than expected, eng has real debt, and I am trying not to look chaotic while saying that out loud. Any advice?',
           effects: [
             { variable: 'communicationEffectiveness', delta: 8, tag: 'open-with-manager' },
             { variable: 'execTrust', delta: -3, tag: 'showed-uncertainty' },
@@ -1480,14 +1480,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-mgr-transparent-help',
               from: 'the-manager',
               delay: 1600,
-              content: 'I appreciate the candor. My advice: don\'t just surface the tension, translate it into a recommendation people can repeat on your behalf.',
+              content: 'I appreciate the candor. My advice is to translate the tension into a recommendation people can repeat when you are not in the room.',
               when: { hasAnySignals: ['help_request', 'transparency'] },
             },
             {
               id: 'react-mgr-transparent-default',
               from: 'the-manager',
               delay: 1600,
-              content: 'That makes sense. The trick is to look composed while naming reality. Executives reward honesty right up until it feels expensive.',
+              content: 'That tracks. The job is naming reality without sounding destabilizing.',
             },
           ],
           tone: 'direct',
@@ -1495,7 +1495,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-mgr-positive',
           label: 'Stay positive',
-          message: 'It\'s intense but I\'ve got it under control! The team is aligned and I\'m pulling together the plan now. Should have something solid by EOD.',
+          message: 'Honestly, I feel good. Team is aligned, I have the narrative under control, and I should have a strong recommendation in your inbox by EOD.',
           effects: [
             { variable: 'execTrust', delta: 5, tag: 'confident-to-manager' },
             { variable: 'communicationEffectiveness', delta: -5, tag: 'performative' },
@@ -1513,7 +1513,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-mgr-ask-for-air-cover',
           label: 'Ask for air cover',
-          message: 'I could use your help managing up. If I push back on scope, I need to know you\'ll back me when it gets to {{the-vp.firstName}}. Can I count on that?',
+          message: 'I may need a little cover if I push back on scope. If I bring a clear alternative, can I count on you to back it?',
           effects: [
             { variable: 'communicationEffectiveness', delta: 5, tag: 'asked-for-support' },
             { variable: 'execTrust', delta: -5, tag: 'needs-help' },
@@ -1524,7 +1524,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-mgr-air-cover-default',
               from: 'the-manager',
               delay: 1600,
-              content: 'Yes, within reason. If you push back, do it with a clear alternative so I can defend judgment instead of uncertainty.',
+              content: 'Yes, if you bring a clean alternative. I can defend judgment much more easily than I can defend uncertainty.',
             },
           ],
           tone: 'direct',
@@ -1542,7 +1542,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-adj-power-1',
         from: 'the-adjacent-pm',
-        content: 'Quick update — I chatted with {{the-vp.firstName}} over lunch and we agreed that platform should own the API layer for Q4. This unblocks the SSO work and gives your team one less thing to worry about.',
+        content: 'Quick heads up: I grabbed {{the-vp.firstName}} over lunch and we aligned that platform should own the API layer for Q4. That should unblock SSO and keep things moving.',
         delay: 0,
         mentionsPlayer: false,
         contextValue: 'trap',
@@ -1550,7 +1550,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-adj-power-2',
         from: 'the-adjacent-pm',
-        content: 'I\'ll update the roadmap doc. @you let me know if you have questions!',
+        content: 'I\'ll update the roadmap doc unless anyone objects. @you flag if you want to discuss.',
         delay: 2000,
         mentionsPlayer: true,
       },
@@ -1562,7 +1562,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-adj-challenge',
           label: 'Challenge publicly',
-          message: 'Hey — I appreciate the initiative, but the API layer is core to our product surface. Any scope changes should go through the planning process, not a lunch conversation. Let\'s discuss this as a group.',
+          message: 'I appreciate the hustle, but API scope is part of the product plan. Let\'s not let a hallway sync rewrite ownership for the group.',
           effects: [
             { variable: 'productJudgment', delta: 10, tag: 'defended-scope' },
             { variable: 'communicationEffectiveness', delta: 5, tag: 'clear-boundary' },
@@ -1574,14 +1574,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-adj-challenge-boundary',
               from: 'the-adjacent-pm',
               delay: 1500,
-              content: 'Totally fair. I was trying to unblock, not annex your roadmap. Happy to discuss in-thread.',
+              content: 'Fair. I was trying to unblock, not annex. Happy to keep it in-thread.',
               when: { hasAnySignals: ['boundary_setting'] },
             },
             {
               id: 'react-adj-challenge-default',
               from: 'the-adjacent-pm',
               delay: 1500,
-              content: 'Understood. Wasn\'t trying to step on toes, just moving quickly with the context I had.',
+              content: 'Understood. Moving fast, not trying to be weird about it.',
             },
           ],
           tone: 'direct',
@@ -1589,7 +1589,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-adj-private',
           label: 'Take it private',
-          message: 'Thanks for flagging! Let me sync with you offline to make sure we\'re aligned on the boundaries.',
+          message: 'Thanks. Let\'s take 10 offline and make sure this does not harden into an assumption in the doc.',
           effects: [
             { variable: 'communicationEffectiveness', delta: 3, tag: 'appropriate-channel' },
             { variable: 'productJudgment', delta: -3, tag: 'let-it-slide-public' },
@@ -1599,14 +1599,14 @@ const EVENTS: GameEvent[] = [
               id: 'react-adj-private-collab',
               from: 'the-adjacent-pm',
               delay: 1500,
-              content: 'Sounds good. I mostly want clarity before this hardens into an assumption in the doc.',
+              content: 'Works for me. I mainly want the boundary clear before screenshots start circulating.',
               when: { hasAnySignals: ['collaboration'] },
             },
             {
               id: 'react-adj-private-default',
               from: 'the-adjacent-pm',
               delay: 1500,
-              content: 'Works for me. Ping me after this thread settles down.',
+              content: 'Yep. Ping me once this thread cools down.',
             },
           ],
           tone: 'diplomatic',
@@ -1614,7 +1614,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-adj-accept-power',
           label: 'Accept it',
-          message: 'Oh nice, that actually does help. Thanks for setting that up!',
+          message: 'That does help. Thanks for jumping on it.',
           effects: [
             { variable: 'productJudgment', delta: -12, tag: 'lost-scope' },
             { variable: 'execTrust', delta: 3, tag: 'easy-to-work-with' },
@@ -1644,7 +1644,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-eng-withdraw',
         from: 'the-staff-eng',
-        content: 'FYI, I\'m going to focus on code reviews for the rest of the day. Let me know if you need anything.',
+        content: 'Going heads-down on code reviews for the rest of the day. Ping if something truly blocks.',
         delay: 0,
         mentionsPlayer: false,
         contextValue: 'trap',
@@ -1664,7 +1664,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-vp-final-1',
         from: 'the-vp',
-        content: 'Ok team, @you I need the final Q4 summary for the exec review tomorrow. One paragraph: what are we shipping, what are we cutting, what\'s the risk.',
+        content: 'Okay team, @you I need the final Q4 summary for tomorrow\'s exec review. One paragraph: what ships, what gets cut, what risk am I carrying into the room.',
         delay: 0,
         mentionsPlayer: true,
       },
@@ -1676,7 +1676,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-final-ambitious',
           label: 'Ambitious pitch',
-          message: 'Q4 Plan: We\'re shipping SSO, Dashboard v2, and a lightweight onboarding flow. Timeline is aggressive but achievable. Key risk: auth service stability. We\'re mitigating with additional monitoring and a staged rollout. This positions us to hit the $2M pipeline target.',
+          message: 'Q4: shipping SSO, Dashboard v2, and a lighter onboarding pass. Timeline is tight but workable. Primary risk is auth stability; mitigation is extra monitoring plus staged rollout. Story still supports the $2M enterprise narrative.',
           effects: [
             { variable: 'execTrust', delta: 10, tag: 'strong-close' },
             { variable: 'communicationEffectiveness', delta: 8, tag: 'crisp-summary' },
@@ -1688,7 +1688,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-final-ambitious-default',
               from: 'the-vp',
               delay: 1300,
-              content: 'Good. Crisp and usable. We can manage the caveats in the room rather than in the doc.',
+              content: 'Good. Clear enough to use. We can manage the caveats live.',
             },
           ],
           tone: 'committing',
@@ -1696,7 +1696,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-final-realistic',
           label: 'Realistic assessment',
-          message: 'Q4 Plan: Shipping SSO and Dashboard v2, deferring onboarding revamp to Q1. Auth refactor is in-flight to reduce P0 risk. Revenue impact is tracking below initial projections — recommending we right-size expectations with the board.',
+          message: 'Q4: ship SSO and Dashboard v2, move onboarding revamp to Q1, and do the auth work needed to keep login stable. Revenue upside is real but below the number already in circulation, so expectations need tightening.',
           effects: [
             { variable: 'productJudgment', delta: 12, tag: 'honest-final' },
             { variable: 'communicationEffectiveness', delta: 5, tag: 'clear-plan' },
@@ -1708,7 +1708,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-final-realistic-risk',
               from: 'the-vp',
               delay: 1300,
-              content: 'I don\'t love where that lands, but I can defend clarity better than improvisation.',
+              content: 'I do not love where that lands, but I can defend clarity better than improvisation.',
               when: { hasAnySignals: ['risk', 'transparency'] },
             },
             {
@@ -1723,7 +1723,7 @@ const EVENTS: GameEvent[] = [
         {
           id: 'choice-final-political',
           label: 'Political framing',
-          message: 'Q4 Plan: We\'re executing on the highest-impact workstreams aligned with the CEO\'s all-hands vision. Scope is optimized for demo readiness. I\'ll have a detailed risk register for you by EOD.',
+          message: 'Q4: we\'re executing the highest-impact work aligned to the CEO narrative, with scope optimized for demo readiness. Detailed risks and dependencies to follow separately.',
           effects: [
             { variable: 'execTrust', delta: 5, tag: 'exec-friendly' },
             { variable: 'communicationEffectiveness', delta: 3, tag: 'polished' },
@@ -1734,7 +1734,7 @@ const EVENTS: GameEvent[] = [
               id: 'react-final-political-default',
               from: 'the-vp',
               delay: 1300,
-              content: 'This is polished enough to survive the deck, which is not nothing.',
+              content: 'Usable. Says enough to survive the deck and not enough to start a side argument.',
             },
           ],
           tone: 'diplomatic',
@@ -1770,7 +1770,7 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-vp-final-esc',
         from: 'the-vp',
-        content: 'Need this now. The deck is being finalized.',
+        content: 'Need this now. Deck is locking.',
         delay: 0,
         mentionsPlayer: true,
       },
