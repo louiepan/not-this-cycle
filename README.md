@@ -1,6 +1,5 @@
 # Not This Cycle
-
-> A PM simulator where the prize for surviving Slack is a performance review that still somehow ends with "maybe next cycle."
+A PM simulator where the prize for surviving Slack is a performance review that still somehow ends with "maybe next cycle."
 
 **Not This Cycle** is a web-based satire game about being a Product Manager at a large tech company. The whole thing plays inside a fake Slack workspace: engineering wants fewer surprises, leadership wants more urgency, GTM wants a date, and everyone would prefer that you solve their problem first.
 
