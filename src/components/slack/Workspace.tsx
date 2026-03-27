@@ -59,6 +59,11 @@ export function Workspace({
 
   if (!activeChannel) return null;
 
+  const visibleTypingNames =
+    activeChannel.type === 'dm' && typingNames.length > 0
+      ? [activeChannel.name.split(' ')[0]]
+      : typingNames;
+
   return (
     <div className="flex h-screen w-screen items-center justify-center overflow-hidden bg-[radial-gradient(120%_120%_at_50%_0%,#2a2f36_0%,#17181b_58%)] px-2 py-2 md:px-4 md:py-4 lg:px-8 lg:py-8 xl:px-10 xl:py-10">
       <div className="mx-auto flex h-full w-full min-w-0 items-stretch md:h-[min(920px,calc(100vh-32px))] md:max-w-[calc(100vw-32px)] lg:h-[860px] lg:w-[1520px] lg:max-h-[calc(100vh-80px)] lg:max-w-[calc(100vw-80px)]">
@@ -97,7 +102,7 @@ export function Workspace({
               decisionCount={activeDecisionCount}
               activePendingDecision={activePendingDecision}
               nudge={nudge}
-              typingNames={typingNames}
+              typingNames={visibleTypingNames}
               onMessageSubmit={onMessageSubmit}
               onProfileOpen={onProfileOpen}
               formatTime={formatTime}

@@ -3,6 +3,7 @@ import {
   type GameState,
   type DifficultyConfig,
   type DeliveredMessage,
+  type PendingDecision,
   type EngineAction,
   type EventPriority,
 } from './types';
@@ -11,6 +12,11 @@ interface ScheduledMessage {
   message: Omit<DeliveredMessage, 'timestamp'>;
   deliverAt: number;
   priority: EventPriority;
+}
+
+interface ScheduledDecision {
+  decision: PendingDecision;
+  presentAt: number;
 }
 
 const PRIORITY_ORDER: Record<EventPriority, number> = {
@@ -30,8 +36,10 @@ const PRIORITY_ORDER: Record<EventPriority, number> = {
 export class EventScheduler {
   private events: Map<string, GameEvent>;
   private pendingMessages: ScheduledMessage[] = [];
+  private pendingDecisions: ScheduledDecision[] = [];
   private difficulty: DifficultyConfig;
   private resolvedEventTimestamps: Map<string, number> = new Map();
+  private materializedEvents: Set<string> = new Set();
   private typingEmitted: Set<string> = new Set();
 
   constructor(events: GameEvent[], difficulty: DifficultyConfig) {
@@ -48,7 +56,7 @@ export class EventScheduler {
 
     // 1. Check for events ready to fire
     for (const [id, event] of this.events) {
-      if (state.deliveredEvents.includes(id)) continue;
+      if (this.materializedEvents.has(id)) continue;
       if (!this.isReady(event, state, elapsed)) continue;
 
       const eventActions = this.materializeEvent(event, elapsed);
@@ -93,6 +101,24 @@ export class EventScheduler {
 
     this.pendingMessages = this.pendingMessages.filter(
       (m) => m.deliverAt > elapsed
+    );
+
+    // 4. Present queued decisions after the setup messages land
+    const readyDecisions = this.pendingDecisions.filter(
+      (scheduled) => scheduled.presentAt <= elapsed
+    );
+
+    readyDecisions.sort((a, b) => a.presentAt - b.presentAt);
+
+    for (const scheduled of readyDecisions) {
+      actions.push({
+        type: 'present_decision',
+        decision: scheduled.decision,
+      });
+    }
+
+    this.pendingDecisions = this.pendingDecisions.filter(
+      (scheduled) => scheduled.presentAt > elapsed
     );
 
     return actions;
@@ -140,7 +166,6 @@ export class EventScheduler {
     event: GameEvent,
     currentTime: number
   ): EngineAction[] {
-    const actions: EngineAction[] = [];
     const priority = event.priority || 'decision';
 
     // Schedule messages with their delays
@@ -176,8 +201,8 @@ export class EventScheduler {
       const scaledTimeout =
         event.decision.timeout * this.difficulty.escalationTimeoutScale;
 
-      actions.push({
-        type: 'present_decision',
+      this.pendingDecisions.push({
+        presentAt: decisionTime,
         decision: {
           decisionId: event.decision.id,
           eventId: event.id,
@@ -191,8 +216,9 @@ export class EventScheduler {
     }
 
     this.resolvedEventTimestamps.set(event.id, currentTime);
+    this.materializedEvents.add(event.id);
 
-    return actions;
+    return [];
   }
 
   getEvent(eventId: string): GameEvent | undefined {

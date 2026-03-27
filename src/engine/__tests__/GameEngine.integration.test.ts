@@ -139,6 +139,49 @@ const TEST_SCENARIO: Scenario = {
   endCondition: { type: 'clock', at: 60000 },
 };
 
+const DELAYED_DECISION_SCENARIO: Scenario = {
+  ...TEST_SCENARIO,
+  id: 'delayed-decision-scenario',
+  events: [
+    {
+      id: 'evt-threaded-decision',
+      triggerAt: 0,
+      channel: 'product',
+      messages: [
+        {
+          id: 'msg-threaded-1',
+          from: 'the-vp',
+          content: 'Need your read on the tradeoffs.',
+          delay: 0,
+          mentionsPlayer: true,
+        },
+        {
+          id: 'msg-threaded-2',
+          from: 'the-vp',
+          content: 'Give me the call after you see the constraint.',
+          delay: 1000,
+          mentionsPlayer: true,
+        },
+      ],
+      decision: {
+        id: 'dec-threaded',
+        timeout: 5000,
+        choices: [
+          {
+            id: 'choice-threaded',
+            label: 'Make the call',
+            message: 'I have a recommendation.',
+            effects: [
+              { variable: 'execTrust', delta: 5, tag: 'made-call' },
+            ],
+            tone: 'direct',
+          },
+        ],
+      },
+    },
+  ],
+};
+
 describe('GameEngine Integration', () => {
   it('starts and delivers initial events', () => {
     const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
@@ -197,15 +240,47 @@ describe('GameEngine Integration', () => {
       analysis
     );
 
-    engine.tick(2000);
-    const actions = engine.tick(3200);
-    const followUp = actions.find(
-      (action) =>
-        action.type === 'deliver_message' &&
-        action.message.content === 'Bring me the risks and the recommendation.'
-    );
+    const followUps = [];
+    for (let elapsed = 2000; elapsed <= 3200; elapsed += 100) {
+      const actions = engine.tick(elapsed);
+      followUps.push(
+        ...actions.filter(
+          (action) =>
+            action.type === 'deliver_message' &&
+            action.message.content === 'Bring me the risks and the recommendation.'
+        )
+      );
+    }
 
-    expect(followUp).toBeTruthy();
+    expect(followUps).toHaveLength(1);
+    expect(
+      engine
+        .getState()
+        .messages.filter(
+          (message) =>
+            message.content === 'Bring me the risks and the recommendation.'
+        )
+    ).toHaveLength(1);
+  });
+
+  it('waits to present a decision until its setup messages have landed', () => {
+    const engine = new GameEngine(DELAYED_DECISION_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    const startActions = engine.tick(0);
+    expect(
+      startActions.filter((action) => action.type === 'present_decision')
+    ).toHaveLength(0);
+    expect(engine.getState().pendingDecisions).toHaveLength(0);
+
+    engine.tick(1000);
+    expect(engine.getState().pendingDecisions).toHaveLength(0);
+
+    const decisionActions = engine.tick(1500);
+    expect(
+      decisionActions.filter((action) => action.type === 'present_decision')
+    ).toHaveLength(1);
+    expect(engine.getState().pendingDecisions).toHaveLength(1);
   });
 
   it('escalates unanswered decisions', () => {

@@ -2,49 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { useGameSession } from '@/hooks/useGameSession';
-import { Q4_PLANNING_SCENARIO, PEER_FEEDBACK_TEMPLATES } from '@/content/scenarios/q4-planning';
+import { Q4_PLANNING_SCENARIO } from '@/content/scenarios/q4-planning';
 import { AcceptOfferScreen } from '@/components/game/AcceptOfferScreen';
 import { MorningBrief } from '@/components/game/MorningBrief';
 import { Workspace } from '@/components/slack/Workspace';
 import { ReviewScreen } from '@/components/review/ReviewScreen';
-import type { DifficultyConfig, PendingDecision, RatingResult, VariableName } from '@/engine/types';
-
-function buildPeerFeedback(
-  result: RatingResult,
-): RatingResult {
-  const feedback: { stakeholderId: string; feedback: string; severity: number }[] = [];
-
-  for (const [stakeholderId, template] of Object.entries(PEER_FEEDBACK_TEMPLATES)) {
-    const variable = template.variable as VariableName;
-    const value = result.variables[variable];
-
-    let tier: 'polite' | 'pointed' | 'maskOff';
-    let severity: number;
-    if (variable === 'techDebt' || variable === 'responsivenessDebt') {
-      tier = value <= 30 ? 'polite' : value <= 60 ? 'pointed' : 'maskOff';
-      severity = value;
-    } else {
-      tier = value >= 60 ? 'polite' : value >= 40 ? 'pointed' : 'maskOff';
-      severity = 100 - value;
-    }
-
-    feedback.push({
-      stakeholderId,
-      feedback: template[tier],
-      severity,
-    });
-  }
-
-  feedback.sort((a, b) => b.severity - a.severity);
-
-  return {
-    ...result,
-    peerFeedback: feedback.map(({ stakeholderId, feedback: copy }) => ({
-      stakeholderId,
-      feedback: copy,
-    })),
-  };
-}
+import type { DifficultyConfig, PendingDecision } from '@/engine/types';
+import { buildPeerFeedback } from '@/review/buildPeerFeedback';
 
 export default function Home() {
   const session = useGameSession(Q4_PLANNING_SCENARIO);

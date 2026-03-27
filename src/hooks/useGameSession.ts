@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { GameEngine } from '@/engine/GameEngine';
 import { RatingEngine } from '@/engine/RatingEngine';
 import {
@@ -21,6 +21,15 @@ import type {
 import { DIFFICULTIES } from '@/engine/types';
 import { useGameClock } from './useGameClock';
 import { track, initTracker, flush } from '@/analytics/tracker';
+import { requestNarrativeReview, requestNarrativeTurn } from '@/narrative/client';
+import type { NarrativeReactionMessage } from '@/narrative/types';
+import { buildPeerFeedback } from '@/review/buildPeerFeedback';
+import {
+  addTypingParticipant,
+  getTypingNamesForChannel,
+  removeTypingParticipant,
+  type TypingState,
+} from './typingState';
 
 export type SessionPhase = 'menu' | 'playing' | 'review';
 
@@ -50,39 +59,48 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [ratingResult, setRatingResult] = useState<RatingResult | null>(null);
   const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
-  const [typingNames, setTypingNames] = useState<string[]>([]);
+  const [typingState, setTypingState] = useState<TypingState>({});
   const [difficulty, setDifficulty] = useState<DifficultyConfig>(DIFFICULTIES.senior);
   const [channels, setChannels] = useState<ChannelDef[]>([]);
   const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
 
   const engineRef = useRef<GameEngine | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const ratingEngineRef = useRef(new RatingEngine());
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
+  const pendingNarrativeTurnsRef = useRef<Set<string>>(new Set());
+  const reviewRequestedRef = useRef(false);
+  const reviewRequestVersionRef = useRef(0);
   const nudgeActiveRef = useRef(false);
 
-  const handleActions = useCallback(
-    (actions: EngineAction[], engine: GameEngine) => {
-      const stakeholders = engine.getStakeholders();
+  const clearTypingTimeouts = useCallback(() => {
+    for (const timeout of typingTimeoutsRef.current.values()) {
+      clearTimeout(timeout);
+    }
+    typingTimeoutsRef.current.clear();
+  }, []);
 
+  useEffect(() => clearTypingTimeouts, [clearTypingTimeouts]);
+
+  const handleActions = useCallback(
+    (actions: EngineAction[]) => {
       // Handle typing_started actions
       const typingActions = actions.filter(
         (a) => a.type === 'typing_started'
       );
       if (typingActions.length > 0) {
-        const names = typingActions
-          .map((a) => {
-            if (a.type !== 'typing_started') return null;
-            const s = stakeholders.find((s) => s.id === a.stakeholderId);
-            return s ? s.name.split(' ')[0] : null;
-          })
-          .filter(Boolean) as string[];
-
-        if (names.length > 0) {
-          setTypingNames((prev) => {
-            const combined = new Set([...prev, ...names]);
-            return Array.from(combined);
-          });
-        }
+        setTypingState((prev) =>
+          typingActions.reduce((nextState, action) => {
+            if (action.type !== 'typing_started') return nextState;
+            return addTypingParticipant(
+              nextState,
+              action.channel,
+              action.stakeholderId
+            );
+          }, prev)
+        );
       }
 
       // Clear typing when messages are actually delivered
@@ -90,23 +108,29 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         (a) => a.type === 'deliver_message' && !a.message.isPlayerMessage
       );
       if (messageActions.length > 0) {
-        const deliveredSenderIds = new Set(
-          messageActions.map((a) =>
-            a.type === 'deliver_message' ? a.message.from : ''
-          )
-        );
+        for (const action of messageActions) {
+          if (action.type !== 'deliver_message' || action.message.isPlayerMessage) {
+            continue;
+          }
 
-        const deliveredNames = stakeholders
-          .filter((s) => deliveredSenderIds.has(s.id))
-          .map((s) => s.name.split(' ')[0]);
+          const timeoutKey = `${action.message.channel}:${action.message.from}`;
+          const existingTimeout = typingTimeoutsRef.current.get(timeoutKey);
+          if (existingTimeout) {
+            clearTimeout(existingTimeout);
+          }
 
-        if (deliveredNames.length > 0) {
-          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-          typingTimeoutRef.current = setTimeout(() => {
-            setTypingNames((prev) =>
-              prev.filter((n) => !deliveredNames.includes(n))
+          const timeout = setTimeout(() => {
+            setTypingState((prev) =>
+              removeTypingParticipant(
+                prev,
+                action.message.channel,
+                action.message.from
+              )
             );
+            typingTimeoutsRef.current.delete(timeoutKey);
           }, 300);
+
+          typingTimeoutsRef.current.set(timeoutKey, timeout);
         }
       }
 
@@ -130,10 +154,12 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     const newState = engine.getState();
     setGameState(newState);
 
-    handleActions(actions, engine);
+    handleActions(actions);
 
     if (engine.isComplete()) {
-      const rating = ratingEngineRef.current.computeRating(newState);
+      clearTypingTimeouts();
+      setTypingState({});
+      const rating = buildPeerFeedback(ratingEngineRef.current.computeRating(newState));
       setRatingResult(rating);
       setPhase('review');
       track('game_complete', {
@@ -143,7 +169,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       });
       flush();
     }
-  }, [handleActions]);
+  }, [clearTypingTimeouts, handleActions]);
 
   const { elapsed, start: startClock, pause: stopClock } = useGameClock(onTick);
 
@@ -152,6 +178,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       const seed = Date.now();
       const sessionId = `${seed}-${Math.random().toString(36).slice(2, 8)}`;
       initTracker(sessionId);
+      sessionIdRef.current = sessionId;
 
       const engine = new GameEngine(scenario, diff, seed);
       engineRef.current = engine;
@@ -163,41 +190,69 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       setPhase('playing');
       setGameState(engine.getState());
       setRatingResult(null);
-      setTypingNames([]);
+      clearTypingTimeouts();
+      setTypingState({});
       setNudgeMessage(null);
+      pendingNarrativeTurnsRef.current.clear();
+      reviewRequestedRef.current = false;
+      reviewRequestVersionRef.current = 0;
       nudgeActiveRef.current = false;
       startClock();
 
       track('session_start', { difficulty: diff.id, seed });
       track('difficulty_selected', { difficulty: diff.id });
     },
-    [scenario, startClock]
+    [clearTypingTimeouts, scenario, startClock]
   );
 
   const resetGame = useCallback(async () => {
     stopClock();
     await flush();
+    sessionIdRef.current = null;
     engineRef.current = null;
+    clearTypingTimeouts();
     setPhase('menu');
     setGameState(null);
     setRatingResult(null);
     setStakeholders([]);
-    setTypingNames([]);
+    setTypingState({});
     setNudgeMessage(null);
+    pendingNarrativeTurnsRef.current.clear();
+    reviewRequestedRef.current = false;
+    reviewRequestVersionRef.current = 0;
     nudgeActiveRef.current = false;
-  }, [stopClock]);
+  }, [clearTypingTimeouts, stopClock]);
 
   const resolveDecision = useCallback(
     (
       decisionId: string,
       choice: Choice,
       playerText?: string,
-      analysis?: ReturnType<typeof analyzePlayerReply>
+      analysis?: ReturnType<typeof analyzePlayerReply>,
+      options?: {
+        skipReactiveFollowUp?: boolean;
+        reactionMessages?: NarrativeReactionMessage[];
+        reactionChannelId?: string;
+      }
     ) => {
       const engine = engineRef.current;
       if (!engine) return;
 
-      engine.resolve(decisionId, choice.id, playerText, analysis);
+      engine.resolve(decisionId, choice.id, playerText, analysis, {
+        skipReactiveFollowUp: options?.skipReactiveFollowUp,
+      });
+      if (options?.reactionMessages && options.reactionMessages.length > 0) {
+        engine.injectNarrativeMessages(
+          options.reactionChannelId ?? engine.getState().activeChannel,
+          options.reactionMessages.map((message) => ({
+            id: message.id,
+            from: message.from,
+            content: message.content,
+            mentionsPlayer: message.mentionsPlayer,
+            contextValue: message.contextValue,
+          }))
+        );
+      }
       setGameState(engine.getState());
       setNudgeMessage(null);
       nudgeActiveRef.current = false;
@@ -216,6 +271,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const submitText = useCallback(
     (channelId: string, text: string) => {
       const engine = engineRef.current;
+      const sessionId = sessionIdRef.current;
       if (!engine || !gameState) return;
 
       const pending = gameState.pendingDecisions.find(
@@ -228,24 +284,134 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         return;
       }
 
-      const result = matchChoice(text, pending.choices);
+      const applyLocalFallback = () => {
+        const result = matchChoice(text, pending.choices);
 
-      if (result.confidence < CONFIDENCE_THRESHOLD && !nudgeActiveRef.current) {
-        nudgeActiveRef.current = true;
-        setNudgeMessage('Could you say more? Try being more specific about what you want to do.');
-        track('low_confidence_nudge', {
-          decisionId: pending.decisionId,
-          confidence: result.confidence,
-          playerText: text,
-        });
+        if (result.confidence < CONFIDENCE_THRESHOLD && !nudgeActiveRef.current) {
+          nudgeActiveRef.current = true;
+          setNudgeMessage('Could you say more? Try being more specific about what you want to do.');
+          track('low_confidence_nudge', {
+            decisionId: pending.decisionId,
+            confidence: result.confidence,
+            playerText: text,
+          });
+          return;
+        }
+
+        const analysis = analyzePlayerReply(
+          text,
+          engine.getStakeholders(),
+          result.matchedTone
+        );
+        resolveDecision(pending.decisionId, result.choice, text, analysis);
+      };
+
+      if (pendingNarrativeTurnsRef.current.has(pending.decisionId)) {
         return;
       }
 
-      // Accept the match (either good confidence or second attempt)
-      const analysis = analyzePlayerReply(text, engine.getStakeholders(), result.matchedTone);
-      resolveDecision(pending.decisionId, result.choice, text, analysis);
+      if (!sessionId) {
+        applyLocalFallback();
+        return;
+      }
+
+      pendingNarrativeTurnsRef.current.add(pending.decisionId);
+
+      void (async () => {
+        try {
+          const allowedBeatIds = Array.from(
+            new Set(
+              pending.choices.flatMap((choice) => [
+                ...(choice.triggers ?? []),
+                ...(choice.reactions?.map((reaction) => reaction.id) ?? []),
+              ])
+            )
+          );
+
+          const response = await requestNarrativeTurn({
+            sessionId,
+            scenarioId: scenario.id,
+            seed: engine.getSeed(),
+            difficulty: difficulty.id,
+            playerText: text,
+            allowLowConfidenceMatch: nudgeActiveRef.current,
+            stakeholders: engine.getStakeholders(),
+            messages: gameState.messages.slice(-20).map((message) => ({
+              id: message.id,
+              eventId: message.eventId,
+              channel: message.channel,
+              from: message.from,
+              content: message.content,
+              timestamp: message.timestamp,
+              mentionsPlayer: message.mentionsPlayer,
+              contextValue: message.contextValue,
+              isPlayerMessage: message.isPlayerMessage,
+            })),
+            decision: {
+              decisionId: pending.decisionId,
+              eventId: pending.eventId,
+              channelId: pending.channel,
+              presentedAt: pending.presentedAt,
+              timeout: pending.timeout,
+              escalationStage: pending.escalationStage,
+              choices: pending.choices,
+            },
+            engineSnapshot: {
+              variables: gameState.variables,
+              resolvedDecisions: gameState.resolvedDecisions,
+              pendingDecisions: gameState.pendingDecisions,
+              clock: gameState.clock,
+            },
+            allowedBeatIds,
+            fallbackPlan: ['heuristic_matcher', 'authored_reactions', 'static_choice'],
+          });
+
+          if (response.nudgeMessage) {
+            nudgeActiveRef.current = true;
+            setNudgeMessage(response.nudgeMessage);
+            track('low_confidence_nudge', {
+              decisionId: pending.decisionId,
+              confidence: response.confidence,
+              playerText: text,
+            });
+            return;
+          }
+
+          const localMatch = matchChoice(text, pending.choices);
+          const matchedChoice =
+            pending.choices.find((choice) => choice.id === response.matchedChoiceId) ??
+            localMatch.choice;
+
+          resolveDecision(
+            pending.decisionId,
+            matchedChoice,
+            text,
+            response.analysis,
+            {
+              skipReactiveFollowUp: response.reactionMessages.length > 0,
+              reactionMessages: response.reactionMessages,
+              reactionChannelId: channelId,
+            }
+          );
+
+          track(
+            response.fallbackUsed ? 'narrative_turn_fallback' : 'narrative_turn_applied',
+            {
+              decisionId: pending.decisionId,
+              choiceId: matchedChoice.id,
+              provider: response.routingDecision?.providerId ?? null,
+              model: response.routingDecision?.modelId ?? null,
+              fallbackReason: response.fallbackReason,
+            }
+          );
+        } catch {
+          applyLocalFallback();
+        } finally {
+          pendingNarrativeTurnsRef.current.delete(pending.decisionId);
+        }
+      })();
     },
-    [gameState, resolveDecision]
+    [difficulty.id, gameState, resolveDecision, scenario.id]
   );
 
   const switchChannel = useCallback((channelId: string) => {
@@ -268,6 +434,15 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     return map;
   }, [stakeholders]);
 
+  const typingNames = useMemo(() => {
+    if (!gameState) return [];
+    return getTypingNamesForChannel(
+      typingState,
+      gameState.activeChannel,
+      stakeholders
+    );
+  }, [gameState, stakeholders, typingState]);
+
   const formatGameTime = useCallback((ms: number): string => {
     // The full real-time session maps to an 8-hour in-game workday (9 AM -> 5 PM).
     const gameMinutes = Math.floor((ms / scenario.durationTarget) * 480);
@@ -288,6 +463,58 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     const s = Math.floor(remaining % 60);
     return `${m}:${s.toString().padStart(2, '0')}`;
   }, [elapsed, scenario.durationTarget, difficulty]);
+
+  useEffect(() => {
+    if (phase !== 'review' || !ratingResult || stakeholders.length === 0) {
+      return;
+    }
+
+    if (reviewRequestedRef.current) {
+      return;
+    }
+
+    const sessionId = sessionIdRef.current;
+    if (!sessionId) {
+      return;
+    }
+
+    reviewRequestedRef.current = true;
+    const requestVersion = ++reviewRequestVersionRef.current;
+
+    void requestNarrativeReview({
+      sessionId,
+      scenarioId: scenario.id,
+      stakeholders,
+      ratingResult,
+    })
+      .then((response) => {
+        if (reviewRequestVersionRef.current !== requestVersion) {
+          return;
+        }
+
+        setRatingResult((current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            managerReview: response.managerReview,
+            peerFeedback: response.peerFeedback.length > 0
+              ? response.peerFeedback
+              : current.peerFeedback,
+            calibrationOutcome:
+              response.calibrationOutcome ?? current.calibrationOutcome,
+          };
+        });
+
+        track('narrative_review_applied', {
+          fallbackUsed: response.fallbackUsed,
+          provider: response.routingDecision?.providerId ?? null,
+          model: response.routingDecision?.modelId ?? null,
+        });
+      })
+      .catch(() => {
+        // Keep the deterministic review content when generation fails.
+      });
+  }, [phase, ratingResult, scenario.id, stakeholders]);
 
   return {
     phase,

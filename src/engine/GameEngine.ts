@@ -9,6 +9,7 @@ import {
   type ResolvedDecision,
   type PlayerReplyAnalysis,
   type ReactiveFollowUpTemplate,
+  type MessageContextValue,
   DIFFICULTIES,
 } from './types';
 import { StateManager } from './StateManager';
@@ -108,7 +109,8 @@ export class GameEngine {
     decisionId: string,
     choiceId: string,
     playerText?: string,
-    replyAnalysis?: PlayerReplyAnalysis
+    replyAnalysis?: PlayerReplyAnalysis,
+    options?: { skipReactiveFollowUp?: boolean }
   ): EngineAction[] {
     const pending = this.stateManager.getPendingDecision(decisionId);
     if (!pending) return [];
@@ -183,10 +185,12 @@ export class GameEngine {
       }
     }
 
-    const reactiveFollowUp = this.selectReactiveFollowUp(
-      choice.reactions,
-      replyAnalysis
-    );
+    const reactiveFollowUp = options?.skipReactiveFollowUp
+      ? null
+      : this.selectReactiveFollowUp(
+          choice.reactions,
+          replyAnalysis
+        );
     if (reactiveFollowUp) {
       this.scheduler.addEvent({
         id: `react-${decisionId}-${choiceId}-${elapsed}`,
@@ -214,6 +218,33 @@ export class GameEngine {
       isPlayerMessage: true,
     };
     this.stateManager.addMessage(message);
+  }
+
+  injectNarrativeMessages(
+    channel: string,
+    messages: Array<{
+      id: string;
+      from: string;
+      content: string;
+      contextValue?: MessageContextValue;
+      mentionsPlayer?: boolean;
+    }>
+  ): void {
+    const elapsed = this.stateManager.getState().clock;
+
+    for (const message of messages) {
+      this.stateManager.addMessage({
+        id: message.id,
+        eventId: 'narrative-runtime',
+        channel,
+        from: message.from,
+        content: message.content,
+        timestamp: elapsed,
+        mentionsPlayer: message.mentionsPlayer ?? false,
+        contextValue: message.contextValue ?? null,
+        isPlayerMessage: false,
+      });
+    }
   }
 
   switchChannel(channelId: string): void {
