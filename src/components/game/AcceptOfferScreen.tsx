@@ -33,7 +33,16 @@ const LEVEL_COPY: Record<DifficultyConfig['id'], { name: string; pay: string; de
 
 const FIRST_NAME = (full: string) => full.trim().split(/\s+/)[0] || 'there';
 
-function MailSidebar({ playerName }: { playerName: string }) {
+function derivePlayerEmail(playerName: string, companyDomain: string): string {
+  const parts = playerName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return `you@${companyDomain}.com`;
+  const first = parts[0];
+  const last = parts.slice(1).join('') || first;
+  const local = `${first[0] ?? ''}.${last}`.toLowerCase().replace(/[^a-z0-9.]/g, '');
+  return `${local}@${companyDomain}.com`;
+}
+
+function MailSidebar({ playerName, playerEmail }: { playerName: string; playerEmail: string }) {
   return (
     <aside className="flex h-full w-[232px] flex-shrink-0 flex-col overflow-hidden border-r border-paper-border-subtle bg-paper-sidebar">
       <div className="flex flex-shrink-0 items-center justify-between border-b border-paper-border-subtle px-4 py-3">
@@ -90,7 +99,7 @@ function MailSidebar({ playerName }: { playerName: string }) {
           <div className="truncate text-[12.5px] font-semibold text-paper-text-primary">
             {playerName || 'Your Full Name'}
           </div>
-          <div className="truncate text-[11px] text-paper-text-tertiary">you@work.com</div>
+          <div className="truncate text-[11px] text-paper-text-tertiary">{playerEmail}</div>
         </div>
       </div>
     </aside>
@@ -189,6 +198,10 @@ export function AcceptOfferScreen({
     [offerContext.senderName],
   );
   const companyInitial = companyName.charAt(0).toUpperCase() || 'C';
+  const playerEmail = useMemo(
+    () => derivePlayerEmail(playerName, offerContext.companyDomain),
+    [playerName, offerContext.companyDomain],
+  );
 
   const handleAccept = () => {
     if (!selectedDifficulty) return;
@@ -200,7 +213,7 @@ export function AcceptOfferScreen({
       className="flex h-full w-full overflow-hidden bg-paper-canvas text-paper-text-primary antialiased"
       style={{ fontFamily: 'var(--font-display)' }}
     >
-      <MailSidebar playerName={playerName} />
+      <MailSidebar playerName={playerName} playerEmail={playerEmail} />
 
       <main className="flex flex-1 flex-col overflow-hidden bg-paper-canvas">
         {/* Crumb header */}
@@ -236,7 +249,7 @@ export function AcceptOfferScreen({
                   </span>
                 </div>
                 <div className="mt-1 text-[12px] text-paper-text-tertiary">
-                  to <span className="text-paper-text-secondary">{playerName ? 'you' : 'you@work.com'}</span>
+                  to <span className="text-paper-text-secondary">{playerName ? 'you' : playerEmail}</span>
                 </div>
               </div>
               <div className="flex-shrink-0 text-right text-[12px] text-paper-text-tertiary">
@@ -255,7 +268,7 @@ export function AcceptOfferScreen({
               <div className="leading-tight">
                 <div className="text-[14px] font-bold tracking-tight text-paper-text-primary">{companyName}</div>
                 <div className="mt-0.5 text-[11.5px] text-paper-text-tertiary">
-                  142 Brannan St · San Francisco, CA
+                  {world.hqAddress}
                 </div>
               </div>
             </div>
@@ -275,8 +288,8 @@ export function AcceptOfferScreen({
               </p>
               <p className="mb-4">
                 You&apos;ll partner with me directly, with engineering led by {offerContext.staffEngName},
-                and with design led by {offerContext.designLeadName}. Your initial surface area is cart
-                recovery and retention. Growth has been moving quickly this quarter and you&apos;ll have
+                and with design led by {offerContext.designLeadName}. Your initial surface area is{' '}
+                {world.teamName}. The previous PM transitioned out mid-quarter, so you&apos;ll have
                 meaningful ownership from day one.
               </p>
               <p className="mb-4">A few things to know about how we operate:</p>

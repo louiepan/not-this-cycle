@@ -15,6 +15,10 @@ const MINIMAL_SCENARIO: Scenario = {
       'The previous PM rage-quit on a Tuesday.',
       'The previous PM was promoted out, allegedly.',
     ],
+    hqAddressPool: [
+      '1 Test Plaza · San Francisco, CA',
+      '2 Test Plaza · San Francisco, CA',
+    ],
   },
   stakeholders: [
     {

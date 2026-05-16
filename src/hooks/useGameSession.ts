@@ -41,6 +41,7 @@ export interface OfferContext {
   senderEmail: string;
   staffEngName: string;
   designLeadName: string;
+  companyDomain: string;
 }
 
 interface UseGameSessionReturn {
@@ -105,6 +106,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         senderEmail: `${localPart}@${domain}.com`,
         staffEngName: staffEng.name,
         designLeadName: designLead.name,
+        companyDomain: domain,
       },
     };
   }, [scenario, sessionSeed]);

@@ -315,6 +315,7 @@ export interface ScenarioWorldTemplate {
   companyNamePool: string[];
   teamNamePool: string[];
   predecessorContextPool: string[];
+  hqAddressPool: string[];
 }
 
 export interface ScenarioWorld {
@@ -322,6 +323,7 @@ export interface ScenarioWorld {
   companyName: string;
   teamName: string;
   predecessorContext: string;
+  hqAddress: string;
 }
 
 export interface Scenario {

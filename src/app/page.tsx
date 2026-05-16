@@ -132,6 +132,7 @@ export default function Home() {
           result={resolvedResult}
           stakeholders={session.stakeholders}
           playerName={playerName}
+          world={session.world}
           onPlayAgain={() => {
             setSelectedProfileId(null);
             setPendingBrief(null);

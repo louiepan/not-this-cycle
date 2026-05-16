@@ -1979,6 +1979,13 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
     predecessorContextPool: [
       'The previous PM left abruptly mid-quarter. No transition doc, just a calendar full of inherited 1:1s.',
     ],
+    hqAddressPool: [
+      '450 Brannan St · San Francisco, CA',
+      '210 King St · San Francisco, CA',
+      '500 3rd St · San Francisco, CA',
+      '85 Bluxome St · San Francisco, CA',
+      '888 Bryant St · San Francisco, CA',
+    ],
   },
   stakeholders: [THE_VP, THE_STAFF_ENG, THE_DESIGN_LEAD, THE_DATA_ANALYST, THE_MANAGER, THE_TPM, THE_ADJACENT_PM],
   channels: CHANNELS,

@@ -1,12 +1,13 @@
 'use client';
 
 import { RatingEngine } from '@/engine/RatingEngine';
-import type { CalibrationBucket, RatingResult, Stakeholder } from '@/engine/types';
+import type { CalibrationBucket, RatingResult, ScenarioWorld, Stakeholder } from '@/engine/types';
 
 interface ReviewScreenProps {
   result: RatingResult;
   stakeholders: Stakeholder[];
   playerName: string;
+  world: ScenarioWorld;
   onPlayAgain: () => void;
 }
 
@@ -149,7 +150,8 @@ function initials(name: string): string {
     .slice(0, 2);
 }
 
-export function ReviewScreen({ result, stakeholders, playerName, onPlayAgain }: ReviewScreenProps) {
+export function ReviewScreen({ result, stakeholders, playerName, world, onPlayAgain }: ReviewScreenProps) {
+  const companyInitial = world.companyName.charAt(0).toUpperCase() || 'C';
   const archetypeInfo = RatingEngine.ARCHETYPE_LABELS[result.archetype];
   const composite = computeComposite(result.variables);
   const promotion = parsePromotion(result.calibrationOutcome);
@@ -187,10 +189,10 @@ export function ReviewScreen({ result, stakeholders, playerName, onPlayAgain }: 
             className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[13px] font-extrabold tracking-tight text-[#1a0e07]"
             style={{ background: 'linear-gradient(135deg, #e8915a, #c26b3d)' }}
           >
-            H
+            {companyInitial}
           </div>
           <div className="leading-tight">
-            <div className="text-[13.5px] font-bold tracking-tight">Helix</div>
+            <div className="text-[13.5px] font-bold tracking-tight">{world.companyName}</div>
             <div className="mt-px text-[11px] text-paper-text-tertiary">Calibration</div>
           </div>
         </div>
