@@ -130,7 +130,6 @@ export function ChannelView({
 
         <MessageGroup
           messages={messages}
-          stakeholders={stakeholders}
           stakeholderNames={stakeholderNames}
           playerName={playerName}
           channels={channels}

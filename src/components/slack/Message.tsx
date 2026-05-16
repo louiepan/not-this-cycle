@@ -7,7 +7,6 @@ import type { ChannelDef } from '@/engine/types';
 interface MessageProps {
   senderId: string | 'player';
   senderName: string;
-  senderRole?: string;
   content: string;
   timestamp: string;
   playerName: string;
@@ -139,7 +138,6 @@ function renderContent(
 export function Message({
   senderId,
   senderName,
-  senderRole,
   content,
   timestamp,
   playerName,
@@ -193,9 +191,6 @@ export function Message({
             >
               {displayName}
             </button>
-            {senderRole && !isPlayer && (
-              <span className="text-[11px] font-normal text-slack-text-secondary">{senderRole}</span>
-            )}
             <span className="text-[11px] text-slack-text-secondary">{timestampLabel}</span>
           </div>
         )}
