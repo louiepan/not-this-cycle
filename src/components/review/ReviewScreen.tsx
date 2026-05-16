@@ -54,7 +54,8 @@ function pinPosition(bucket: CalibrationBucket): number {
 
 function computeComposite(vars: RatingResult['variables']): number {
   // Positive metrics weighted directly, debt metrics inverted.
-  const positives = (vars.execTrust + vars.communicationEffectiveness + vars.teamMorale + vars.productJudgment) / 4;
+  // Team morale is intentionally excluded from the scored composite; it surfaces via peer feedback severity.
+  const positives = (vars.execTrust + vars.communicationEffectiveness + vars.productJudgment) / 3;
   const debtsCorrected = (100 - vars.techDebt + 100 - vars.responsivenessDebt) / 2;
   return Math.round(positives * 0.7 + debtsCorrected * 0.3);
 }
@@ -172,7 +173,6 @@ export function ReviewScreen({
     { label: 'Product judgment', value: result.variables.productJudgment, inverted: false },
     { label: 'Communication effectiveness', value: result.variables.communicationEffectiveness, inverted: false },
     { label: 'Executive trust', value: result.variables.execTrust, inverted: false },
-    { label: 'Team morale', value: result.variables.teamMorale, inverted: false },
     { label: 'Tech debt accrued', value: result.variables.techDebt, inverted: true },
     { label: 'Responsiveness debt', value: result.variables.responsivenessDebt, inverted: true },
   ];
