@@ -27,6 +27,7 @@ export default function Home() {
         <MorningBrief
           difficulty={pendingBrief}
           playerName={playerName}
+          world={session.world}
           onBack={() => setPendingBrief(null)}
           onContinue={() => {
             session.startGame(pendingBrief);
@@ -39,6 +40,7 @@ export default function Home() {
     return (
       <AcceptOfferScreen
         initialPlayerName={playerName === 'You' ? '' : playerName}
+        world={session.world}
         onAccept={(diff: DifficultyConfig, submittedName: string) => {
           setPlayerName(submittedName);
           if (diff.id === 'junior') {
@@ -90,6 +92,7 @@ export default function Home() {
       stakeholders={session.stakeholders}
       stakeholderNames={session.stakeholderNames}
       playerName={playerName}
+      world={session.world}
       unreadCounts={session.gameState.unreadCounts}
       mentionCounts={session.gameState.mentionCounts}
       pendingDecisionCounts={pendingDecisionCounts}

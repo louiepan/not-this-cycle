@@ -13,6 +13,12 @@ const TEST_SCENARIO: Scenario = {
   title: 'Test Scenario',
   premise: 'Testing',
   durationTarget: 60000,
+  worldTemplate: {
+    templateId: 'test-world',
+    companyNamePool: ['TestCo'],
+    teamNamePool: ['Test Team'],
+    predecessorContextPool: ['The previous PM left abruptly.'],
+  },
   stakeholders: [
     {
       id: 'the-vp',

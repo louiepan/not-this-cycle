@@ -1,5 +1,7 @@
 import {
   type Scenario,
+  type ScenarioWorld,
+  type ScenarioWorldTemplate,
   type Stakeholder,
   type StakeholderTemplate,
   type ChannelDef,
@@ -11,6 +13,7 @@ import { SeededRandom } from './SeededRandom';
 
 export interface ContentProvider {
   getScenario(): Scenario;
+  getWorld(): ScenarioWorld;
   getStakeholders(): Stakeholder[];
   getChannels(): ChannelDef[];
   getEvents(): GameEvent[];
@@ -25,6 +28,7 @@ export interface ContentProvider {
  */
 export class StaticContentProvider implements ContentProvider {
   private scenario: Scenario;
+  private world: ScenarioWorld;
   private stakeholders: Stakeholder[];
   private templateMap: Map<string, Stakeholder>;
   private rng: SeededRandom;
@@ -34,6 +38,7 @@ export class StaticContentProvider implements ContentProvider {
     this.scenario = scenario;
     this.seed = seed;
     this.rng = new SeededRandom(seed);
+    this.world = this.resolveWorld(scenario.worldTemplate);
     this.stakeholders = this.resolveStakeholders(scenario.stakeholders);
     this.templateMap = new Map(
       this.stakeholders.map((s) => [s.id, s])
@@ -42,6 +47,10 @@ export class StaticContentProvider implements ContentProvider {
 
   getScenario(): Scenario {
     return this.scenario;
+  }
+
+  getWorld(): ScenarioWorld {
+    return this.world;
   }
 
   getStakeholders(): Stakeholder[] {
@@ -96,8 +105,17 @@ export class StaticContentProvider implements ContentProvider {
   }
 
   resolveTemplate(template: string, stakeholders: Stakeholder[]): string {
-    return template.replace(/\{\{(\w[\w-]*)\.(firstName|lastName|name|role)\}\}/g,
+    return template.replace(/\{\{(\w[\w-]*)\.(\w+)\}\}/g,
       (match, id, field) => {
+        if (id === 'world') {
+          switch (field) {
+            case 'companyName': return this.world.companyName;
+            case 'teamName': return this.world.teamName;
+            case 'predecessorContext': return this.world.predecessorContext;
+            default: return match;
+          }
+        }
+
         const stakeholder = this.templateMap.get(id) ||
           stakeholders.find((s) => s.id === id);
         if (!stakeholder) return match;
@@ -111,6 +129,15 @@ export class StaticContentProvider implements ContentProvider {
         }
       }
     );
+  }
+
+  private resolveWorld(template: ScenarioWorldTemplate): ScenarioWorld {
+    return {
+      templateId: template.templateId,
+      companyName: this.rng.pick(template.companyNamePool),
+      teamName: this.rng.pick(template.teamNamePool),
+      predecessorContext: this.rng.pick(template.predecessorContextPool),
+    };
   }
 
   private resolveStakeholders(templates: StakeholderTemplate[]): Stakeholder[] {

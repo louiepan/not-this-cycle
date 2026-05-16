@@ -310,11 +310,26 @@ export interface ChannelDef {
   isNoise?: boolean;
 }
 
+export interface ScenarioWorldTemplate {
+  templateId: string;
+  companyNamePool: string[];
+  teamNamePool: string[];
+  predecessorContextPool: string[];
+}
+
+export interface ScenarioWorld {
+  templateId: string;
+  companyName: string;
+  teamName: string;
+  predecessorContext: string;
+}
+
 export interface Scenario {
   id: string;
   title: string;
   premise: string;
   durationTarget: number;
+  worldTemplate: ScenarioWorldTemplate;
   stakeholders: StakeholderTemplate[];
   stakeholderPool?: {
     pool: StakeholderTemplate[];

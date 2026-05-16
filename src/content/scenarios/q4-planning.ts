@@ -1945,6 +1945,14 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
   title: 'Not This Cycle',
   premise: 'It\'s Q4 planning week. The CEO wants a demo in 6 weeks. Your VP wants a plan by EOD. Your engineer wants a refactor. Your designer wants more time. And someone just DM\'d your manager about you.',
   durationTarget: 180000,
+  worldTemplate: {
+    templateId: 'q4-techco',
+    companyNamePool: ['TechCorp'],
+    teamNamePool: ['Core Platform'],
+    predecessorContextPool: [
+      'The previous PM left abruptly mid-quarter. No transition doc, just a calendar full of inherited 1:1s.',
+    ],
+  },
   stakeholders: [THE_VP, THE_STAFF_ENG, THE_DESIGN_LEAD, THE_DATA_ANALYST, THE_MANAGER, THE_TPM, THE_ADJACENT_PM],
   channels: CHANNELS,
   events: EVENTS,

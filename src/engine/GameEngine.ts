@@ -2,6 +2,7 @@ import {
   type GameState,
   type EngineAction,
   type Scenario,
+  type ScenarioWorld,
   type ChannelDef,
   type DifficultyConfig,
   type Stakeholder,
@@ -261,6 +262,10 @@ export class GameEngine {
 
   getScenario(): Scenario {
     return this.scenario;
+  }
+
+  getWorld(): ScenarioWorld {
+    return this.contentProvider.getWorld();
   }
 
   getChannels(): ChannelDef[] {

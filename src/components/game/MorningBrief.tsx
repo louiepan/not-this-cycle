@@ -1,10 +1,11 @@
 'use client';
 
-import type { DifficultyConfig } from '@/engine/types';
+import type { DifficultyConfig, ScenarioWorld } from '@/engine/types';
 
 interface MorningBriefProps {
   difficulty: DifficultyConfig;
   playerName: string;
+  world: ScenarioWorld;
   onContinue: () => void;
   onBack: () => void;
 }
@@ -12,6 +13,7 @@ interface MorningBriefProps {
 export function MorningBrief({
   difficulty,
   playerName,
+  world,
   onContinue,
   onBack,
 }: MorningBriefProps) {
@@ -20,7 +22,7 @@ export function MorningBrief({
       <div className="app-stage-center">
         <section className="screen-shell max-w-4xl">
           <div className="screen-header">
-            <div className="eyebrow">TechCorp PM Onboarding</div>
+            <div className="eyebrow">{world.companyName} PM Onboarding</div>
             <div className="mt-4 flex items-center gap-3">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slack-link text-xs font-bold text-[#0d0f11]">
                 4

@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { DifficultySelect } from './DifficultySelect';
-import type { DifficultyConfig } from '@/engine/types';
+import type { DifficultyConfig, ScenarioWorld } from '@/engine/types';
 
 interface AcceptOfferScreenProps {
   onAccept: (difficulty: DifficultyConfig, playerName: string) => void;
   initialPlayerName?: string;
+  world: ScenarioWorld;
 }
 
 type OnboardingStep = 1 | 2 | 3;
@@ -16,12 +17,14 @@ function StepShell({
   title,
   subtitle,
   contentWidth = 'wide',
+  companyName,
   children,
 }: {
   step: OnboardingStep;
   title: string;
   subtitle: string;
   contentWidth?: 'narrow' | 'wide';
+  companyName: string;
   children: React.ReactNode;
 }) {
   const isNarrow = contentWidth === 'narrow';
@@ -30,7 +33,7 @@ function StepShell({
     <section className="screen-shell max-w-3xl">
       <div className="screen-header">
         <div className={isNarrow ? 'mx-auto max-w-xl' : undefined}>
-          <div className={isNarrow ? 'eyebrow text-center' : 'eyebrow'}>TechCorp PM Onboarding</div>
+          <div className={isNarrow ? 'eyebrow text-center' : 'eyebrow'}>{companyName} PM Onboarding</div>
           <div className={`mt-4 flex items-center gap-3 ${isNarrow ? 'justify-center' : ''}`}>
             {[1, 2, 3].map((item) => {
               const isActive = step === item;
@@ -68,7 +71,7 @@ function StepShell({
   );
 }
 
-export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOfferScreenProps) {
+export function AcceptOfferScreen({ onAccept, initialPlayerName = '', world }: AcceptOfferScreenProps) {
   const [step, setStep] = useState<OnboardingStep>(1);
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyConfig | null>(null);
   const [playerName, setPlayerName] = useState(initialPlayerName);
@@ -86,6 +89,7 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
             title="What’s your name?"
             subtitle="This becomes your Slack display name and follows you all the way into your performance review."
             contentWidth="narrow"
+            companyName={world.companyName}
           >
             <div className="panel stack-lg px-6 py-6 md:px-7 md:py-7">
               <label className="field-row">
@@ -123,6 +127,7 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
             title="What level PM are you?"
             subtitle="This sets the amount of ambient chaos, timer pressure, and executive improvisation waiting for you on day one."
             contentWidth="narrow"
+            companyName={world.companyName}
           >
             <div className="panel stack-lg px-6 py-6 md:px-7 md:py-7">
               <DifficultySelect
@@ -154,6 +159,7 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
             step={3}
             title="Do you accept the offer?"
             subtitle={`Final check before we drop ${trimmedPlayerName} into Q4 planning as a ${selectedDifficulty.label}.`}
+            companyName={world.companyName}
           >
             <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="panel stack-md">
@@ -169,7 +175,7 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
                   </div>
                   <div className="panel panel-muted text-center">
                     <div className="section-label">Team</div>
-                    <div className="mt-1 text-lg font-semibold text-slack-white">Core Platform</div>
+                    <div className="mt-1 text-lg font-semibold text-slack-white">{world.teamName}</div>
                   </div>
                 </div>
               </div>
@@ -184,7 +190,7 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
                       Offer Letter
                     </div>
                     <div className="mt-1 text-lg font-semibold text-slack-white">
-                      Your Offer — {selectedDifficulty.label}, Core Platform
+                      Your Offer — {selectedDifficulty.label}, {world.teamName}
                     </div>
                   </div>
                 </div>
@@ -193,8 +199,8 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
                   <p>Hi {trimmedPlayerName},</p>
                   <p>
                     We&apos;re thrilled to extend an offer for the role of{' '}
-                    <span className="font-semibold text-slack-white">{selectedDifficulty.label}</span> on the
-                    Core Platform team at TechCorp.
+                    <span className="font-semibold text-slack-white">{selectedDifficulty.label}</span> on the{' '}
+                    {world.teamName} team at {world.companyName}.
                   </p>
                   <p>
                     You&apos;ll be joining during an exciting time. Q4 planning is underway, dependencies have

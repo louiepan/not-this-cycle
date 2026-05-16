@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChannelDef, DeliveredMessage, PendingDecision, Stakeholder } from '@/engine/types';
+import type { ChannelDef, DeliveredMessage, PendingDecision, ScenarioWorld, Stakeholder } from '@/engine/types';
 import { Sidebar } from './Sidebar';
 import { ChannelView } from './ChannelView';
 import { ProfilePanel } from './ProfilePanel';
@@ -12,6 +12,7 @@ interface WorkspaceProps {
   stakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
   playerName: string;
+  world: ScenarioWorld;
   unreadCounts: Record<string, number>;
   mentionCounts: Record<string, number>;
   pendingDecisionCounts: Record<string, number>;
@@ -35,6 +36,7 @@ export function Workspace({
   stakeholders,
   stakeholderNames,
   playerName,
+  world,
   unreadCounts,
   mentionCounts,
   pendingDecisionCounts,
@@ -75,7 +77,7 @@ export function Workspace({
               <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
             </div>
             <div className="rounded-md border border-white/6 bg-white/4 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slack-text-secondary">
-              TechCorp Slack
+              {world.companyName} Slack
             </div>
             <div className="text-xs font-mono tabular-nums text-slack-text-secondary">{gameClock}</div>
           </div>
@@ -89,7 +91,7 @@ export function Workspace({
               mentionCounts={mentionCounts}
               pendingDecisionCounts={pendingDecisionCounts}
               onChannelSelect={onChannelSelect}
-              workspaceName="TechCorp HQ"
+              workspaceName={`${world.companyName} HQ`}
               gameClock={gameClock}
             />
             <ChannelView

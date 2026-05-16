@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { GameEngine } from '@/engine/GameEngine';
 import { RatingEngine } from '@/engine/RatingEngine';
+import { StaticContentProvider } from '@/engine/ContentProvider';
 import {
   analyzePlayerReply,
   matchChoice,
@@ -10,6 +11,7 @@ import {
 } from '@/engine/ChoiceMatcher';
 import type {
   Scenario,
+  ScenarioWorld,
   ChannelDef,
   DifficultyConfig,
   GameState,
@@ -40,6 +42,7 @@ interface UseGameSessionReturn {
   stakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
   channels: ChannelDef[];
+  world: ScenarioWorld;
   elapsed: number;
   difficulty: DifficultyConfig;
   typingNames: string[];
@@ -62,7 +65,13 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const [typingState, setTypingState] = useState<TypingState>({});
   const [difficulty, setDifficulty] = useState<DifficultyConfig>(DIFFICULTIES.senior);
   const [channels, setChannels] = useState<ChannelDef[]>([]);
+  const [sessionSeed, setSessionSeed] = useState<number>(() => Date.now());
   const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
+
+  const world = useMemo<ScenarioWorld>(
+    () => new StaticContentProvider(scenario, sessionSeed).getWorld(),
+    [scenario, sessionSeed]
+  );
 
   const engineRef = useRef<GameEngine | null>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -175,7 +184,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
 
   const startGame = useCallback(
     (diff: DifficultyConfig) => {
-      const seed = Date.now();
+      const seed = sessionSeed;
       const sessionId = `${seed}-${Math.random().toString(36).slice(2, 8)}`;
       initTracker(sessionId);
       sessionIdRef.current = sessionId;
@@ -202,7 +211,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       track('session_start', { difficulty: diff.id, seed });
       track('difficulty_selected', { difficulty: diff.id });
     },
-    [clearTypingTimeouts, scenario, startClock]
+    [clearTypingTimeouts, scenario, sessionSeed, startClock]
   );
 
   const resetGame = useCallback(async () => {
@@ -217,6 +226,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     setStakeholders([]);
     setTypingState({});
     setNudgeMessage(null);
+    setSessionSeed(Date.now());
     pendingNarrativeTurnsRef.current.clear();
     reviewRequestedRef.current = false;
     reviewRequestVersionRef.current = 0;
@@ -523,6 +533,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     stakeholders,
     stakeholderNames,
     channels,
+    world,
     elapsed,
     difficulty,
     typingNames,
