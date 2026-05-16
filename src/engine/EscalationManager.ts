@@ -30,6 +30,10 @@ export class EscalationManager {
   private difficulty: DifficultyConfig;
   private scheduler: EventScheduler;
   private stakeholdersBySeniority: Map<string, Seniority> = new Map();
+  // Elapsed time at which each stage of a given decision fired. Length is the
+  // number of stages already processed. Used to avoid re-escalating every tick
+  // and to compute per-stage deadlines.
+  private stageFireTimes: Map<string, number[]> = new Map();
 
   constructor(
     difficulty: DifficultyConfig,
@@ -51,27 +55,51 @@ export class EscalationManager {
     const actions: EngineAction[] = [];
 
     for (const pending of state.pendingDecisions) {
-      const deadline = pending.presentedAt + pending.timeout;
-      if (elapsed < deadline) continue;
-
       const event = this.scheduler.getEvent(pending.eventId);
-      if (!event?.decision?.escalation) {
-        // No escalation config — auto-resolve immediately
+      const escalation = event?.decision?.escalation;
+
+      if (!escalation) {
+        // No escalation config — auto-resolve at the decision's deadline.
+        const deadline = pending.presentedAt + pending.timeout;
+        if (elapsed < deadline) continue;
         actions.push(...this.autoResolve(pending, event?.decision));
         continue;
       }
 
-      const { stages, autoResolve } = event.decision.escalation;
-      const currentStage = pending.escalationStage;
+      const fireTimes = this.stageFireTimes.get(pending.decisionId) ?? [];
+      const nextStageIndex = fireTimes.length;
+      const { stages, autoResolve } = escalation;
 
-      if (currentStage < stages.length) {
-        actions.push(...this.escalateToStage(pending, stages[currentStage], currentStage));
-      } else if (autoResolve) {
-        actions.push(...this.autoResolve(pending, event.decision));
-      } else {
-        // No more stages, no auto-resolve — just close it
-        actions.push({ type: 'close_decision', decisionId: pending.decisionId });
+      if (nextStageIndex < stages.length) {
+        const stage = stages[nextStageIndex];
+        const stageDeadline =
+          nextStageIndex === 0
+            ? pending.presentedAt + pending.timeout
+            : fireTimes[nextStageIndex - 1] +
+              stage.delay * this.difficulty.escalationTimeoutScale;
+
+        if (elapsed < stageDeadline) continue;
+
+        actions.push(...this.escalateToStage(pending, stage, nextStageIndex));
+        fireTimes.push(elapsed);
+        this.stageFireTimes.set(pending.decisionId, fireTimes);
+        continue;
       }
+
+      if (autoResolve) {
+        const lastFireTime =
+          fireTimes[fireTimes.length - 1] ?? pending.presentedAt + pending.timeout;
+        const autoResolveDeadline =
+          lastFireTime + autoResolve.delay * this.difficulty.escalationTimeoutScale;
+        if (elapsed < autoResolveDeadline) continue;
+        actions.push(...this.autoResolve(pending, event.decision));
+        this.stageFireTimes.delete(pending.decisionId);
+        continue;
+      }
+
+      // No more stages, no auto-resolve — close it.
+      actions.push({ type: 'close_decision', decisionId: pending.decisionId });
+      this.stageFireTimes.delete(pending.decisionId);
     }
 
     return actions;
@@ -104,7 +132,20 @@ export class EscalationManager {
       tag: `ignored-${seniority}`,
     });
 
-    // Fire the escalation event
+    // Schedule the stage's follow-up event to fire. The event was authored as
+    // reactive-only (no triggerAt/triggerAfter), so we inject a triggerAfter
+    // pointing at the source event — the scheduler will materialize it on the
+    // next tick.
+    const stageEvent = this.scheduler.getEvent(stage.eventId);
+    if (stageEvent) {
+      this.scheduler.addEvent({
+        ...stageEvent,
+        triggerAt: undefined,
+        triggerAfter: { eventId: pending.eventId, delay: 0 },
+      });
+    }
+
+    // Telemetry/UI signal that an escalation occurred
     actions.push({
       type: 'escalate',
       decisionId: pending.decisionId,
@@ -149,13 +190,25 @@ export class EscalationManager {
           tag: effect.tag,
         });
       }
+    } else {
+      // No authored auto-resolve effects — apply a baseline responsiveness debt
+      // so ignoring a decision always has weight, and the resolved-decision log
+      // captures the ignore.
+      const seniority = this.getDecisionSeniority(pending);
+      const debtCost = RESPONSIVENESS_COST[seniority] || 5;
       actions.push({
-        type: 'auto_resolve',
-        decisionId: pending.decisionId,
-        description: autoResolve.description,
+        type: 'update_state',
+        variable: 'responsivenessDebt',
+        delta: debtCost,
+        tag: `ignored-${seniority}`,
       });
     }
 
+    actions.push({
+      type: 'auto_resolve',
+      decisionId: pending.decisionId,
+      description: autoResolve?.description ?? 'Decision expired without a response.',
+    });
     actions.push({ type: 'close_decision', decisionId: pending.decisionId });
     return actions;
   }

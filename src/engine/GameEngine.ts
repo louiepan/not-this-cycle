@@ -224,6 +224,15 @@ export class GameEngine {
       isPlayerMessage: true,
     };
     this.stateManager.addMessage(message);
+
+    // Engagement signal: typing in a channel (even off-prompt) shows the player
+    // is present, so we shave a little responsivenessDebt. Clamping in
+    // applyEffect prevents this from going negative.
+    this.stateManager.applyEffect({
+      variable: 'responsivenessDebt',
+      delta: -3,
+      tag: 'engaged-freeform',
+    });
   }
 
   injectNarrativeMessages(
