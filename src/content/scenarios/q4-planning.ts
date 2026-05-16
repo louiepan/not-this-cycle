@@ -1974,7 +1974,7 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
   durationTarget: 180000,
   worldTemplate: {
     templateId: 'q4-techco',
-    companyNamePool: ['TechCorp'],
+    companyNamePool: ['Forma', 'Plinth', 'Cadence', 'Vellum', 'Helix'],
     teamNamePool: ['Core Platform'],
     predecessorContextPool: [
       'The previous PM left abruptly mid-quarter. No transition doc, just a calendar full of inherited 1:1s.',

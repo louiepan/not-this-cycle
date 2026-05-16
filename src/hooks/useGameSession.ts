@@ -35,6 +35,14 @@ import {
 
 export type SessionPhase = 'menu' | 'playing' | 'review';
 
+export interface OfferContext {
+  senderName: string;
+  senderRole: string;
+  senderEmail: string;
+  staffEngName: string;
+  designLeadName: string;
+}
+
 interface UseGameSessionReturn {
   phase: SessionPhase;
   gameState: GameState | null;
@@ -43,6 +51,7 @@ interface UseGameSessionReturn {
   stakeholderNames: Record<string, string>;
   channels: ChannelDef[];
   world: ScenarioWorld;
+  offerContext: OfferContext;
   elapsed: number;
   difficulty: DifficultyConfig;
   typingNames: string[];
@@ -68,10 +77,37 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const [sessionSeed, setSessionSeed] = useState<number>(() => Date.now());
   const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
 
-  const world = useMemo<ScenarioWorld>(
-    () => new StaticContentProvider(scenario, sessionSeed).getWorld(),
-    [scenario, sessionSeed]
-  );
+  const { world, offerContext } = useMemo<{
+    world: ScenarioWorld;
+    offerContext: OfferContext;
+  }>(() => {
+    const provider = new StaticContentProvider(scenario, sessionSeed);
+    const resolvedWorld = provider.getWorld();
+    const stakeholders = provider.getStakeholders();
+    const pick = (id: string) =>
+      stakeholders.find((s) => s.id === id) ?? stakeholders[0];
+
+    const manager = pick('the-manager');
+    const staffEng = pick('the-staff-eng');
+    const designLead = pick('the-design-lead');
+
+    const [firstName = '', ...rest] = manager.name.split(/\s+/);
+    const lastName = rest.join('');
+    const domain =
+      resolvedWorld.companyName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'work';
+    const localPart = `${firstName[0] ?? ''}.${lastName}`.toLowerCase() || 'manager';
+
+    return {
+      world: resolvedWorld,
+      offerContext: {
+        senderName: manager.name,
+        senderRole: 'Director of Product',
+        senderEmail: `${localPart}@${domain}.com`,
+        staffEngName: staffEng.name,
+        designLeadName: designLead.name,
+      },
+    };
+  }, [scenario, sessionSeed]);
 
   const engineRef = useRef<GameEngine | null>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -534,6 +570,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     stakeholderNames,
     channels,
     world,
+    offerContext,
     elapsed,
     difficulty,
     typingNames,

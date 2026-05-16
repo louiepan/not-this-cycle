@@ -111,6 +111,7 @@ export default function Home() {
         <AcceptOfferScreen
           initialPlayerName={playerName === 'You' ? '' : playerName}
           world={session.world}
+          offerContext={session.offerContext}
           onAccept={(diff: DifficultyConfig, submittedName: string) => {
             setPlayerName(submittedName);
             if (diff.id === 'junior') {

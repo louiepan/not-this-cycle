@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { DIFFICULTIES, type DifficultyConfig, type ScenarioWorld } from '@/engine/types';
+import type { OfferContext } from '@/hooks/useGameSession';
 
 interface AcceptOfferScreenProps {
   onAccept: (difficulty: DifficultyConfig, playerName: string) => void;
   initialPlayerName?: string;
   world: ScenarioWorld;
+  offerContext: OfferContext;
 }
 
 // Satirical, aspirational copy. Lowering the descriptions into the rules of
@@ -15,20 +17,17 @@ const LEVEL_COPY: Record<DifficultyConfig['id'], { name: string; pay: string; de
   junior: {
     name: 'Junior PM',
     pay: 'L3 · base $135K',
-    description:
-      'Smaller surface area. Patient stakeholders. Most pings can wait. Reviews skew kind.',
+    description: '"I can do this."',
   },
   senior: {
     name: 'Senior PM',
     pay: 'L5 · base $215K',
-    description:
-      'Cross-functional ownership. Decision velocity expected. Stakeholders escalate quickly. Reviews skew honest.',
+    description: '"I should be able to do this."',
   },
   principal: {
     name: 'Principal PM',
     pay: 'L7 · base $310K',
-    description:
-      "Org-wide influence. Director sync on the calendar. Directors will contradict each other and you'll be expected to resolve it.",
+    description: '"Why did I do this."',
   },
 };
 
@@ -168,13 +167,28 @@ const FolderIcon: IconComponent = ({ className }) => (
   </svg>
 );
 
-export function AcceptOfferScreen({ onAccept, initialPlayerName = '', world }: AcceptOfferScreenProps) {
+export function AcceptOfferScreen({
+  onAccept,
+  initialPlayerName = '',
+  world,
+  offerContext,
+}: AcceptOfferScreenProps) {
   const companyName = world.companyName;
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyConfig | null>(
     DIFFICULTIES.senior ?? null,
   );
   const playerName = initialPlayerName.trim();
   const greetingName = useMemo(() => FIRST_NAME(playerName), [playerName]);
+  const senderInitials = useMemo(
+    () =>
+      offerContext.senderName
+        .split(/\s+/)
+        .map((p) => p[0]?.toUpperCase() ?? '')
+        .join('')
+        .slice(0, 2) || 'PM',
+    [offerContext.senderName],
+  );
+  const companyInitial = companyName.charAt(0).toUpperCase() || 'C';
 
   const handleAccept = () => {
     if (!selectedDifficulty) return;
@@ -212,13 +226,13 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '', world }: A
                 className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md text-sm font-semibold text-white"
                 style={{ background: 'linear-gradient(135deg, #4AA572, #2C7548)' }}
               >
-                SP
+                {senderInitials}
               </div>
               <div className="min-w-0 flex-1 leading-tight">
                 <div className="text-[13.5px] font-semibold text-paper-text-primary">
-                  Samira Patel
+                  {offerContext.senderName}
                   <span className="ml-1 text-[12.5px] font-normal text-paper-text-tertiary">
-                    &lt;s.patel@helix.com&gt;
+                    &lt;{offerContext.senderEmail}&gt;
                   </span>
                 </div>
                 <div className="mt-1 text-[12px] text-paper-text-tertiary">
@@ -236,7 +250,7 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '', world }: A
                 className="flex h-8 w-8 items-center justify-center rounded-md text-sm font-extrabold tracking-tight text-[#1a0e07]"
                 style={{ background: 'linear-gradient(135deg, #e8915a, #c26b3d)' }}
               >
-                H
+                {companyInitial}
               </div>
               <div className="leading-tight">
                 <div className="text-[14px] font-bold tracking-tight text-paper-text-primary">{companyName}</div>
@@ -260,10 +274,10 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '', world }: A
                 The team is holding for your decision.
               </p>
               <p className="mb-4">
-                You&apos;ll partner with me directly, with engineering led by Derek Walsh, and with
-                design led by Tomás Reyes. Your initial surface area is cart recovery and retention.
-                Growth has been moving quickly this quarter and you&apos;ll have meaningful ownership
-                from day one.
+                You&apos;ll partner with me directly, with engineering led by {offerContext.staffEngName},
+                and with design led by {offerContext.designLeadName}. Your initial surface area is cart
+                recovery and retention. Growth has been moving quickly this quarter and you&apos;ll have
+                meaningful ownership from day one.
               </p>
               <p className="mb-4">A few things to know about how we operate:</p>
               <ul className="mb-5 list-none space-y-2 pl-0">
@@ -284,9 +298,9 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '', world }: A
               </p>
               <p>Excited to have you on the team,</p>
               <div className="mt-8 leading-tight">
-                <div className="text-[14.5px] font-semibold text-paper-text-primary">Samira Patel</div>
+                <div className="text-[14.5px] font-semibold text-paper-text-primary">{offerContext.senderName}</div>
                 <div className="mt-1 text-[12.5px] text-paper-text-tertiary">
-                  Director of Product · {companyName}
+                  {offerContext.senderRole} · {companyName}
                 </div>
               </div>
             </article>
@@ -334,7 +348,7 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '', world }: A
                             {copy.pay}
                           </span>
                         </div>
-                        <div className="mt-1 text-[12.5px] leading-[1.55] text-paper-text-secondary">
+                        <div className="mt-1 text-[12px] italic leading-[1.55] text-paper-text-tertiary">
                           {copy.description}
                         </div>
                       </div>
