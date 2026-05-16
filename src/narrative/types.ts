@@ -4,8 +4,8 @@ import type {
   GameState,
   MessageContextValue,
   PlayerReplyAnalysis,
-  PlayerReplySignal,
   RatingResult,
+  ScenarioWorld,
   Stakeholder,
   Tone,
 } from '@/engine/types';
@@ -211,6 +211,7 @@ export interface NarrativeTurnRequest {
   difficulty: Difficulty;
   playerText: string;
   allowLowConfidenceMatch?: boolean;
+  world?: ScenarioWorld;
   stakeholders: Stakeholder[];
   messages: NarrativeMessageContext[];
   decision: NarrativeDecisionContext;
@@ -236,6 +237,7 @@ export interface NarrativeTurnResponse {
 export interface NarrativeReviewRequest {
   sessionId: string;
   scenarioId: string;
+  world?: ScenarioWorld;
   stakeholders: Stakeholder[];
   ratingResult: RatingResult;
   narrativeMemory?: NarrativeMemory;
@@ -254,7 +256,7 @@ export interface NarrativeAnalyzeOutput {
   matchedChoiceId: string;
   confidence: number;
   tone: Tone | null;
-  signals: PlayerReplySignal[];
+  signals: string[];
   addressedStakeholderIds: string[];
   memoryPatch: NarrativeMemoryPatch;
   contradictionFlags: string[];

@@ -1,15 +1,17 @@
 'use client';
 
 import { Message } from './Message';
-import type { DeliveredMessage, Stakeholder } from '@/engine/types';
+import type { ChannelDef, DeliveredMessage, Stakeholder } from '@/engine/types';
 
 interface MessageGroupProps {
   messages: DeliveredMessage[];
   stakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
   playerName: string;
+  channels?: ChannelDef[];
   formatTime: (ms: number) => string;
   onProfileOpen?: (stakeholderId: string) => void;
+  onChannelOpen?: (channelId: string) => void;
 }
 
 /**
@@ -21,8 +23,10 @@ export function MessageGroup({
   stakeholders,
   stakeholderNames,
   playerName,
+  channels,
   formatTime,
   onProfileOpen,
+  onChannelOpen,
 }: MessageGroupProps) {
   const roleById: Record<string, string> = {};
   for (const s of stakeholders) roleById[s.id] = s.role;
@@ -61,11 +65,13 @@ export function MessageGroup({
               timestamp={formatTime(msg.timestamp)}
               playerName={playerName}
               stakeholderNames={stakeholderNames}
+              channels={channels}
               isPlayer={msg.isPlayerMessage}
               mentionsPlayer={msg.mentionsPlayer}
               showAvatar={idx === 0}
               showHeader={idx === 0}
               onProfileOpen={onProfileOpen}
+              onChannelOpen={onChannelOpen}
             />
           );
         })

@@ -61,7 +61,12 @@ export class GameEngine {
     this.stateManager.setPhase('active');
 
     if (this.scenario.channels.length > 0) {
-      this.stateManager.setActiveChannel(this.scenario.channels[0].id);
+      const preferred = this.scenario.initialActiveChannel;
+      const startChannel =
+        preferred && this.scenario.channels.some((channel) => channel.id === preferred)
+          ? preferred
+          : this.scenario.channels[0].id;
+      this.stateManager.setActiveChannel(startChannel);
     }
 
     return this.stateManager.getState();

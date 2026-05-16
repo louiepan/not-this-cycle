@@ -19,6 +19,9 @@ const STAKEHOLDERS: Stakeholder[] = [
       coreFear: 'Being ineffective',
       coreDesire: 'Impact',
       communicationStyle: 'direct',
+      voiceRegister: 'Terse imperatives.',
+      voiceExamples: ['Need this by EOD.'],
+      pushBackLines: ['Specifically?'],
     },
     mechanics: {
       patience: 0.4,
@@ -43,6 +46,9 @@ const STAKEHOLDERS: Stakeholder[] = [
       coreFear: 'Conflict spilling upward',
       coreDesire: 'Calm orderly delivery',
       communicationStyle: 'measured',
+      voiceRegister: 'Measured warmth, deferential to leadership.',
+      voiceExamples: ['Let me check with the team.'],
+      pushBackLines: ['Help me help you.'],
     },
     mechanics: {
       patience: 0.7,

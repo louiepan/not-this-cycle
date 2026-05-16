@@ -19,6 +19,19 @@ const THE_VP: StakeholderTemplate = {
     coreFear: 'Being seen as ineffective',
     coreDesire: 'Impact and recognition',
     communicationStyle: 'Terse, expects speed, drops names',
+    voiceRegister:
+      'Terse imperatives. Single-word sentences ("Good." "Fine."). Opens with what just happened in exec staff ("Just left staff,"). Never explains, never apologizes. Cuts off pleasantries. Uses "tight," "clean," "headline" as adjectives for deliverables.',
+    voiceExamples: [
+      'Just left staff. CEO wants something demo-able at the all-hands in 6 weeks.',
+      'Keep the tradeoffs below the fold. I need the headline to read clean.',
+      'Fine. Bring me a recommendation, not a seminar on complexity.',
+    ],
+    pushBackLines: [
+      'Specifically?',
+      'Pick a headline I can repeat.',
+      'I need a direction, not a vibe.',
+      'Try that again. Where are you actually landing?',
+    ],
   },
   mechanics: {
     patience: 0.4,
@@ -51,6 +64,19 @@ const THE_STAFF_ENG: StakeholderTemplate = {
     coreFear: 'Being forced to ship garbage',
     coreDesire: 'Technical excellence and autonomy',
     communicationStyle: 'Precise, unemotional, occasional dry wit',
+    voiceRegister:
+      'Talks in blast radius, weird deploys, P0 risk, blast surface. Professionally exhausted. Says "cursed" affectionately. Hedges on hope, never on engineering. Will write "I need a call" rather than "please decide." Long pauses between messages.',
+    voiceExamples: [
+      'Auth is one weird deploy away from eating logins. If we layer SSO on top right now, I think we create actual P0 risk.',
+      'I\'ll build the least cursed version of it I can.',
+      'I\'m treating the silence as "ship fast." Logging the debt for Q1 and moving on.',
+    ],
+    pushBackLines: [
+      'Need a call, not a vibe.',
+      'I can\'t write the doc with that. Yes or no?',
+      'Give me something I can put in front of the team.',
+      'I need to know which one we\'re actually committing to.',
+    ],
   },
   mechanics: {
     patience: 0.7,
@@ -83,6 +109,19 @@ const THE_DESIGN_LEAD: StakeholderTemplate = {
     coreFear: 'Shipping something ugly that hurts users',
     coreDesire: 'Creating beautiful, intuitive experiences',
     communicationStyle: 'Empathetic, uses metaphors, emotionally invested',
+    voiceRegister:
+      'Names the human cost of decisions ("users are going to feel the seams"). Polite but doesn\'t let you off the hook. Asks for compromises to be made public so design isn\'t carrying them alone later. Uses "we" generously but means it.',
+    voiceExamples: [
+      'SSO, dashboard, and onboarding revamp in one release is a lot of new mental models at once. Users are going to feel the seams.',
+      'Okay. Then I want the compromise named somewhere public so design is not carrying it alone later.',
+      'I just don\'t want us pretending the UX survives untouched.',
+    ],
+    pushBackLines: [
+      'Help me out — what are we actually choosing between?',
+      'Are we phasing this, or shipping all at once? Those are very different.',
+      'I want to help you make this work. What\'s the actual ask?',
+      'Be honest with me. What\'s the part you don\'t want to say out loud?',
+    ],
   },
   mechanics: {
     patience: 0.6,
@@ -115,6 +154,19 @@ const THE_DATA_ANALYST: StakeholderTemplate = {
     coreFear: 'Making decisions on bad data',
     coreDesire: 'Accuracy and being prepared',
     communicationStyle: 'Cautious, hedges, provides receipts',
+    voiceRegister:
+      'Hedges with numerical specificity ("closer to ~$200K than $2M"). Brings receipts unprompted. Self-deprecates to soften the blow ("awkward now," "mildly unpopular"). Frequently ends lines with "for whatever that is worth" or similar disclaimers. Quiet but lethal.',
+    voiceExamples: [
+      'I reran the SSO model. On current enterprise pipeline I\'m seeing closer to ~$200K ARR than the $2M number that made it to the board.',
+      'Three enterprise prospects mentioned admin controls before they mentioned onboarding, for whatever that is worth.',
+      'Mildly unpopular now is still better than spectacularly wrong later.',
+    ],
+    pushBackLines: [
+      'To make sure I run the right query — what\'s the actual question?',
+      'Hedging is fine, but I need a direction to pull data against.',
+      'What outcome are you optimizing for? Different metrics for different answers.',
+      'Specifically? I can be more useful with a sharper ask.',
+    ],
   },
   mechanics: {
     patience: 0.8,
@@ -147,6 +199,19 @@ const THE_MANAGER: StakeholderTemplate = {
     coreFear: 'Conflict and looking bad to their boss',
     coreDesire: 'Harmony and being seen as a good manager',
     communicationStyle: 'Overly positive, vague, avoids specifics',
+    voiceRegister:
+      'Performative warmth ("Big day today!"). Mentions being in back-to-backs as a soft decline. Offers help in the abstract, never the specific. Never takes a position. Defers to "the team" or "leadership" when pressed. Uses exclamation marks at moments that don\'t earn them.',
+    voiceExamples: [
+      'Good morning! Big day today. Let me know if you need anything — I\'m in back-to-backs but can make time.',
+      'Heads up: {{the-vp.firstName}} was not thrilled that the revenue numbers hit #planning-war-room. Not saying you were wrong. Just saying visibility has a half-life around here.',
+      'Today\'s going to be... a day.',
+    ],
+    pushBackLines: [
+      'Help me help you — what specifically?',
+      'Walk me through it. I want to make sure I\'m representing you correctly upstairs.',
+      'I\'m all ears! Just want to make sure I understand the actual move.',
+      'Where are you leaning? I can help you sharpen it.',
+    ],
   },
   mechanics: {
     patience: 0.9,
@@ -179,6 +244,19 @@ const THE_TPM: StakeholderTemplate = {
     coreFear: 'Chaos and missed deadlines',
     coreDesire: 'Order, accountability, clean trackers',
     communicationStyle: 'Structured, bullet points, asks for dates',
+    voiceRegister:
+      'Bullets and dates. Past-tense passive aggression ("your row says TBD in red"). Tracks who said what, when. Never forgets a slip. Will quote your earlier message back at you. Reads "TBD" as a personal failure.',
+    voiceExamples: [
+      '@you — can I get:\n• SSO target\n• Dashboard v2 target\n• Onboarding revamp target\n• Known blockers / dependencies',
+      'Still need those dates. Deck review is tomorrow and I am not putting TBD in front of execs.',
+      'Helpful. Messy, but helpful. I can work with conditional dates as long as nobody edits the nuance out of the slide later.',
+    ],
+    pushBackLines: [
+      'I need something I can put in the tracker. Date or no date.',
+      'Sharper, please. The row needs a value, not a vibe.',
+      'Translation for the tracker: what\'s the actual call?',
+      'Either / or, not both. Which row goes red if we don\'t decide?',
+    ],
   },
   mechanics: {
     patience: 0.3,
@@ -211,6 +289,19 @@ const THE_ADJACENT_PM: StakeholderTemplate = {
     coreFear: 'Being overlooked',
     coreDesire: 'Being the favorite, being promoted first',
     communicationStyle: 'Casually drops exec names, volunteers to "help", subtle credit-taking',
+    voiceRegister:
+      'Opens with which executive she just spoke to. Volunteers to "help" or "take something off your plate" — translation: scope grab. Uses "we" to mean "me + the person you report to." Liberal emoji (🙌 ✨ 💪). Always cc-ing one more person than you expected.',
+    voiceExamples: [
+      'Hey! {{the-vp.firstName}} mentioned we should sync on Q4. I\'ve been chatting with {{the-vp.firstName}} about how platform can support the initiative — happy to take the API integration piece off your plate if that helps? 🙌',
+      'Looping {{the-vp.firstName}} for visibility ✨',
+      'No worries if you\'re slammed! I can just run with it and share back when it\'s ready 💪',
+    ],
+    pushBackLines: [
+      'Just so I\'m sure I\'m tracking — what\'s the move? 🙌',
+      'Want to make sure I rep this correctly to {{the-vp.firstName}}. What direction are we landing on?',
+      'No pressure at all! Just need a sentence I can drop in the next sync ✨',
+      'Quick clarifier — are we coordinating on this or are you taking point?',
+    ],
   },
   mechanics: {
     patience: 0.6,
@@ -250,6 +341,7 @@ const CHANNELS: ChannelDef[] = [
   { id: 'team-random', name: 'team-random', type: 'channel', description: 'Low-stakes bonding and calendar entropy', isNoise: true },
   { id: 'field-asks', name: 'gtm-launches', type: 'channel', description: 'Launch comms and enablement requests', isNoise: true },
   { id: 'dm-manager', name: '{{the-manager.firstName}} {{the-manager.lastName}}', type: 'dm' },
+  { id: 'dm-vp', name: '{{the-vp.firstName}} {{the-vp.lastName}}', type: 'dm' },
   { id: 'dm-staff-eng', name: '{{the-staff-eng.firstName}} {{the-staff-eng.lastName}}', type: 'dm' },
   { id: 'dm-design-lead', name: '{{the-design-lead.firstName}} {{the-design-lead.lastName}}', type: 'dm' },
 ];
@@ -261,14 +353,14 @@ const CHANNELS: ChannelDef[] = [
 const EVENTS: GameEvent[] = [
   // ---- Warm-start: pre-existing channel history ----
 
-  // Context already in product-strategy when you arrive
+  // Context already in product-strategy when you arrive (chronological — oldest to newest)
   {
     id: 'evt-history-product',
     triggerAt: 0,
     channel: 'product-strategy',
     messages: [
       {
-        id: 'msg-history-1',
+        id: 'msg-history-kickoff',
         from: 'the-manager',
         content: 'Heads up team — Q4 planning kicks off today. {{the-vp.firstName}} wants a roadmap locked by end of week. Let\'s stay aligned.',
         delay: 0,
@@ -276,7 +368,7 @@ const EVENTS: GameEvent[] = [
         contextValue: 'ambient',
       },
       {
-        id: 'msg-history-2',
+        id: 'msg-history-ack-design',
         from: 'the-design-lead',
         content: 'Sounds good. I\'ll have the updated mocks ready for review this afternoon.',
         delay: 0,
@@ -284,9 +376,33 @@ const EVENTS: GameEvent[] = [
         contextValue: 'ambient',
       },
       {
-        id: 'msg-history-3',
+        id: 'msg-history-flag-eng',
         from: 'the-staff-eng',
         content: 'Just flagging — there are some tech debt items we should discuss before locking scope.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-history-priorities',
+        from: 'the-manager',
+        content: 'Reposting the Q4 priorities per {{the-vp.firstName}}\'s ask since the kickoff thread got noisy. Three things the board is watching: enterprise readiness for the upmarket motion, the AI feature we keep slipping, and the readiness story we are not officially calling IPO prep. {{world.teamName}} touches all three. Scoping convos kick off this week.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-history-tracker',
+        from: 'the-tpm',
+        content: 'Q4 tracker is live. Dates start filling in this week. Don\'t be the row that goes red.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-history-scope',
+        from: 'the-tpm',
+        content: 'Current rows under discussion for {{world.teamName}}:\n• SSO + admin console (enterprise lane)\n• Onboarding v2 (activation funnel)\n• Dashboard v2 with the AI surface\n• Integrations refresh\nScoping this week. Owners TBD until {{the-vp.firstName}} signs off.',
         delay: 0,
         mentionsPlayer: false,
         contextValue: 'ambient',
@@ -295,8 +411,10 @@ const EVENTS: GameEvent[] = [
     priority: 'ambient',
   },
 
-  // Manager DM — morning greeting
+  // Manager DM — morning greeting, then welcome aside, then re-grounding, then pinned pointer.
   // ORDER IS LOAD-BEARING: greeting -> welcome -> re-grounding -> pinned references.
+  // Delays stagger the messages over ~6s so the manager's morning DM trickles in
+  // rather than landing as a wall of text.
   // The "Heads up: {VP} was not thrilled" beat (evt-vp-data-reaction) must NEVER appear
   // in this event — it only fires after the player surfaces revenue data. Eval enforces this.
   {
@@ -340,18 +458,125 @@ const EVENTS: GameEvent[] = [
     priority: 'ambient',
   },
 
-  // Staff Eng DM — heads up
+  // VP welcome DM — fires a few seconds in. Low-value introduction, no ask.
+  // Sets up the relationship without creating action. Player notices the DM
+  // light up second (after the manager DM that's already there at t=0).
+  {
+    id: 'evt-history-dm-vp-welcome',
+    triggerAt: 3000,
+    channel: 'dm-vp',
+    messages: [
+      {
+        id: 'msg-dm-vp-welcome',
+        from: 'the-vp',
+        content: 'Welcome aboard. Looking forward to seeing what {{world.teamName}} ships this quarter.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
+  // Staff Eng DM — brief pleasantry, then the ask. Fires ~8s in so the
+  // manager + VP messages land first and the player can orient.
   {
     id: 'evt-history-dm-eng',
-    triggerAt: 0,
+    triggerAt: 8000,
     channel: 'dm-staff-eng',
     messages: [
       {
-        id: 'msg-dm-eng-morning',
+        id: 'msg-dm-eng-pleasantry',
+        from: 'the-staff-eng',
+        content: 'Morning. Welcome aboard.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-eng-ask',
         from: 'the-staff-eng',
         content: 'Hey — got a sec later today? Need to talk about the auth service before we commit to anything for Q4.',
         delay: 0,
         mentionsPlayer: true,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
+  // Design Lead DM — warm welcome with an edge, then a 15-min ask. Fires
+  // last (~14s in) so the player isn't drowning in pings at game start.
+  {
+    id: 'evt-history-dm-design',
+    triggerAt: 14000,
+    channel: 'dm-design-lead',
+    messages: [
+      {
+        id: 'msg-dm-design-welcome',
+        from: 'the-design-lead',
+        content: 'Welcome! Genuinely glad you\'re here. Onboarding has needed a real PM for a while.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-design-ask',
+        from: 'the-design-lead',
+        content: 'Whenever you\'ve digested the Q4 scope, would love 15 min on the onboarding piece. There\'s UX debt I\'d rather not bury in the slide deck if we\'re actually committing to a revamp this quarter.',
+        delay: 0,
+        mentionsPlayer: true,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
+  // Planning war room — warm-start scrollback so the channel isn't a ghost town
+  // when the data analyst's revelation lands later in the game.
+  {
+    id: 'evt-history-planning-war-room',
+    triggerAt: 0,
+    channel: 'planning-war-room',
+    messages: [
+      {
+        id: 'msg-planning-war-room-1',
+        from: 'the-tpm',
+        content: 'Sliding the cross-fn sync to 1pm so {{the-vp.firstName}} can sit in part of it.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-planning-war-room-2',
+        from: 'the-design-lead',
+        content: 'Works. I\'ll bring the seam analysis I owe you.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-planning-war-room-3',
+        from: 'the-staff-eng',
+        content: 'Joining late. Triage with the platform team runs until 1:15.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-planning-war-room-4',
+        from: 'the-manager',
+        content: 'Great! Make sure design + eng have time to actually disagree on something — we keep papering over the seams.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-planning-war-room-5',
+        from: 'the-adjacent-pm',
+        content: 'Looping {{the-vp.firstName}} on the platform overlap items so we don\'t end up re-explaining at the readout ✨',
+        delay: 0,
+        mentionsPlayer: false,
         contextValue: 'ambient',
       },
     ],
@@ -364,6 +589,30 @@ const EVENTS: GameEvent[] = [
     triggerAt: 0,
     channel: 'support-escalations',
     messages: [
+      {
+        id: 'msg-support-escalations-0a',
+        from: 'the-tpm',
+        content: 'Closing the loop on the Acme ticket from last week — they got their dates, we got our credibility back.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-support-escalations-0b',
+        from: 'the-manager',
+        content: 'Nice work navigating that. Acme is now a reference call we can actually use.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-support-escalations-0c',
+        from: 'the-design-lead',
+        content: 'And the original UX complaint? Filed under "we\'ll think about it."',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
       {
         id: 'msg-support-escalations-1',
         from: 'the-manager',
@@ -397,6 +646,30 @@ const EVENTS: GameEvent[] = [
     channel: 'customer-feedback',
     messages: [
       {
+        id: 'msg-customer-feedback-0a',
+        from: 'the-adjacent-pm',
+        content: 'Field pinged me — Acme wants "AI features but explainable." Logged.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-customer-feedback-0b',
+        from: 'the-data-analyst',
+        content: 'Could you ask what "explainable" specifically means to them? Logged is fine but I\'d like a paragraph.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-customer-feedback-0c',
+        from: 'the-adjacent-pm',
+        content: 'Will follow up. They were on speaker so the answer was loud confidence.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
         id: 'msg-customer-feedback-1',
         from: 'the-data-analyst',
         content: 'Three enterprise prospects mentioned admin controls before they mentioned onboarding, for whatever that is worth.',
@@ -428,6 +701,30 @@ const EVENTS: GameEvent[] = [
     triggerAt: 0,
     channel: 'gtm-launches',
     messages: [
+      {
+        id: 'msg-gtm-launches-0a',
+        from: 'the-design-lead',
+        content: 'Whatever it ends up being called, the marketing site needs the screenshots updated before the deck goes external.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-gtm-launches-0b',
+        from: 'the-tpm',
+        content: 'I need at least one ship date that survives contact with the website.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-gtm-launches-0c',
+        from: 'the-adjacent-pm',
+        content: 'Working on it ✨',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
       {
         id: 'msg-gtm-launches-1',
         from: 'the-manager',
@@ -461,6 +758,30 @@ const EVENTS: GameEvent[] = [
     channel: 'sales-questions',
     messages: [
       {
+        id: 'msg-sales-questions-0a',
+        from: 'the-adjacent-pm',
+        content: 'AE asked again about admin roles for Q4. Redirected to "enterprise readiness" which I think is the right altitude.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-sales-questions-0b',
+        from: 'the-vp',
+        content: 'Correct.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-sales-questions-0c',
+        from: 'the-manager',
+        content: 'Bookmarking "the right altitude" as a future framework.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
         id: 'msg-sales-questions-1',
         from: 'the-vp',
         content: 'If anyone is talking to Sales today, please avoid implying that the roadmap is a buffet.',
@@ -492,6 +813,30 @@ const EVENTS: GameEvent[] = [
     triggerAt: 0,
     channel: 'support-triage',
     messages: [
+      {
+        id: 'msg-support-triage-0a',
+        from: 'the-staff-eng',
+        content: 'Closed out the deploy-train rollback retro. Action items survived the meeting, which is two more than usual.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-support-triage-0b',
+        from: 'the-tpm',
+        content: 'Will track them in the tracker.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-support-triage-0c',
+        from: 'the-staff-eng',
+        content: 'The tracker is haunted but yes.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
       {
         id: 'msg-support-triage-1',
         from: 'the-staff-eng',
@@ -525,6 +870,30 @@ const EVENTS: GameEvent[] = [
     channel: 'platform-ops',
     messages: [
       {
+        id: 'msg-platform-ops-0a',
+        from: 'the-tpm',
+        content: 'Quick reminder: q3 retros are due in the wiki under "rituals." If you wrote a postmortem you owe it a 2-line takeaway.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-platform-ops-0b',
+        from: 'the-staff-eng',
+        content: 'Rituals folder feels apt.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-platform-ops-0c',
+        from: 'the-manager',
+        content: 'Just be honest. Specific is better than diplomatic in retros.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
         id: 'msg-platform-ops-1',
         from: 'the-tpm',
         content: 'Please update owners in the dependency sheet. There are currently twelve rows assigned to "TBD".',
@@ -556,6 +925,30 @@ const EVENTS: GameEvent[] = [
     triggerAt: 0,
     channel: 'growth-ideas',
     messages: [
+      {
+        id: 'msg-growth-ideas-0a',
+        from: 'the-adjacent-pm',
+        content: 'Brainstorm: what if onboarding had a "skip ahead, I\'ve used this before" mode for power users? 💡',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-growth-ideas-0b',
+        from: 'the-design-lead',
+        content: 'Adding "power user" to the list of personas we keep inventing instead of researching.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-growth-ideas-0c',
+        from: 'the-data-analyst',
+        content: 'If we ship it, can we actually A/B test it? I have opinions about how few people self-identify as power users.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
       {
         id: 'msg-growth-ideas-1',
         from: 'the-adjacent-pm',
@@ -589,6 +982,30 @@ const EVENTS: GameEvent[] = [
     channel: 'board-prep',
     messages: [
       {
+        id: 'msg-board-prep-0a',
+        from: 'the-manager',
+        content: 'Q3 board narrative landed well. The "durable acceleration" framing is now firmly in the vocabulary.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-board-prep-0b',
+        from: 'the-vp',
+        content: 'Good. Don\'t dilute it.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-board-prep-0c',
+        from: 'the-manager',
+        content: 'Saving "durable acceleration" to the slide library for reuse.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
         id: 'msg-board-prep-1',
         from: 'the-manager',
         content: 'Please keep any downside scenarios phrased as "execution considerations."',
@@ -620,6 +1037,30 @@ const EVENTS: GameEvent[] = [
     triggerAt: 0,
     channel: 'roadmap-backlog',
     messages: [
+      {
+        id: 'msg-roadmap-backlog-0a',
+        from: 'the-design-lead',
+        content: 'Adding the password reset redesign here for the third time.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-roadmap-backlog-0b',
+        from: 'the-adjacent-pm',
+        content: 'Will get to it after Q4 lands ✨',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-roadmap-backlog-0c',
+        from: 'the-design-lead',
+        content: 'We said that in Q3 also.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
       {
         id: 'msg-roadmap-backlog-1',
         from: 'the-design-lead',
@@ -653,6 +1094,30 @@ const EVENTS: GameEvent[] = [
     channel: 'compliance-fire-drill',
     messages: [
       {
+        id: 'msg-compliance-fire-drill-0a',
+        from: 'the-manager',
+        content: 'FYI the SOC2 follow-ups from last cycle — we owe legal a status by Friday.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-compliance-fire-drill-0b',
+        from: 'the-tpm',
+        content: 'Sliding to next week. Sorry. Will not let it slip again.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-compliance-fire-drill-0c',
+        from: 'the-manager',
+        content: 'We\'ve said that before. With confidence.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
         id: 'msg-compliance-fire-drill-1',
         from: 'the-tpm',
         content: 'Not urgent until it is, which means it will become urgent at 4:47 PM.',
@@ -685,6 +1150,30 @@ const EVENTS: GameEvent[] = [
     channel: 'team-random',
     messages: [
       {
+        id: 'msg-team-random-0a',
+        from: 'the-design-lead',
+        content: 'Anyone know where the team lunch ended up landing this Thursday?',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-team-random-0b',
+        from: 'the-manager',
+        content: 'The doodle poll is in shambles. I\'ll just pick a place. Tex-Mex unless someone screams.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-team-random-0c',
+        from: 'the-staff-eng',
+        content: 'Not screaming.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
         id: 'msg-team-random-1',
         from: 'the-manager',
         content: 'Bagels in kitchen 3. Please remember this is not a substitute for a morale strategy.',
@@ -716,6 +1205,30 @@ const EVENTS: GameEvent[] = [
     triggerAt: 0,
     channel: 'field-asks',
     messages: [
+      {
+        id: 'msg-field-asks-0a',
+        from: 'the-adjacent-pm',
+        content: 'Salesforce admin asking if we have an SLA for response time. Told them "best effort."',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-field-asks-0b',
+        from: 'the-manager',
+        content: 'Define "best effort."',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-field-asks-0c',
+        from: 'the-adjacent-pm',
+        content: 'Doing my best.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
       {
         id: 'msg-field-asks-1',
         from: 'the-adjacent-pm',
@@ -1974,14 +2487,30 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
   durationTarget: 180000,
   worldTemplate: {
     templateId: 'q4-techco',
-    companyNamePool: ['TechCorp'],
-    teamNamePool: ['Core Platform'],
+    companyNamePool: ['Forma', 'TechCorp', 'Plinth', 'Cadence', 'Vellum'],
+    teamNamePool: ['Growth Platform', 'Core Platform', 'Activation', 'Lifecycle'],
     predecessorContextPool: [
+      'Your predecessor left for a Series A three weeks ago. The team has been quietly rudderless and your manager hasn\'t replaced the standing meetings yet.',
       'The previous PM left abruptly mid-quarter. No transition doc, just a calendar full of inherited 1:1s.',
+      'Your predecessor got promoted out and onto a flashier surface. They are technically still cc\'ed on the Q4 thread; they technically have not responded in two weeks.',
     ],
+    productDescription: 'the operating system for modern product orgs',
+    stage: 'Series C, ~480 people, 18 months from the IPO target',
+    annualThemes: [
+      'Move upmarket — close enterprise logos with security and admin features',
+      'Ship the AI strategy the board has been asking about since the spring offsite',
+      'Hit the IPO-readiness milestones without anyone admitting that\'s what we\'re doing',
+    ],
+    boardPressure:
+      'The board greenlit aggressive ARR targets at the spring offsite. The CEO\'s last all-hands referenced "the AI window" three times. Nobody has shipped the AI feature yet.',
+    teamCharter:
+      'Owns the surfaces where customers first land, activate, and expand: onboarding, in-product navigation, the admin console, and the integration platform.',
+    mandate:
+      'Unblock the Q4 roadmap. {{the-vp.firstName}} needs something demo-able at the all-hands in 6 weeks. Make the team look credible to executives without breaking what already works.',
   },
   stakeholders: [THE_VP, THE_STAFF_ENG, THE_DESIGN_LEAD, THE_DATA_ANALYST, THE_MANAGER, THE_TPM, THE_ADJACENT_PM],
   channels: CHANNELS,
+  initialActiveChannel: 'dm-manager',
   events: EVENTS,
   ambientPools: AMBIENT_POOLS,
   initialState: {},
