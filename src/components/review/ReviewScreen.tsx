@@ -11,6 +11,11 @@ interface ReviewScreenProps {
   world: ScenarioWorld;
   sessionId?: string | null;
   onPlayAgain: () => void;
+  /**
+   * Satirical continuity lines that reference prior runs. Computed by the
+   * caller from localStorage history. Empty array on first-ever run.
+   */
+  continuityLines?: string[];
 }
 
 const BUCKET_LABELS: Record<CalibrationBucket, string> = {
@@ -126,6 +131,7 @@ export function ReviewScreen({
   world,
   sessionId,
   onPlayAgain,
+  continuityLines = [],
 }: ReviewScreenProps) {
   const companyInitial = world.companyName.charAt(0).toUpperCase() || 'C';
   const archetypeInfo = RatingEngine.ARCHETYPE_LABELS[result.archetype];
@@ -403,6 +409,41 @@ export function ReviewScreen({
               </div>
             </div>
           </Card>
+
+          {/* ========= HR continuing notes (only if prior cycles exist) ========= */}
+          {continuityLines.length > 0 && (
+            <Card>
+              <CardHeader
+                eyebrow="From your file"
+                title="HR continuing notes"
+                meta={`${continuityLines.length} ${continuityLines.length === 1 ? 'entry' : 'entries'}`}
+              />
+              <div className="p-6">
+                <ul className="space-y-3">
+                  {continuityLines.map((line, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-3 text-[14px] leading-[1.7] text-paper-text-primary"
+                    >
+                      <span
+                        className="mt-[10px] h-[5px] w-[5px] flex-shrink-0 rotate-45 bg-accent"
+                        aria-hidden="true"
+                      />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-4 rounded-lg border border-paper-border-subtle bg-paper-canvas px-3.5 py-3 text-[12px] leading-[1.55] text-paper-text-tertiary">
+                  <strong className="mb-1 block text-[10.5px] font-bold uppercase tracking-[0.04em] text-paper-text-secondary">
+                    Note
+                  </strong>
+                  Continuity entries are surfaced automatically based on patterns
+                  detected in your prior calibration cycles. They are advisory only
+                  and do not factor into composite scoring.
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* ========= Manager review ========= */}
           <Card>

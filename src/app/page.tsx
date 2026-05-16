@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameSession } from '@/hooks/useGameSession';
 import { Q4_PLANNING_SCENARIO } from '@/content/scenarios/q4-planning';
 import { AcceptOfferScreen } from '@/components/game/AcceptOfferScreen';
@@ -11,6 +11,8 @@ import { ReviewScreen } from '@/components/review/ReviewScreen';
 import { Window } from '@/components/layout/Window';
 import type { DifficultyConfig, PendingDecision } from '@/engine/types';
 import { buildPeerFeedback } from '@/review/buildPeerFeedback';
+import { appendRun, loadProfile } from '@/lib/playerProfile';
+import { selectContinuityLines } from '@/content/continuityLines';
 
 export default function Home() {
   const session = useGameSession(Q4_PLANNING_SCENARIO);
@@ -33,6 +35,53 @@ export default function Home() {
     if (!session.ratingResult) return null;
     return buildPeerFeedback(session.ratingResult);
   }, [session.ratingResult]);
+
+  // Continuity: append each completed run to localStorage (`ntc:player:v1`)
+  // and surface satirical lines on the review screen that reference prior
+  // cycles. Ref-guarded so the append fires exactly once per review session
+  // even if re-renders happen.
+  const [continuityLines, setContinuityLines] = useState<string[]>([]);
+  const hasRecordedCurrentReviewRef = useRef(false);
+
+  useEffect(() => {
+    if (session.phase !== 'review' || !resolvedResult) {
+      hasRecordedCurrentReviewRef.current = false;
+      return;
+    }
+    if (hasRecordedCurrentReviewRef.current) return;
+
+    // Snapshot the history that existed *before* this run so the current
+    // review is not counted in its own "Nth review" math.
+    const profileBeforeThisRun = loadProfile();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing engine phase transition into derived UI state
+    setContinuityLines(
+      selectContinuityLines({
+        history: profileBeforeThisRun.runHistory,
+        current: {
+          archetype: resolvedResult.archetype,
+          calibrationBucket: resolvedResult.calibrationBucket,
+          difficulty: session.difficulty.id,
+        },
+        playerName,
+        companyName: session.world.companyName,
+      })
+    );
+
+    appendRun({
+      difficulty: session.difficulty.id,
+      archetype: resolvedResult.archetype,
+      calibrationBucket: resolvedResult.calibrationBucket,
+      scenarioId: Q4_PLANNING_SCENARIO.id,
+    });
+
+    hasRecordedCurrentReviewRef.current = true;
+  }, [
+    session.phase,
+    session.difficulty,
+    session.world.companyName,
+    resolvedResult,
+    playerName,
+  ]);
 
   if (!introCompleted) {
     return (
@@ -94,9 +143,11 @@ export default function Home() {
           playerName={playerName}
           world={session.world}
           sessionId={session.sessionId}
+          continuityLines={continuityLines}
           onPlayAgain={() => {
             setSelectedProfileId(null);
             setPendingBrief(null);
+            setContinuityLines([]);
             session.resetGame();
           }}
         />
