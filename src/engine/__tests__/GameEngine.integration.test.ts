@@ -18,6 +18,7 @@ const TEST_SCENARIO: Scenario = {
     companyNamePool: ['TestCo'],
     teamNamePool: ['Test Team'],
     predecessorContextPool: ['The previous PM left abruptly.'],
+    hqAddressPool: ['1 Test Plaza · Anywhere, USA'],
     productDescription: 'test software',
     stage: 'Series A',
     annualThemes: ['Test theme'],

@@ -321,6 +321,7 @@ export interface ScenarioWorldTemplate {
   companyNamePool: string[];
   teamNamePool: string[];
   predecessorContextPool: string[];
+  hqAddressPool: string[];
   // Fixed fields — same across every session in this template, shape the
   // strategic context the player walks into and the AI's system prompt
   productDescription: string;
@@ -337,6 +338,7 @@ export interface ScenarioWorld {
   companyName: string;
   teamName: string;
   predecessorContext: string;
+  hqAddress: string;
   // Carried through from template
   productDescription: string;
   stage: string;

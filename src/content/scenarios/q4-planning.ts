@@ -2487,12 +2487,19 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
   durationTarget: 180000,
   worldTemplate: {
     templateId: 'q4-techco',
-    companyNamePool: ['Forma', 'TechCorp', 'Plinth', 'Cadence', 'Vellum'],
+    companyNamePool: ['Forma', 'TechCorp', 'Plinth', 'Cadence', 'Vellum', 'Helix'],
     teamNamePool: ['Growth Platform', 'Core Platform', 'Activation', 'Lifecycle'],
     predecessorContextPool: [
       'Your predecessor left for a Series A three weeks ago. The team has been quietly rudderless and your manager hasn\'t replaced the standing meetings yet.',
       'The previous PM left abruptly mid-quarter. No transition doc, just a calendar full of inherited 1:1s.',
       'Your predecessor got promoted out and onto a flashier surface. They are technically still cc\'ed on the Q4 thread; they technically have not responded in two weeks.',
+    ],
+    hqAddressPool: [
+      '450 Brannan St · San Francisco, CA',
+      '210 King St · San Francisco, CA',
+      '500 3rd St · San Francisco, CA',
+      '85 Bluxome St · San Francisco, CA',
+      '888 Bryant St · San Francisco, CA',
     ],
     productDescription: 'the operating system for modern product orgs',
     stage: 'Series C, ~480 people, 18 months from the IPO target',
