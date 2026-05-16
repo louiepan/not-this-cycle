@@ -4,7 +4,6 @@ import type {
   GameState,
   MessageContextValue,
   PlayerReplyAnalysis,
-  PlayerReplySignal,
   RatingResult,
   Stakeholder,
   Tone,
@@ -254,7 +253,7 @@ export interface NarrativeAnalyzeOutput {
   matchedChoiceId: string;
   confidence: number;
   tone: Tone | null;
-  signals: PlayerReplySignal[];
+  signals: string[];
   addressedStakeholderIds: string[];
   memoryPatch: NarrativeMemoryPatch;
   contradictionFlags: string[];

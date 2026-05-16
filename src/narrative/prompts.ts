@@ -25,6 +25,10 @@ export function buildTurnAnalyzePrompt(request: NarrativeTurnRequest, memory: Na
       'Preserve sharp Silicon Valley tone and psychological realism.',
       'Return only structured data that maps the player message to an authored choice.',
       'Do not invent gameplay mechanics, hidden variables, or new outcomes.',
+      'matchedChoiceId must exactly match one provided choice id.',
+      'tone must be one of diplomatic, direct, deflecting, committing, or null.',
+      'complexityScore must be an integer from 0 to 10.',
+      'signals may be short descriptive strings; prefer a short list and return [] if unsure.',
     ].join('\n'),
     user: JSON.stringify(
       {

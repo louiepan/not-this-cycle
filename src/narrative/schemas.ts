@@ -52,17 +52,7 @@ export const analyzeOutputSchema = z.object({
   matchedChoiceId: z.string(),
   confidence: z.number().min(0).max(1),
   tone: z.enum(['diplomatic', 'direct', 'deflecting', 'committing']).nullable(),
-  signals: z.array(
-    z.enum([
-      'ownership',
-      'collaboration',
-      'risk',
-      'deferral',
-      'help_request',
-      'boundary_setting',
-      'transparency',
-    ])
-  ),
+  signals: z.array(z.string()),
   addressedStakeholderIds: z.array(z.string()),
   memoryPatch: narrativeMemoryPatchSchema,
   contradictionFlags: z.array(z.string()),
