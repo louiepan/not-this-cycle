@@ -59,50 +59,16 @@ function computeComposite(vars: RatingResult['variables']): number {
   return Math.round(positives * 0.7 + debtsCorrected * 0.3);
 }
 
-interface PromotionStatus {
-  deferred: boolean;
-  status: string;
-  summary: string;
+function isPromotionDeferred(outcome: string): boolean {
+  // Only the "committee meets" path keeps candidacy alive; all others defer.
+  return !outcome.includes('committee meets');
 }
 
-function parsePromotion(outcome: string): PromotionStatus {
-  if (outcome.includes('improvement plan')) {
-    return {
-      deferred: true,
-      status: 'Performance improvement plan initiated',
-      summary:
-        'Calibration committee has placed you on a structured improvement plan. Promotion is suspended pending plan completion.',
-    };
-  }
-  if (outcome.includes('committee meets')) {
-    return {
-      deferred: false,
-      status: 'Strong candidacy · pending committee',
-      summary:
-        'Calibration committee acknowledged a strong cycle and has placed your candidacy on the next promotion docket. We will revisit at the closing committee meeting.',
-    };
-  }
-  if (outcome.includes('next cycle') || outcome.includes('Q2') || outcome.includes('H2')) {
-    return {
-      deferred: true,
-      status: 'Deferred · revisit next cycle',
-      summary:
-        "Calibration committee acknowledged your contributions but did not advance you this cycle. You're tracking on judgment and communication; the gap to close is around demonstrated influence and executive sponsorship. We're rooting for you.",
-    };
-  }
-  return {
-    deferred: true,
-    status: 'Deferred · revisit next cycle',
-    summary:
-      "Calibration committee did not advance promotion this cycle. Outstanding criteria are documented below. We're rooting for you.",
-  };
-}
-
-const PROMOTION_CRITERIA = [
-  'Demonstrated executive sponsorship from VP-level or above',
-  'Cross-org influence beyond Growth, with documented partners',
-  'Track record of decision velocity under sustained pressure',
-  'Manager testimonial reflecting promotion readiness',
+const FOCUS_AREAS = [
+  'Cultivate executive sponsorship from VP-level or above',
+  'Build cross-org influence beyond Growth, with documented partners',
+  'Demonstrate a track record of decision velocity under sustained pressure',
+  'Earn a manager testimonial reflecting promotion readiness',
 ];
 
 interface VarRow {
@@ -163,7 +129,7 @@ export function ReviewScreen({
   const companyInitial = world.companyName.charAt(0).toUpperCase() || 'C';
   const archetypeInfo = RatingEngine.ARCHETYPE_LABELS[result.archetype];
   const composite = computeComposite(result.variables);
-  const promotion = parsePromotion(result.calibrationOutcome);
+  const promotionDeferred = isPromotionDeferred(result.calibrationOutcome);
   const personalizedManagerReview = result.managerReview.replaceAll('[Player]', playerName);
   const managerStakeholder = stakeholders.find((s) => s.id === 'the-manager');
   const managerName = managerStakeholder?.name || 'Your Manager';
@@ -351,12 +317,12 @@ export function ReviewScreen({
                 className="mt-5 flex items-center gap-3.5 rounded-[9px] border border-concern bg-concern-soft px-4 py-3.5"
               >
                 <span className="flex-shrink-0 rounded bg-concern px-2 py-[3px] text-[10px] font-bold uppercase tracking-[0.06em] text-white">
-                  {promotion.deferred ? 'Promotion deferred' : 'Promotion pending'}
+                  {promotionDeferred ? 'Promotion deferred' : 'Promotion pending'}
                 </span>
                 <span className="flex-1 text-[13px] leading-[1.5] text-paper-text-primary">
                   <strong className="font-semibold">Promotion to Staff Product Manager:</strong>{' '}
-                  {promotion.deferred ? 'not advanced this cycle.' : 'pending committee.'}{' '}
-                  Outstanding criteria documented below.
+                  {promotionDeferred ? 'not advanced this cycle.' : 'pending committee.'}{' '}
+                  Focus areas documented below.
                 </span>
               </div>
             </div>
@@ -515,27 +481,25 @@ export function ReviewScreen({
             </Card>
           )}
 
-          {/* ========= Promotion candidacy ========= */}
+          {/* ========= Development plan ========= */}
           <Card>
-            <CardHeader eyebrow="Promotion candidacy" title="Outcome & outstanding criteria" />
+            <CardHeader eyebrow="Development plan" title="Focus areas for next cycle" />
             <div className="grid grid-cols-1 gap-7 p-6 lg:grid-cols-[1fr_280px]">
               <div>
                 <div className="text-[22px] font-bold leading-[1.25] tracking-[-0.02em] text-paper-text-primary">
-                  Promotion to Staff Product Manager
-                </div>
-                <div className="mt-2 inline-flex items-center gap-2 text-[13px] font-semibold text-concern">
-                  <span className="h-1.5 w-1.5 rounded-full bg-concern" />
-                  {promotion.status}
+                  Where to invest next cycle
                 </div>
                 <p className="mt-3.5 text-[13.5px] leading-[1.65] text-paper-text-secondary">
-                  {promotion.summary}
+                  Committee identified these as the highest-leverage areas to develop. Sustained
+                  progress here positions you well for future consideration. Specific milestones to
+                  be calibrated with your manager.
                 </p>
               </div>
               <div className="rounded-[10px] border border-paper-border-subtle bg-paper-canvas px-4 pb-3.5 pt-4">
                 <div className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.07em] text-paper-text-tertiary">
-                  Outstanding criteria
+                  Focus areas
                 </div>
-                {PROMOTION_CRITERIA.map((item) => (
+                {FOCUS_AREAS.map((item) => (
                   <div
                     key={item}
                     className="grid grid-cols-[14px_1fr] items-start gap-2 py-1.5 text-[12.5px] leading-[1.5] text-paper-text-primary"
