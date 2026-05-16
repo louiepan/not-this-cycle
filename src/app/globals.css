@@ -1,43 +1,48 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-slack-bg: #1d1c1d;
-  --color-slack-sidebar: #311f3f;
-  --color-slack-sidebar-hover: #3a264a;
-  --color-slack-sidebar-active: #1164a3;
-  --color-slack-channel-bg: #1f1f20;
-  --color-slack-channel-header: #1e1f22;
-  --color-slack-message-hover: #252629;
-  --color-slack-text: #d1d2d3;
-  --color-slack-text-muted: #ababad;
-  --color-slack-text-secondary: #8e8e93;
-  --color-slack-white: #ffffff;
-  --color-slack-link: #1d9bd1;
-  --color-slack-green: #2bac76;
-  --color-slack-yellow: #e8a820;
-  --color-slack-red: #e01e5a;
-  --color-slack-mention-bg: #1d4068;
-  --color-slack-mention-text: #1d9bd1;
-  --color-slack-badge-red: #e01e5a;
-  --color-slack-badge-gray: #616061;
-  --color-slack-composer-bg: #ffffff;
-  --color-slack-composer-border: #c8c8cc;
-  --color-slack-divider: #323336;
-  --color-slack-presence-green: #2bac76;
-  --color-slack-choice-bg: #1d4068;
-  --color-slack-choice-hover: #2d5078;
-  --color-slack-choice-border: #1d9bd1;
-  --color-slack-window-backdrop: #17181b;
-  --color-slack-window-shell: #201f23;
-  --color-slack-window-border: rgba(255, 255, 255, 0.12);
-  --color-slack-window-inset: rgba(255, 255, 255, 0.06);
-  --color-slack-window-frame: rgba(255, 255, 255, 0.04);
-  --color-slack-muted-chrome: #6f7075;
-  --color-slack-composer-footer: #f8f8f8;
-  --color-slack-composer-icon: #616061;
-  --color-slack-composer-placeholder: #6f6f74;
+  /* Slack-* tokens remain for backwards compatibility with existing components.
+     Values now map to the new Amber dark palette. The slack- prefix is a misnomer;
+     a future cleanup pass will rename these to amber-* and remove duplication. */
+  --color-slack-bg: #0a0b0e;
+  --color-slack-sidebar: #111317;
+  --color-slack-sidebar-hover: #1c2027;
+  --color-slack-sidebar-active: #181c22;
+  --color-slack-channel-bg: #0a0b0e;
+  --color-slack-channel-header: #111317;
+  --color-slack-message-hover: rgba(255, 255, 255, 0.025);
+  --color-slack-text: #e8eaed;
+  --color-slack-text-muted: #8b92a0;
+  --color-slack-text-secondary: #5a6170;
+  --color-slack-white: #e8eaed;
+  --color-slack-link: #e8915a;
+  --color-slack-green: #4fc78f;
+  --color-slack-yellow: #e8b85a;
+  --color-slack-red: #c2683a;
+  --color-slack-mention-bg: rgba(232, 145, 90, 0.10);
+  --color-slack-mention-text: #e8915a;
+  --color-slack-badge-red: #e8915a;
+  --color-slack-badge-gray: #242a33;
+  --color-slack-composer-bg: #14171c;
+  --color-slack-composer-border: #242a33;
+  --color-slack-divider: #1d2129;
+  --color-slack-presence-green: #4fc78f;
+  --color-slack-choice-bg: rgba(232, 145, 90, 0.10);
+  --color-slack-choice-hover: rgba(232, 145, 90, 0.18);
+  --color-slack-choice-border: #e8915a;
+  --color-slack-window-backdrop: #0a0b0e;
+  --color-slack-window-shell: #111317;
+  --color-slack-window-border: rgba(255, 255, 255, 0.06);
+  --color-slack-window-inset: rgba(255, 255, 255, 0.04);
+  --color-slack-window-frame: rgba(255, 255, 255, 0.03);
+  --color-slack-muted-chrome: #5a6170;
+  --color-slack-composer-footer: #14171c;
+  --color-slack-composer-icon: #8b92a0;
+  --color-slack-composer-placeholder: #5a6170;
 
-  --font-slack: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* Display font (Inter) used across the new design system. Token name preserved
+     for backwards compatibility with existing components. */
+  --font-slack: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 
   --space-screen-x: clamp(1rem, 1.8vw, 1.75rem);
   --space-screen-y: clamp(1.25rem, 2.2vw, 2.5rem);
@@ -60,17 +65,76 @@
   --color-surface-muted: #111418;
   --color-border-subtle: rgba(255, 255, 255, 0.08);
   --color-border-strong: rgba(255, 255, 255, 0.12);
+
+  /* ============================================================
+     Not This Cycle — Amber/Paper design system
+     Two palettes share an accent. Use paper-* on intro/offer/review,
+     amber-* on the Slack workspace.
+     ============================================================ */
+
+  /* Accent (shared across themes) */
+  --color-accent: #c2683a;
+  --color-accent-light: #e8915a;
+  --color-accent-strong: #a85628;
+  --color-accent-soft: rgba(194, 104, 58, 0.08);
+  --color-accent-border: rgba(194, 104, 58, 0.25);
+
+  /* Status (shared) */
+  --color-positive: #3c8a5e;
+  --color-positive-soft: rgba(60, 138, 94, 0.08);
+  --color-concern: #a85b3f;
+  --color-concern-soft: rgba(168, 91, 63, 0.08);
+  --color-neutral-tone: #948c7e;
+  --color-presence-online: #4fc78f;
+
+  /* Paper palette — light surfaces (intro, offer, review) */
+  --color-paper-canvas: #f4f0ea;
+  --color-paper-sidebar: #ece7de;
+  --color-paper-panel: #faf7f2;
+  --color-paper-elevated: #ffffff;
+  --color-paper-hover: #e8e2d8;
+  --color-paper-input: #ffffff;
+  --color-paper-border-subtle: #e2dcd0;
+  --color-paper-border-default: #cdc4b5;
+  --color-paper-border-strong: #b5ab99;
+  --color-paper-text-primary: #1a140c;
+  --color-paper-text-secondary: #5c5246;
+  --color-paper-text-tertiary: #8a8073;
+  --color-paper-text-quaternary: #b5ab99;
+
+  /* Amber palette — dark surfaces (Slack workspace) */
+  --color-amber-canvas: #0a0b0e;
+  --color-amber-sidebar: #111317;
+  --color-amber-panel: #14171c;
+  --color-amber-elevated: #181c22;
+  --color-amber-hover: #1c2027;
+  --color-amber-input: #14171c;
+  --color-amber-border-subtle: #1d2129;
+  --color-amber-border-default: #242a33;
+  --color-amber-text-primary: #e8eaed;
+  --color-amber-text-secondary: #8b92a0;
+  --color-amber-text-tertiary: #5a6170;
+  --color-amber-text-quaternary: #3f4551;
+
+  /* Paper-specific shadows */
+  --shadow-paper-sm: 0 1px 2px rgba(58, 42, 22, 0.05);
+  --shadow-paper-md: 0 1px 3px rgba(58, 42, 22, 0.06), 0 4px 14px rgba(58, 42, 22, 0.04);
+
+  /* Display font (used by new components; existing uses --font-slack) */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  overflow: hidden;
+/* Reset lives in @layer base so Tailwind utilities (in @layer utilities)
+   still win the cascade. Without the layer, * { padding: 0 } overrides
+   every p-*, m-*, gap-* utility across the app. */
+@layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+  }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
 }
 
 body {
