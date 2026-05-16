@@ -26,6 +26,9 @@ import { track, initTracker, flush } from '@/analytics/tracker';
 import { requestNarrativeReview, requestNarrativeTurn } from '@/narrative/client';
 import type { NarrativeReactionMessage } from '@/narrative/types';
 import { buildPeerFeedback } from '@/review/buildPeerFeedback';
+import { buildTranscript } from '@/eval/buildTranscript';
+import { buildEvaluationReport } from '@/eval/report';
+import { saveReport, saveTranscript } from '@/eval/storage';
 import {
   addTypingParticipant,
   getTypingNamesForChannel,
@@ -65,8 +68,9 @@ interface UseGameSessionReturn {
   difficulty: DifficultyConfig;
   typingNames: string[];
   nudgeMessage: string | null;
+  sessionId: string | null;
 
-  startGame: (difficulty: DifficultyConfig) => void;
+  startGame: (difficulty: DifficultyConfig, playerName?: string) => void;
   resetGame: () => void;
   resolveDecision: (decisionId: string, choice: Choice, playerText?: string) => void;
   submitText: (channelId: string, text: string) => void;
@@ -105,6 +109,9 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   // 0 = no push-back yet, 1 = tier 1 (template) shown, 2 = tier 2 (AI) shown.
   // On the third low-confidence attempt the server commits to a best-guess match.
   const pushBackStrikesRef = useRef<Map<string, number>>(new Map());
+  // For transcript metadata captured on game completion.
+  const sessionStartedAtRef = useRef<string | null>(null);
+  const playerNameRef = useRef<string>('You');
   const gameCompleteRef = useRef(false);
 
   const clearTypingTimeouts = useCallback(() => {
@@ -201,17 +208,48 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         bucket: rating.calibrationBucket,
       });
       flush();
+
+      // Capture transcript + evaluation report. Stored client-side; downloadable
+      // from the review screen. Wrapped so a serialization failure can't crash
+      // the end-of-game flow.
+      try {
+        const authoredDecisions = scenario.events
+          .map((e) => e.decision)
+          .filter((d): d is NonNullable<typeof d> => !!d);
+        const transcript = buildTranscript({
+          sessionId: sessionIdRef.current ?? `unknown-${Date.now()}`,
+          createdAt: sessionStartedAtRef.current ?? new Date().toISOString(),
+          durationMs: newState.clock,
+          scenarioId: scenario.id,
+          seed: engine.getSeed(),
+          difficulty: difficulty.id,
+          playerName: playerNameRef.current,
+          world,
+          stakeholders: engine.getStakeholders(),
+          gameState: newState,
+          pushBackStrikes: new Map(pushBackStrikesRef.current),
+          authoredDecisions,
+          finalRating: rating,
+        });
+        saveTranscript(transcript);
+        const report = buildEvaluationReport(transcript);
+        saveReport(report);
+      } catch {
+        // Eval/capture failure must not block the review screen.
+      }
     }
-  }, [clearTypingTimeouts, handleActions]);
+  }, [clearTypingTimeouts, difficulty.id, handleActions, scenario.events, scenario.id, world]);
 
   const { elapsed, start: startClock, pause: stopClock } = useGameClock(onTick);
 
   const startGame = useCallback(
-    (diff: DifficultyConfig) => {
+    (diff: DifficultyConfig, playerName: string = 'You') => {
       const seed = sessionSeed;
       const sessionId = `${seed}-${Math.random().toString(36).slice(2, 8)}`;
       initTracker(sessionId);
       sessionIdRef.current = sessionId;
+      sessionStartedAtRef.current = new Date().toISOString();
+      playerNameRef.current = playerName;
 
       const engine = new GameEngine(scenario, diff, seed);
       engineRef.current = engine;
@@ -593,6 +631,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     difficulty,
     typingNames,
     nudgeMessage,
+    sessionId: sessionIdRef.current,
     startGame,
     resetGame,
     resolveDecision,
