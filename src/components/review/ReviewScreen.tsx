@@ -2,12 +2,14 @@
 
 import { RatingEngine } from '@/engine/RatingEngine';
 import type { CalibrationBucket, RatingResult, ScenarioWorld, Stakeholder } from '@/engine/types';
+import { EvaluationPanel } from '@/components/eval/EvaluationPanel';
 
 interface ReviewScreenProps {
   result: RatingResult;
   stakeholders: Stakeholder[];
   playerName: string;
   world: ScenarioWorld;
+  sessionId?: string | null;
   onPlayAgain: () => void;
 }
 
@@ -150,7 +152,14 @@ function initials(name: string): string {
     .slice(0, 2);
 }
 
-export function ReviewScreen({ result, stakeholders, playerName, world, onPlayAgain }: ReviewScreenProps) {
+export function ReviewScreen({
+  result,
+  stakeholders,
+  playerName,
+  world,
+  sessionId,
+  onPlayAgain,
+}: ReviewScreenProps) {
   const companyInitial = world.companyName.charAt(0).toUpperCase() || 'C';
   const archetypeInfo = RatingEngine.ARCHETYPE_LABELS[result.archetype];
   const composite = computeComposite(result.variables);
@@ -538,6 +547,9 @@ export function ReviewScreen({ result, stakeholders, playerName, world, onPlayAg
               </div>
             </div>
           </Card>
+
+          {/* ========= Evaluation panel (deterministic findings + recs) ========= */}
+          {sessionId && <EvaluationPanel sessionId={sessionId} />}
 
           {/* ========= Footer CTA ========= */}
           <div className="mt-7 flex items-center gap-4 rounded-xl border border-paper-border-subtle bg-paper-panel p-5">

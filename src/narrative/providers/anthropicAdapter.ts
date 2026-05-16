@@ -50,15 +50,12 @@ function buildMessages(user: string): MessageParam[] {
 
 function mapThinking(
   effort: StructuredRunRequest<unknown>['reasoningEffort'] | TextRunRequest['reasoningEffort']
-): { type: 'disabled' } | { type: 'adaptive'; display: 'omitted' } {
-  if (!effort || effort === 'none') {
-    return { type: 'disabled' };
-  }
-
-  return {
-    type: 'adaptive',
-    display: 'omitted',
-  };
+): { type: 'disabled' } {
+  // Anthropic support for "thinking" is model-specific. Our routed tasks only need the
+  // final structured/text output, so default to the compatible request shape and treat
+  // reasoning-effort hints as advisory metadata for analytics rather than a hard API feature.
+  void effort;
+  return { type: 'disabled' };
 }
 
 export class AnthropicAdapter implements ProviderAdapter {

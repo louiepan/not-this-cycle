@@ -19,6 +19,12 @@ const MINIMAL_SCENARIO: Scenario = {
       '1 Test Plaza · San Francisco, CA',
       '2 Test Plaza · San Francisco, CA',
     ],
+    productDescription: 'workflow software',
+    stage: 'Series B',
+    annualThemes: ['Move upmarket'],
+    boardPressure: 'Board wants growth.',
+    teamCharter: 'Owns onboarding.',
+    mandate: 'Unblock the roadmap.',
   },
   stakeholders: [
     {
@@ -36,6 +42,9 @@ const MINIMAL_SCENARIO: Scenario = {
         coreFear: 'Being irrelevant',
         coreDesire: 'Achievement',
         communicationStyle: 'Direct',
+        voiceRegister: 'Direct.',
+        voiceExamples: ['Make it happen.'],
+        pushBackLines: ['Specifically?'],
       },
       mechanics: {
         patience: 0.5,

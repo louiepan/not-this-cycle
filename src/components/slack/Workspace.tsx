@@ -82,6 +82,7 @@ export function Workspace({
       />
       <ChannelView
         channel={activeChannel}
+        channels={channels}
         messages={channelMessages}
         stakeholders={stakeholders}
         stakeholderNames={stakeholderNames}
@@ -93,6 +94,7 @@ export function Workspace({
         typingNames={visibleTypingNames}
         onMessageSubmit={onMessageSubmit}
         onProfileOpen={onProfileOpen}
+        onChannelOpen={onChannelSelect}
         formatTime={formatTime}
       />
       <ProfilePanel stakeholder={selectedStakeholder} onClose={onProfileClose} />

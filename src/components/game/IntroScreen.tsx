@@ -62,25 +62,24 @@ export function IntroScreen({ onSubmit, initialData }: IntroScreenProps) {
       </header>
 
       <main className="flex flex-1 items-center justify-center px-8 pb-12">
-        <div className="flex w-full max-w-[480px] flex-col gap-7">
+        <div className="flex w-full max-w-[560px] flex-col gap-7">
           <div>
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-accent">
               <span className="h-[5px] w-[5px] rotate-45 bg-accent" />
-              A 5-minute simulation
+              A 3-minute simulation
             </span>
           </div>
 
           <h1 className="text-[38px] font-bold leading-[1.1] tracking-[-0.025em] text-paper-text-primary">
-            Welcome to your next role.
+            <span className="block">The offer was the easy part.</span>
+            <span className="block">Now survive calibration.</span>
           </h1>
 
-          <p className="max-w-[44ch] text-base leading-[1.65] text-paper-text-secondary">
-            You&apos;re being hired as a Product Manager at a fast-growing tech company.
-            Receive escalating pings, make calls under ambiguity, and finish with{' '}
+          <p className="max-w-[52ch] text-base leading-[1.65] text-paper-text-secondary">
+            Accept the offer if you&apos;re ready. Read the room.{' '}
             <strong className="font-semibold text-paper-text-primary">
-              the kind of performance review we all love receiving
+              Survive calibration.
             </strong>
-            .
           </p>
 
           <form onSubmit={handleSubmit} className="mt-1 flex flex-col gap-4" noValidate>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from './Avatar';
+import type { ChannelDef } from '@/engine/types';
 
 interface MessageProps {
   senderId: string | 'player';
@@ -11,12 +12,14 @@ interface MessageProps {
   timestamp: string;
   playerName: string;
   stakeholderNames: Record<string, string>;
+  channels?: ChannelDef[];
   isPlayer?: boolean;
   mentionsPlayer?: boolean;
   showAvatar?: boolean;
   showHeader?: boolean;
   animate?: boolean;
   onProfileOpen?: (stakeholderId: string) => void;
+  onChannelOpen?: (channelId: string) => void;
 }
 
 function escapeRegExp(value: string): string {
@@ -44,14 +47,33 @@ function buildMentionCatalog(
   return catalog;
 }
 
+function buildChannelCatalog(channels: ChannelDef[] | undefined) {
+  const catalog = new Map<string, string>();
+  if (!channels) return catalog;
+  for (const channel of channels) {
+    if (channel.type !== 'channel') continue;
+    catalog.set(`#${channel.id}`, channel.id);
+    if (channel.name !== channel.id) {
+      catalog.set(`#${channel.name}`, channel.id);
+    }
+  }
+  return catalog;
+}
+
 function renderContent(
   content: string,
   playerName: string,
   stakeholderNames: Record<string, string>,
-  onProfileOpen?: (stakeholderId: string) => void
+  channels: ChannelDef[] | undefined,
+  onProfileOpen?: (stakeholderId: string) => void,
+  onChannelOpen?: (channelId: string) => void
 ): React.ReactNode {
-  const catalog = buildMentionCatalog(playerName, stakeholderNames);
-  const tokens = Array.from(catalog.keys()).sort((a, b) => b.length - a.length);
+  const mentions = buildMentionCatalog(playerName, stakeholderNames);
+  const channelCatalog = buildChannelCatalog(channels);
+  const tokens = [
+    ...Array.from(mentions.keys()),
+    ...Array.from(channelCatalog.keys()),
+  ].sort((a, b) => b.length - a.length);
   if (tokens.length === 0) return content;
 
   const regex = new RegExp(`(${tokens.map(escapeRegExp).join('|')})`, 'gi');
@@ -59,15 +81,37 @@ function renderContent(
   if (parts.length === 1) return content;
 
   return parts.map((part, i) => {
-    const meta = catalog.get(part) || catalog.get(part.toLowerCase());
+    const lower = part.toLowerCase();
+    const mention = mentions.get(part) || mentions.get(lower);
+    const channelId = channelCatalog.get(part) || channelCatalog.get(lower);
 
-    if (part === '@channel' || part === '@here' || meta) {
-      const stakeholderId = meta?.stakeholderId ?? null;
+    if (channelId) {
+      const isClickable = Boolean(onChannelOpen);
+      return (
+        <button
+          key={i}
+          type="button"
+          onClick={() => {
+            if (onChannelOpen) onChannelOpen(channelId);
+          }}
+          className={`rounded px-0.5 font-medium ${
+            isClickable
+              ? 'cursor-pointer bg-slack-mention-bg/40 text-slack-link hover:bg-slack-mention-bg/70 hover:underline'
+              : 'bg-slack-mention-bg/30 text-slack-link'
+          }`}
+        >
+          {part}
+        </button>
+      );
+    }
+
+    if (part === '@channel' || part === '@here' || mention) {
+      const stakeholderId = mention?.stakeholderId ?? null;
       const isClickable = stakeholderId !== null && Boolean(onProfileOpen);
       const isPlayerMention =
-        part.toLowerCase() === '@you' ||
-        part.toLowerCase() === '@player' ||
-        (playerName.trim() && part.toLowerCase() === `@${playerName.toLowerCase()}`);
+        lower === '@you' ||
+        lower === '@player' ||
+        (playerName.trim() && lower === `@${playerName.toLowerCase()}`);
       const displayPart =
         isPlayerMention && playerName.trim() ? `@${playerName}` : part;
 
@@ -100,12 +144,14 @@ export function Message({
   timestamp,
   playerName,
   stakeholderNames,
+  channels,
   isPlayer = false,
   mentionsPlayer = false,
   showAvatar = true,
   showHeader = true,
   animate = true,
   onProfileOpen,
+  onChannelOpen,
 }: MessageProps) {
   const [visible, setVisible] = useState(!animate);
   const ref = useRef<HTMLDivElement>(null);
@@ -154,7 +200,7 @@ export function Message({
           </div>
         )}
         <div className="text-slack-text text-[14px] leading-[1.55] whitespace-pre-wrap break-words">
-          {renderContent(content, playerName, stakeholderNames, onProfileOpen)}
+          {renderContent(content, playerName, stakeholderNames, channels, onProfileOpen, onChannelOpen)}
         </div>
       </div>
     </div>

@@ -25,6 +25,9 @@ const TEST_STAKEHOLDER: Stakeholder = {
     coreFear: 'Looking indecisive',
     coreDesire: 'Winning',
     communicationStyle: 'direct',
+    voiceRegister: 'Terse imperatives.',
+    voiceExamples: ['Need this by EOD.'],
+    pushBackLines: ['Specifically?'],
   },
   mechanics: {
     patience: 0.2,

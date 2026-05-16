@@ -22,6 +22,9 @@ const STAKEHOLDERS: Stakeholder[] = [
       coreFear: 'Losing influence',
       coreDesire: 'Being valued',
       communicationStyle: 'Warm and calibrated',
+      voiceRegister: 'Warm and calibrated.',
+      voiceExamples: ['Happy to chat.'],
+      pushBackLines: ['Tell me more.'],
     },
     mechanics: {
       patience: 0.5,
@@ -46,6 +49,9 @@ const STAKEHOLDERS: Stakeholder[] = [
       coreFear: 'Being incompetent',
       coreDesire: 'Mastery',
       communicationStyle: 'Blunt and precise',
+      voiceRegister: 'Blunt and precise.',
+      voiceExamples: ['That is not how it works.'],
+      pushBackLines: ['Need a call.'],
     },
     mechanics: {
       patience: 0.4,

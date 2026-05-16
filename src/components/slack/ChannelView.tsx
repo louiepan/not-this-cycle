@@ -9,6 +9,7 @@ import { UnreadBanner } from './UnreadBanner';
 
 interface ChannelViewProps {
   channel: ChannelDef;
+  channels?: ChannelDef[];
   messages: DeliveredMessage[];
   stakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
@@ -20,11 +21,13 @@ interface ChannelViewProps {
   typingNames: string[];
   onMessageSubmit: (text: string) => void;
   onProfileOpen?: (stakeholderId: string) => void;
+  onChannelOpen?: (channelId: string) => void;
   formatTime: (ms: number) => string;
 }
 
 export function ChannelView({
   channel,
+  channels,
   messages,
   stakeholders,
   stakeholderNames,
@@ -36,6 +39,7 @@ export function ChannelView({
   typingNames,
   onMessageSubmit,
   onProfileOpen,
+  onChannelOpen,
   formatTime,
 }: ChannelViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -129,8 +133,10 @@ export function ChannelView({
           stakeholders={stakeholders}
           stakeholderNames={stakeholderNames}
           playerName={playerName}
+          channels={channels}
           formatTime={formatTime}
           onProfileOpen={onProfileOpen}
+          onChannelOpen={onChannelOpen}
         />
         {messages.length === 0 && typingNames.length === 0 && (
           <div className="px-8 py-16 text-center">

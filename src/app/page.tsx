@@ -98,7 +98,7 @@ export default function Home() {
             world={session.world}
             onBack={() => setPendingBrief(null)}
             onContinue={() => {
-              session.startGame(pendingBrief);
+              session.startGame(pendingBrief, playerName);
               setPendingBrief(null);
             }}
           />
@@ -118,7 +118,7 @@ export default function Home() {
               setPendingBrief(diff);
               return;
             }
-            session.startGame(diff);
+            session.startGame(diff, submittedName);
           }}
         />
       </Window>
@@ -133,6 +133,7 @@ export default function Home() {
           stakeholders={session.stakeholders}
           playerName={playerName}
           world={session.world}
+          sessionId={session.sessionId}
           onPlayAgain={() => {
             setSelectedProfileId(null);
             setPendingBrief(null);
