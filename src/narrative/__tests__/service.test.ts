@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { ProviderAdapter } from '../provider';
+import type { ProviderAdapter, StructuredRunRequest } from '../provider';
 import { NarrativeService } from '../service';
-import type { NarrativeReviewRequest, NarrativeTurnRequest } from '../types';
+import type {
+  NarrativeAnalyzeOutput,
+  NarrativeRealizeOutput,
+  NarrativeReviewRequest,
+  NarrativeTurnRequest,
+  TaskRunResult,
+} from '../types';
 import type { Stakeholder } from '@/engine/types';
 
 const TEST_STAKEHOLDER: Stakeholder = {
@@ -170,5 +176,130 @@ describe('NarrativeService fallback behavior', () => {
     expect(response.fallbackUsed).toBe(true);
     expect(response.managerReview).toBe('Existing manager review');
     expect(response.peerFeedback.length).toBeGreaterThan(0);
+  });
+});
+
+function makeRunResult<T>(parsed: T): TaskRunResult<T> {
+  return {
+    parsed,
+    rawText: JSON.stringify(parsed),
+    usage: {
+      inputTokens: 100,
+      outputTokens: 50,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      totalTokens: 150,
+    },
+    latencyMs: 10,
+    estimatedCostUsd: 0.001,
+    cache: { hit: false },
+    providerResponseId: 'resp-1',
+    warnings: [],
+    providerId: 'openai',
+    modelId: 'gpt-5-mini',
+    snapshot: 'test',
+  };
+}
+
+interface ScriptedOutputs {
+  analyze: NarrativeAnalyzeOutput;
+  realize: NarrativeRealizeOutput;
+}
+
+function makeScriptedProvider(outputs: ScriptedOutputs): ProviderAdapter {
+  return {
+    id: 'openai',
+    isConfigured: () => true,
+    capabilities: () => [],
+    healthCheck: async () => ({ ok: true, providerId: 'openai' }),
+    estimateCost: () => 0,
+    runStructured: async <T,>(req: StructuredRunRequest<T>): Promise<TaskRunResult<T>> => {
+      const key = req.schemaName;
+      if (key === 'NarrativeAnalyzeOutput') {
+        return makeRunResult(outputs.analyze) as TaskRunResult<T>;
+      }
+      if (key === 'NarrativeRealizeOutput') {
+        return makeRunResult(outputs.realize) as TaskRunResult<T>;
+      }
+      throw new Error(`No scripted output for schema ${key}`);
+    },
+    runText: async () => {
+      throw new Error('not implemented');
+    },
+  };
+}
+
+describe('NarrativeService realize guardrails', () => {
+  it('filters drifty reactions that reference out-of-scope authored beats', async () => {
+    const provider = makeScriptedProvider({
+      analyze: {
+        matchedChoiceId: 'commit',
+        confidence: 0.9,
+        tone: 'committing',
+        signals: ['ownership'],
+        addressedStakeholderIds: ['the-vp'],
+        memoryPatch: {},
+        contradictionFlags: [],
+        complexityScore: 1,
+      },
+      realize: {
+        selectedBeatId: 'evt-vp-data-reaction',
+        reactionMessages: [
+          {
+            id: 'msg-mgr-heads-up',
+            from: 'the-manager',
+            content: 'Heads up: Sarah was not thrilled.',
+            delay: 0,
+          },
+          {
+            id: 'ai-react-valid',
+            from: 'the-vp',
+            content: 'Noted.',
+            delay: 0,
+          },
+        ],
+        toneTags: [],
+      },
+    });
+
+    const service = new NarrativeService({ openai: provider });
+    const response = await service.runTurn(createTurnRequest({ allowedBeatIds: [] }));
+
+    expect(response.reactionMessages.map((reaction) => reaction.id)).toEqual(['ai-react-valid']);
+    expect(response.fallbackUsed).toBe(true);
+    expect(response.fallbackReason).toContain('Realize guardrail');
+  });
+
+  it('keeps clean output untouched', async () => {
+    const provider = makeScriptedProvider({
+      analyze: {
+        matchedChoiceId: 'commit',
+        confidence: 0.95,
+        tone: 'committing',
+        signals: ['ownership'],
+        addressedStakeholderIds: ['the-vp'],
+        memoryPatch: {},
+        contradictionFlags: [],
+        complexityScore: 1,
+      },
+      realize: {
+        selectedBeatId: null,
+        reactionMessages: [
+          {
+            id: 'ai-react-vp-1',
+            from: 'the-vp',
+            content: 'Good. Send me the one-pager by EOD.',
+            delay: 1500,
+          },
+        ],
+        toneTags: ['firm'],
+      },
+    });
+
+    const service = new NarrativeService({ openai: provider });
+    const response = await service.runTurn(createTurnRequest({ allowedBeatIds: [] }));
+
+    expect(response.reactionMessages).toHaveLength(1);
+    expect(response.fallbackUsed).toBe(false);
   });
 });

@@ -296,6 +296,9 @@ const EVENTS: GameEvent[] = [
   },
 
   // Manager DM — morning greeting
+  // ORDER IS LOAD-BEARING: greeting -> welcome -> re-grounding -> pinned references.
+  // The "Heads up: {VP} was not thrilled" beat (evt-vp-data-reaction) must NEVER appear
+  // in this event — it only fires after the player surfaces revenue data. Eval enforces this.
   {
     id: 'evt-history-dm-manager',
     triggerAt: 0,
@@ -304,9 +307,33 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-dm-mgr-morning',
         from: 'the-manager',
-        content: 'Good morning! Big day today. Let me know if you need anything — I\'m in back-to-backs but can make time.',
+        content: 'Big day today. Let me know if you need anything — I\'m in back-to-backs but can make time.',
         delay: 0,
         mentionsPlayer: true,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-welcome',
+        from: 'the-manager',
+        content: 'And welcome aboard, formally. I know you\'ve been onboarding but today is where it gets real.',
+        delay: 2500,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-regrounding',
+        from: 'the-manager',
+        content: 'Quick re-grounding before you jump in: the mandate {{the-vp.firstName}} gave me for {{world.teamName}} this quarter is "unblock the Q4 roadmap." Translation: something demo-able at the all-hands in 6 weeks, without breaking what already works. You\'ve got more latitude than your predecessor had — use it.',
+        delay: 4000,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-pinned',
+        from: 'the-manager',
+        content: 'I pinned the Q4 priorities recap at the top of #q4-planning this morning — read that first. The tracker {{the-tpm.firstName}} runs is linked in there too.',
+        delay: 6000,
+        mentionsPlayer: false,
         contextValue: 'ambient',
       },
     ],
