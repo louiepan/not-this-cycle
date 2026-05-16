@@ -165,6 +165,8 @@ export interface StakeholderPersonality {
   coreFear: string;
   coreDesire: string;
   communicationStyle: string;
+  voiceRegister: string;
+  voiceExamples: string[];
 }
 
 export interface StakeholderMechanics {
@@ -312,16 +314,33 @@ export interface ChannelDef {
 
 export interface ScenarioWorldTemplate {
   templateId: string;
+  // Pooled fields — engine picks one entry per session for procedural variation
   companyNamePool: string[];
   teamNamePool: string[];
   predecessorContextPool: string[];
+  // Fixed fields — same across every session in this template, shape the
+  // strategic context the player walks into and the AI's system prompt
+  productDescription: string;
+  stage: string;
+  annualThemes: string[];
+  boardPressure: string;
+  teamCharter: string;
+  mandate: string;
 }
 
 export interface ScenarioWorld {
   templateId: string;
+  // Resolved from pools at session start
   companyName: string;
   teamName: string;
   predecessorContext: string;
+  // Carried through from template
+  productDescription: string;
+  stage: string;
+  annualThemes: string[];
+  boardPressure: string;
+  teamCharter: string;
+  mandate: string;
 }
 
 export interface Scenario {
@@ -336,6 +355,7 @@ export interface Scenario {
     selectCount: number;
   };
   channels: ChannelDef[];
+  initialActiveChannel?: string;
   events: GameEvent[];
   ambientPools: MessagePool[];
   eventSlots?: EventSlot[];

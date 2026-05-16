@@ -83,6 +83,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const reviewRequestedRef = useRef(false);
   const reviewRequestVersionRef = useRef(0);
   const nudgeActiveRef = useRef(false);
+  const gameCompleteRef = useRef(false);
 
   const clearTypingTimeouts = useCallback(() => {
     for (const timeout of typingTimeoutsRef.current.values()) {
@@ -165,7 +166,8 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
 
     handleActions(actions);
 
-    if (engine.isComplete()) {
+    if (engine.isComplete() && !gameCompleteRef.current) {
+      gameCompleteRef.current = true;
       clearTypingTimeouts();
       setTypingState({});
       const rating = buildPeerFeedback(ratingEngineRef.current.computeRating(newState));
@@ -206,6 +208,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       reviewRequestedRef.current = false;
       reviewRequestVersionRef.current = 0;
       nudgeActiveRef.current = false;
+      gameCompleteRef.current = false;
       startClock();
 
       track('session_start', { difficulty: diff.id, seed });
@@ -231,6 +234,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     reviewRequestedRef.current = false;
     reviewRequestVersionRef.current = 0;
     nudgeActiveRef.current = false;
+    gameCompleteRef.current = false;
   }, [clearTypingTimeouts, stopClock]);
 
   const resolveDecision = useCallback(
@@ -345,6 +349,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
             difficulty: difficulty.id,
             playerText: text,
             allowLowConfidenceMatch: nudgeActiveRef.current,
+            world,
             stakeholders: engine.getStakeholders(),
             messages: gameState.messages.slice(-20).map((message) => ({
               id: message.id,
@@ -421,7 +426,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         }
       })();
     },
-    [difficulty.id, gameState, resolveDecision, scenario.id]
+    [difficulty.id, gameState, resolveDecision, scenario.id, world]
   );
 
   const switchChannel = useCallback((channelId: string) => {
@@ -494,6 +499,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     void requestNarrativeReview({
       sessionId,
       scenarioId: scenario.id,
+      world,
       stakeholders,
       ratingResult,
     })
@@ -524,7 +530,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       .catch(() => {
         // Keep the deterministic review content when generation fails.
       });
-  }, [phase, ratingResult, scenario.id, stakeholders]);
+  }, [phase, ratingResult, scenario.id, stakeholders, world]);
 
   return {
     phase,

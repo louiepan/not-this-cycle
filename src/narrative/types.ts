@@ -5,6 +5,7 @@ import type {
   MessageContextValue,
   PlayerReplyAnalysis,
   RatingResult,
+  ScenarioWorld,
   Stakeholder,
   Tone,
 } from '@/engine/types';
@@ -210,6 +211,7 @@ export interface NarrativeTurnRequest {
   difficulty: Difficulty;
   playerText: string;
   allowLowConfidenceMatch?: boolean;
+  world?: ScenarioWorld;
   stakeholders: Stakeholder[];
   messages: NarrativeMessageContext[];
   decision: NarrativeDecisionContext;
@@ -235,6 +237,7 @@ export interface NarrativeTurnResponse {
 export interface NarrativeReviewRequest {
   sessionId: string;
   scenarioId: string;
+  world?: ScenarioWorld;
   stakeholders: Stakeholder[];
   ratingResult: RatingResult;
   narrativeMemory?: NarrativeMemory;

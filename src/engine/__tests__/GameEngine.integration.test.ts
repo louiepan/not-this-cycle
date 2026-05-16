@@ -18,6 +18,12 @@ const TEST_SCENARIO: Scenario = {
     companyNamePool: ['TestCo'],
     teamNamePool: ['Test Team'],
     predecessorContextPool: ['The previous PM left abruptly.'],
+    productDescription: 'test software',
+    stage: 'Series A',
+    annualThemes: ['Test theme'],
+    boardPressure: 'Test pressure.',
+    teamCharter: 'Test charter.',
+    mandate: 'Test mandate.',
   },
   stakeholders: [
     {
@@ -35,6 +41,8 @@ const TEST_SCENARIO: Scenario = {
         coreFear: 'Being irrelevant',
         coreDesire: 'Achievement',
         communicationStyle: 'Direct and concise',
+        voiceRegister: 'Direct and concise.',
+        voiceExamples: ['Need a decision today.'],
       },
       mechanics: {
         patience: 0.5,

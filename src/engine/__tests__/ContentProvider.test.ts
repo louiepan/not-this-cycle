@@ -15,6 +15,12 @@ const MINIMAL_SCENARIO: Scenario = {
       'The previous PM rage-quit on a Tuesday.',
       'The previous PM was promoted out, allegedly.',
     ],
+    productDescription: 'workflow software',
+    stage: 'Series B',
+    annualThemes: ['Move upmarket'],
+    boardPressure: 'Board wants growth.',
+    teamCharter: 'Owns onboarding.',
+    mandate: 'Unblock the roadmap.',
   },
   stakeholders: [
     {
@@ -32,6 +38,8 @@ const MINIMAL_SCENARIO: Scenario = {
         coreFear: 'Being irrelevant',
         coreDesire: 'Achievement',
         communicationStyle: 'Direct',
+        voiceRegister: 'Direct.',
+        voiceExamples: ['Make it happen.'],
       },
       mechanics: {
         patience: 0.5,

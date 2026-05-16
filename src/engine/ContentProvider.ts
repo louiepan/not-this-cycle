@@ -137,6 +137,12 @@ export class StaticContentProvider implements ContentProvider {
       companyName: this.rng.pick(template.companyNamePool),
       teamName: this.rng.pick(template.teamNamePool),
       predecessorContext: this.rng.pick(template.predecessorContextPool),
+      productDescription: template.productDescription,
+      stage: template.stage,
+      annualThemes: template.annualThemes,
+      boardPressure: template.boardPressure,
+      teamCharter: template.teamCharter,
+      mandate: template.mandate,
     };
   }
 
