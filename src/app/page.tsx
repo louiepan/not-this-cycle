@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useGameSession } from '@/hooks/useGameSession';
 import { Q4_PLANNING_SCENARIO } from '@/content/scenarios/q4-planning';
 import { AcceptOfferScreen } from '@/components/game/AcceptOfferScreen';
@@ -12,57 +12,20 @@ import { Window } from '@/components/layout/Window';
 import type { DifficultyConfig, PendingDecision } from '@/engine/types';
 import { buildPeerFeedback } from '@/review/buildPeerFeedback';
 
-const INTRO_STORAGE_KEY = 'ntc:intro:v1';
-
-interface StoredIntro {
-  fullName: string;
-  email: string;
-  marketingConsent: boolean;
-  capturedAt: string;
-}
-
 export default function Home() {
   const session = useGameSession(Q4_PLANNING_SCENARIO);
   const [playerName, setPlayerName] = useState('You');
+  // playerEmail stays in component state only; not persisted across refreshes.
+  // Marketing-platform sync will dedupe by email when wired up (BACKLOG).
   const [playerEmail, setPlayerEmail] = useState('');
-  const [introHydrated, setIntroHydrated] = useState(false);
   const [introCompleted, setIntroCompleted] = useState(false);
   const [pendingBrief, setPendingBrief] = useState<DifficultyConfig | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-
-  // Hydrate intro state from localStorage on mount so refresh doesn't re-prompt.
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(INTRO_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as StoredIntro;
-        if (parsed?.fullName && parsed?.email) {
-          setPlayerName(parsed.fullName);
-          setPlayerEmail(parsed.email);
-          setIntroCompleted(true);
-        }
-      }
-    } catch {
-      // Ignore corrupt storage; user will just see the intro again.
-    }
-    setIntroHydrated(true);
-  }, []);
 
   const handleIntroSubmit = (data: IntroSubmission) => {
     setPlayerName(data.fullName);
     setPlayerEmail(data.email);
     setIntroCompleted(true);
-    try {
-      const payload: StoredIntro = {
-        fullName: data.fullName,
-        email: data.email,
-        marketingConsent: data.marketingConsent,
-        capturedAt: new Date().toISOString(),
-      };
-      window.localStorage.setItem(INTRO_STORAGE_KEY, JSON.stringify(payload));
-    } catch {
-      // Storage may be unavailable (private mode, quota); session-only is acceptable.
-    }
     // TODO: forward to marketing platform per BACKLOG (email sync + consent gating).
   };
 
@@ -70,9 +33,6 @@ export default function Home() {
     if (!session.ratingResult) return null;
     return buildPeerFeedback(session.ratingResult);
   }, [session.ratingResult]);
-
-  // Avoid flashing the intro before localStorage hydration finishes.
-  if (!introHydrated) return null;
 
   if (!introCompleted) {
     return (
