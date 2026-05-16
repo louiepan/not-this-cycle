@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Helix · Calibration Q4 2025 · Your performance review</title>
+<style>
+  :root {
+    --bg-canvas: #F4F0EA;
+    --bg-sidebar: #ECE7DE;
+    --bg-panel: #FAF7F2;
+    --bg-elevated: #FFFFFF;
+    --bg-hover: #E8E2D8;
+    --bg-input: #FFFFFF;
+    --border-subtle: #E2DCD0;
+    --border-default: #CDC4B5;
+    --border-strong: #B5AB99;
+    --text-primary: #1A140C;
+    --text-secondary: #5C5246;
+    --text-tertiary: #8A8073;
+    --text-quaternary: #B5AB99;
+    --accent: #C2683A;
+    --accent-soft: #C2683A14;
+    --accent-border: #C2683A40;
+    --accent-strong: #A85628;
+    --positive: #3C8A5E;
+    --positive-soft: #3C8A5E14;
+    --neutral: #948C7E;
+    --concern: #A85B3F;
+    --concern-soft: #A85B3F14;
+    --shadow-sm: 0 1px 2px rgba(58, 42, 22, 0.05);
+    --shadow-md: 0 1px 3px rgba(58, 42, 22, 0.06), 0 4px 14px rgba(58, 42, 22, 0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ============ Top bar ============ */
+  .topbar {
+    flex-shrink: 0;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand-mark {
+    width: 26px; height: 26px;
+    background: linear-gradient(135deg, #E8915A, #C26B3D);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #1A0E07; font-weight: 800; font-size: 13px;
+    letter-spacing: -0.04em;
+  }
+  .brand-text { line-height: 1.25; }
+  .brand-name { font-size: 13.5px; font-weight: 700; letter-spacing: -0.01em; }
+  .brand-app { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+
+  .nav-divider { width: 1px; height: 20px; background: var(--border-default); }
+
+  .top-nav {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .top-nav-item {
+    padding: 7px 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  .top-nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .top-nav-item.active {
+    color: var(--text-primary);
+    font-weight: 600;
+    background: var(--bg-canvas);
+  }
+
+  .topbar-spacer { flex: 1; }
+
+  .cycle-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 4px 10px 4px 8px;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .cycle-pill .dot {
+    width: 6px; height: 6px;
+    background: var(--neutral);
+    border-radius: 50%;
+  }
+
+  .top-user {
+    display: flex; align-items: center; gap: 9px;
+  }
+  .top-user .meta {
+    text-align: right; line-height: 1.25;
+  }
+  .top-user .name { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+  .top-user .role { font-size: 11px; color: var(--text-tertiary); }
+  .avatar {
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+  }
+  .avatar.sm { width: 26px; height: 26px; font-size: 10.5px; }
+  .avatar.md { width: 32px; height: 32px; font-size: 12px; }
+  .avatar.lg { width: 40px; height: 40px; font-size: 14px; border-radius: 7px; }
+  .avatar.xl { width: 56px; height: 56px; font-size: 18px; border-radius: 10px; }
+  .avatar-you { background: linear-gradient(135deg, #6E6359, #45403A); }
+  .avatar-samira { background: linear-gradient(135deg, #4AA572, #2C7548); }
+  .avatar-derek { background: linear-gradient(135deg, #A55E4A, #75382C); }
+  .avatar-maya { background: linear-gradient(135deg, #4A6FA5, #2C4A75); }
+  .avatar-tomas { background: linear-gradient(135deg, #8A4AA5, #5C2C75); }
+  .avatar-priya { background: linear-gradient(135deg, #A5984A, #75682C); }
+
+  /* ============ Page ============ */
+  .scroll {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .page-wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 32px 32px 64px;
+  }
+
+  /* ============ Page header ============ */
+  .page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 28px;
+  }
+  .page-eyebrow {
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-bottom: 10px;
+  }
+  .page-eyebrow::before {
+    content: ''; width: 5px; height: 5px;
+    background: var(--accent); transform: rotate(45deg);
+  }
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+  .page-meta {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .page-meta .meta-sep { color: var(--text-quaternary); }
+  .page-meta a { color: var(--text-secondary); text-decoration: none; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 5px 12px 5px 10px;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .status-pill .dot {
+    width: 6px; height: 6px;
+    background: var(--neutral);
+    border-radius: 50%;
+  }
+
+  /* ============ Cards ============ */
+  .card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 18px 22px 14px;
+    display: flex; align-items: baseline; gap: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .card-eyebrow {
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    flex: 1;
+  }
+  .card-meta {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+  .card-body { padding: 22px; }
+
+  /* ============ Calibration distribution ============ */
+  .calibration {
+    padding: 28px 22px 22px;
+  }
+  .calibration-heading {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .calibration-eyebrow {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+  }
+  .calibration-bucket-name {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-top: 10px;
+  }
+  .calibration-bucket-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    max-width: 56ch;
+    line-height: 1.6;
+  }
+
+  .calibration-cohort {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .calibration-cohort .label {
+    font-size: 11px; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+  }
+  .calibration-cohort .val {
+    font-size: 22px; font-weight: 700; color: var(--text-primary);
+    letter-spacing: -0.02em; margin-top: 6px;
+    font-feature-settings: 'tnum';
+  }
+  .calibration-cohort .delta {
+    font-size: 11px; color: var(--text-tertiary); margin-top: 2px;
+  }
+
+  .distribution {
+    margin-top: 24px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 16px 16px 14px;
+  }
+  .distribution-label {
+    font-size: 11px; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .distribution-bar {
+    display: flex;
+    width: 100%;
+    height: 32px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    position: relative;
+  }
+  .dist-segment {
+    height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border-subtle);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    font-feature-settings: 'tnum';
+  }
+  .dist-segment:last-child { border-right: 0; }
+  .dist-segment.you {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+
+  .distribution-marker {
+    position: relative;
+    margin-top: 10px;
+    height: 24px;
+  }
+  .distribution-pin {
+    position: absolute;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .pin-arrow {
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 6px solid var(--accent);
+    margin-bottom: 2px;
+  }
+  .pin-label {
+    font-size: 11px;
+    color: var(--accent-strong);
+    font-weight: 700;
+    background: var(--bg-elevated);
+    border: 1px solid var(--accent-border);
+    border-radius: 12px;
+    padding: 2px 8px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .distribution-axis {
+    display: flex;
+    width: 100%;
+    margin-top: 8px;
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+  .axis-tick {
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .promotion-strip {
+    margin-top: 22px;
+    padding: 14px 18px;
+    background: var(--concern-soft);
+    border: 1px solid var(--concern);
+    border-radius: 9px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .promotion-strip .badge-deferred {
+    background: var(--concern);
+    color: #fff;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .promotion-strip .text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .promotion-strip .text strong { font-weight: 600; }
+  .promotion-strip a {
+    color: var(--concern);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 12.5px;
+    flex-shrink: 0;
+  }
+
+  /* ============ Archetype card ============ */
+  .archetype {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 22px;
+    align-items: flex-start;
+  }
+  .archetype-glyph {
+    width: 96px; height: 96px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .archetype-content {
+    min-width: 0;
+  }
+  .archetype-name {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    color: var(--text-primary);
+  }
+  .archetype-tagline {
+    font-size: 13.5px;
+    color: var(--accent-strong);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .archetype-desc {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    margin-top: 12px;
+  }
+  .archetype-meta {
+    display: flex; gap: 18px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+  }
+  .archetype-meta strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-feature-settings: 'tnum';
+  }
+
+  /* ============ Variables ============ */
+  .var-list {
+    display: flex; flex-direction: column;
+  }
+  .var-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 60px;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .var-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .var-row:first-child { padding-top: 0; }
+  .var-name {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  .var-name .invert {
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    margin-left: 6px;
+    font-weight: 500;
+  }
+  .var-bar-track {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .var-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+  .fill-positive { background: var(--positive); }
+  .fill-neutral { background: var(--neutral); }
+  .fill-concern { background: var(--concern); }
+  .var-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum';
+  }
+
+  .var-summary {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 12px;
+    color: var(--text-tertiary);
+    line-height: 1.6;
+  }
+  .var-summary strong { color: var(--text-secondary); font-weight: 600; }
+
+  /* ============ Manager review ============ */
+  .review-attribution {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .review-attribution .meta { line-height: 1.3; }
+  .review-attribution .name {
+    font-size: 13.5px; font-weight: 600; color: var(--text-primary);
+  }
+  .review-attribution .role {
+    font-size: 11.5px; color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+  .review-body {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.7;
+  }
+  .review-body p { margin-bottom: 14px; }
+  .review-body p:last-child { margin-bottom: 0; }
+
+  .committee-note {
+    margin-top: 18px;
+    padding: 12px 14px;
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    line-height: 1.55;
+  }
+  .committee-note strong {
+    color: var(--text-secondary); font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 10.5px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ============ Peer feedback ============ */
+  .peer-list { display: flex; flex-direction: column; }
+  .peer-row {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: flex-start;
+  }
+  .peer-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .peer-row:first-child { padding-top: 0; }
+  .peer-meta { line-height: 1.3; }
+  .peer-name {
+    font-size: 13.5px; font-weight: 600; color: var(--text-primary);
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .peer-role {
+    font-size: 11.5px; color: var(--text-tertiary); font-weight: 500;
+  }
+  .peer-tone {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: auto;
+  }
+  .tone-polite { background: var(--positive-soft); color: var(--positive); }
+  .tone-pointed { background: var(--accent-soft); color: var(--accent-strong); }
+  .tone-mask-off { background: var(--concern-soft); color: var(--concern); }
+  .peer-quote {
+    font-size: 13.5px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    margin-top: 6px;
+  }
+  .peer-quote::before { content: '"'; color: var(--text-quaternary); margin-right: 1px; }
+  .peer-quote::after { content: '"'; color: var(--text-quaternary); margin-left: 1px; }
+
+  /* ============ Promotion section ============ */
+  .promo-block {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 28px;
+    align-items: flex-start;
+  }
+  .promo-headline {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.25;
+  }
+  .promo-status {
+    display: inline-flex; align-items: center; gap: 7px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--concern);
+    font-weight: 600;
+  }
+  .promo-status::before {
+    content: ''; width: 7px; height: 7px;
+    background: var(--concern);
+    border-radius: 50%;
+  }
+  .promo-summary {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-top: 14px;
+    line-height: 1.65;
+  }
+
+  .criteria-list {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .criteria-label {
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .criteria-item {
+    display: grid;
+    grid-template-columns: 14px 1fr;
+    gap: 9px;
+    font-size: 12.5px;
+    color: var(--text-primary);
+    padding: 5px 0;
+    align-items: flex-start;
+    line-height: 1.5;
+  }
+  .criteria-item .check {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--text-tertiary);
+    border-radius: 3px;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+
+  /* ============ Footer CTA ============ */
+  .footer-cta {
+    margin-top: 28px;
+    padding: 22px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .footer-cta .copy {
+    flex: 1;
+    line-height: 1.55;
+  }
+  .footer-cta .copy .head {
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+  }
+  .footer-cta .copy .sub {
+    font-size: 12.5px; color: var(--text-tertiary); margin-top: 4px;
+  }
+  .btn-secondary {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+    padding: 9px 16px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-secondary:hover { border-color: var(--border-strong); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 1px 2px rgba(168, 86, 40, 0.25);
+  }
+  .btn-primary:hover { background: var(--accent-strong); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ========= TOP BAR ========= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">H</div>
+      <div class="brand-text">
+        <div class="brand-name">Helix</div>
+        <div class="brand-app">Calibration</div>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <nav class="top-nav">
+      <a class="top-nav-item active">My Cycle</a>
+    </nav>
+    <div class="topbar-spacer"></div>
+    <div class="cycle-pill"><span class="dot"></span>Review date: May 15, 2026</div>
+    <div class="top-user">
+      <div class="meta">
+        <div class="name">Louis Pan</div>
+        <div class="role">Senior PM &middot; Growth</div>
+      </div>
+      <div class="avatar md avatar-you">LP</div>
+    </div>
+  </header>
+
+  <!-- ========= MAIN ========= -->
+  <main class="scroll">
+    <div class="page-wrap">
+
+      <!-- Page header -->
+      <div class="page-header">
+        <div>
+          <span class="page-eyebrow">Q4 2025 &middot; Calibration cycle</span>
+          <h1 class="page-title">Your performance review</h1>
+          <div class="page-meta">
+            <span>Reviewed by <a href="#">Samira Patel</a></span>
+            <span class="meta-sep">&middot;</span>
+            <span>Director of Product</span>
+            <span class="meta-sep">&middot;</span>
+            <span>Released 16 minutes ago</span>
+          </div>
+        </div>
+        <div class="status-pill"><span class="dot"></span>Calibration finalized</div>
+      </div>
+
+      <!-- ========= 1. Calibration outcome ========= -->
+      <div class="card">
+        <div class="calibration">
+          <div class="calibration-heading">
+            <div>
+              <div class="calibration-eyebrow">Cycle outcome</div>
+              <div class="calibration-bucket-name">Meets Expectations</div>
+              <p class="calibration-bucket-desc">
+                You operated at the bar expected of your level. Strong on judgment, room
+                to grow on cross-functional clarity. Final placement reflects committee
+                consensus across six partner reviewers.
+              </p>
+            </div>
+            <div class="calibration-cohort">
+              <div class="label">Composite</div>
+              <div class="val">62 / 100</div>
+              <div class="delta">cohort median: 64</div>
+            </div>
+          </div>
+
+          <div class="distribution">
+            <div class="distribution-label">Cohort distribution &middot; Q4 PM org</div>
+            <div class="distribution-bar">
+              <div class="dist-segment" style="width: 5%">5%</div>
+              <div class="dist-segment" style="width: 15%">15%</div>
+              <div class="dist-segment you" style="width: 50%">50%</div>
+              <div class="dist-segment" style="width: 25%">25%</div>
+              <div class="dist-segment" style="width: 5%">5%</div>
+            </div>
+            <div class="distribution-marker">
+              <div class="distribution-pin" style="left: 38%">
+                <div class="pin-arrow"></div>
+                <div class="pin-label">You &middot; Meets</div>
+              </div>
+            </div>
+            <div class="distribution-axis">
+              <div class="axis-tick" style="width: 5%">Needs<br>improvement</div>
+              <div class="axis-tick" style="width: 15%">Below<br>expectations</div>
+              <div class="axis-tick" style="width: 50%">Meets<br>expectations</div>
+              <div class="axis-tick" style="width: 25%">Exceeds<br>expectations</div>
+              <div class="axis-tick" style="width: 5%">Strongly<br>exceeds</div>
+            </div>
+          </div>
+
+          <div class="promotion-strip">
+            <span class="badge-deferred">Promotion deferred</span>
+            <span class="text">
+              <strong>Promotion to Staff Product Manager:</strong> not advanced this cycle.
+              Outstanding criteria documented below.
+            </span>
+            <a href="#promotion">View detail &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========= 2. Detected archetype ========= -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-eyebrow">Detected pattern</span>
+          <span class="card-title">Operating archetype</span>
+          <span class="card-meta">inferred from decision history</span>
+        </div>
+        <div class="card-body">
+          <div class="archetype">
+            <div class="archetype-glyph">C</div>
+            <div class="archetype-content">
+              <div class="archetype-name">The Cassandra</div>
+              <div class="archetype-tagline">You saw the problems. You called them out. Few listened.</div>
+              <p class="archetype-desc">
+                Across the cycle you repeatedly flagged risks &mdash; timeline slip, headcount
+                mismatch, design ambiguity &mdash; without converting them into commitments.
+                Cassandras generate valuable signal but are rarely promoted on signal alone.
+                Next cycle, pair every flagged risk with a concrete proposal and an owner.
+              </p>
+              <div class="archetype-meta">
+                <span>Match confidence: <strong>76%</strong></span>
+                <span>Adjacent archetypes: <strong>The Shield, The Diplomat</strong></span>
+                <span>Population frequency: <strong>11% of cohort</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========= 3. Performance variables ========= -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-eyebrow">Signals</span>
+          <span class="card-title">Performance variables</span>
+          <span class="card-meta">aggregated from 142 events this cycle</span>
+        </div>
+        <div class="card-body">
+          <div class="var-list">
+
+            <div class="var-row">
+              <div class="var-name">Product judgment</div>
+              <div class="var-bar-track"><div class="var-bar-fill fill-positive" style="width: 76%"></div></div>
+              <div class="var-value">76</div>
+            </div>
+
+            <div class="var-row">
+              <div class="var-name">Communication effectiveness</div>
+              <div class="var-bar-track"><div class="var-bar-fill fill-positive" style="width: 71%"></div></div>
+              <div class="var-value">71</div>
+            </div>
+
+            <div class="var-row">
+              <div class="var-name">Executive trust</div>
+              <div class="var-bar-track"><div class="var-bar-fill fill-neutral" style="width: 62%"></div></div>
+              <div class="var-value">62</div>
+            </div>
+
+            <div class="var-row">
+              <div class="var-name">Team morale</div>
+              <div class="var-bar-track"><div class="var-bar-fill fill-concern" style="width: 48%"></div></div>
+              <div class="var-value">48</div>
+            </div>
+
+            <div class="var-row">
+              <div class="var-name">Tech debt accrued <span class="invert">lower is better</span></div>
+              <div class="var-bar-track"><div class="var-bar-fill fill-concern" style="width: 41%"></div></div>
+              <div class="var-value">41</div>
+            </div>
+
+            <div class="var-row">
+              <div class="var-name">Responsiveness debt <span class="invert">lower is better</span></div>
+              <div class="var-bar-track"><div class="var-bar-fill fill-neutral" style="width: 39%"></div></div>
+              <div class="var-value">39</div>
+            </div>
+
+          </div>
+          <div class="var-summary">
+            <strong>Trend:</strong> judgment and communication ran ahead of trust and morale this cycle.
+            That gap is the most common precursor to a deferred promotion. Closing it is the focus area
+            committee identified for Q1.
+          </div>
+        </div>
+      </div>
+
+      <!-- ========= 4. Manager review ========= -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-eyebrow">Written review</span>
+          <span class="card-title">Manager commentary</span>
+        </div>
+        <div class="card-body">
+          <div class="review-attribution">
+            <div class="avatar lg avatar-samira">SP</div>
+            <div class="meta">
+              <div class="name">Samira Patel</div>
+              <div class="role">Director of Product &middot; your manager</div>
+            </div>
+          </div>
+          <div class="review-body">
+            <p>
+              Louis demonstrated thoughtful product judgment this cycle and showed real
+              ownership of the cart-recovery surface area. The bar he set on prioritization
+              rigor is something I'd like to see modeled across the org going forward.
+            </p>
+            <p>
+              There's room to grow on cross-functional communication and stakeholder
+              management &mdash; particularly when timelines slipped, we'd like to see more
+              proactive escalation rather than reactive resolution. Several partners
+              flagged moments where pre-alignment could have changed outcomes.
+            </p>
+            <p>
+              Going into Q1, focus on building executive trust through demonstrated
+              decision velocity and clearer trade-off articulation. We're confident in
+              your trajectory and will revisit promotion readiness at the next calibration.
+            </p>
+          </div>
+          <div class="committee-note">
+            <strong>Calibration committee note</strong>
+            Final placement reflects consensus across six partner reviewers.
+            Ratings were normalized against the L5 distribution.
+            Outstanding feedback items are surfaced in your career framework.
+          </div>
+        </div>
+      </div>
+
+      <!-- ========= 5. Peer feedback ========= -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-eyebrow">360 inputs</span>
+          <span class="card-title">Peer feedback</span>
+          <span class="card-meta">5 reviewers &middot; anonymized below the manager line</span>
+        </div>
+        <div class="card-body">
+          <div class="peer-list">
+
+            <div class="peer-row">
+              <div class="avatar md avatar-derek">DW</div>
+              <div>
+                <div class="peer-name">
+                  Derek Walsh
+                  <span class="peer-role">Engineering Manager</span>
+                  <span class="peer-tone tone-mask-off">Mask off</span>
+                </div>
+                <div class="peer-quote">Engineering felt under-prioritized in the Q4 plan. Open to a deeper partnership next cycle, but only if scoping is owned earlier.</div>
+              </div>
+            </div>
+
+            <div class="peer-row">
+              <div class="avatar md avatar-maya">MC</div>
+              <div>
+                <div class="peer-name">
+                  Maya Chen
+                  <span class="peer-role">Senior PM, Retention</span>
+                  <span class="peer-tone tone-pointed">Pointed</span>
+                </div>
+                <div class="peer-quote">Direct and decisive when present, but several decisions felt rushed. Would value more pre-alignment on cross-team work.</div>
+              </div>
+            </div>
+
+            <div class="peer-row">
+              <div class="avatar md avatar-tomas">TR</div>
+              <div>
+                <div class="peer-name">
+                  Tomás Reyes
+                  <span class="peer-role">Staff Designer</span>
+                  <span class="peer-tone tone-pointed">Pointed</span>
+                </div>
+                <div class="peer-quote">Designs were ambiguous on important calls. Looking forward to clearer briefs and earlier intent before pixel work begins.</div>
+              </div>
+            </div>
+
+            <div class="peer-row">
+              <div class="avatar md avatar-priya">PI</div>
+              <div>
+                <div class="peer-name">
+                  Priya Iyer
+                  <span class="peer-role">Senior PM, Platform</span>
+                  <span class="peer-tone tone-mask-off">Mask off</span>
+                </div>
+                <div class="peer-quote">We didn't engage much this cycle. Would welcome more inclusion in upcoming planning. Felt like a missed opportunity for both of us.</div>
+              </div>
+            </div>
+
+            <div class="peer-row">
+              <div class="avatar md avatar-samira">SP</div>
+              <div>
+                <div class="peer-name">
+                  Samira Patel
+                  <span class="peer-role">Director of Product</span>
+                  <span class="peer-tone tone-polite">Polite</span>
+                </div>
+                <div class="peer-quote">Strong potential. Leaving room for growth on stakeholder management and executive narrative. Excited to see Q1 land differently.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ========= 6. Promotion status ========= -->
+      <div class="card" id="promotion">
+        <div class="card-header">
+          <span class="card-eyebrow">Promotion candidacy</span>
+          <span class="card-title">Outcome &amp; outstanding criteria</span>
+        </div>
+        <div class="card-body">
+          <div class="promo-block">
+            <div>
+              <div class="promo-headline">Promotion to Staff Product Manager</div>
+              <div class="promo-status">Deferred &middot; revisit next cycle</div>
+              <p class="promo-summary">
+                Calibration committee acknowledged your contributions but did not advance
+                you this cycle. You're tracking on judgment and communication; the gap to
+                close is around demonstrated influence and executive sponsorship. We're
+                rooting for you.
+              </p>
+            </div>
+            <div class="criteria-list">
+              <div class="criteria-label">Outstanding criteria</div>
+              <div class="criteria-item"><span class="check"></span><span>Demonstrated executive sponsorship from VP-level or above</span></div>
+              <div class="criteria-item"><span class="check"></span><span>Cross-org influence beyond Growth, with documented partners</span></div>
+              <div class="criteria-item"><span class="check"></span><span>Track record of decision velocity under sustained pressure</span></div>
+              <div class="criteria-item"><span class="check"></span><span>Manager testimonial reflecting promotion readiness</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========= Footer CTA ========= -->
+      <div class="footer-cta">
+        <div class="copy">
+          <div class="head">Begin your next cycle?</div>
+          <div class="sub">Calibration is closed. Q1 2026 onboarding starts when you are.</div>
+        </div>
+        <button class="btn-secondary">Download review (.pdf)</button>
+        <button class="btn-primary">
+          Begin next cycle
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 7h8m0 0L7.5 3.5M11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

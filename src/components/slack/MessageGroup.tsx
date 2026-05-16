@@ -1,10 +1,11 @@
 'use client';
 
 import { Message } from './Message';
-import type { DeliveredMessage } from '@/engine/types';
+import type { DeliveredMessage, Stakeholder } from '@/engine/types';
 
 interface MessageGroupProps {
   messages: DeliveredMessage[];
+  stakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
   playerName: string;
   formatTime: (ms: number) => string;
@@ -17,11 +18,14 @@ interface MessageGroupProps {
  */
 export function MessageGroup({
   messages,
+  stakeholders,
   stakeholderNames,
   playerName,
   formatTime,
   onProfileOpen,
 }: MessageGroupProps) {
+  const roleById: Record<string, string> = {};
+  for (const s of stakeholders) roleById[s.id] = s.role;
   if (messages.length === 0) return null;
 
   const groups: { senderId: string; messages: DeliveredMessage[] }[] = [];
@@ -52,6 +56,7 @@ export function MessageGroup({
               key={msg.id}
               senderId={msg.from}
               senderName={senderName}
+              senderRole={msg.from === 'player' ? undefined : roleById[msg.from]}
               content={msg.content}
               timestamp={formatTime(msg.timestamp)}
               playerName={playerName}

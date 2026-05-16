@@ -146,33 +146,38 @@ export function MessageComposer({
     }
   }
 
+  // Suppress unused-var warnings while we lean on dialogue context for decisions.
+  void decisionSummary;
+
+  // Suppress unused warning while we lean on dialogue context for decisions.
+  void decisionSummary;
+
   return (
-    <div className="shrink-0 px-4 pb-4 sm:px-5">
-      {(hasDecision || nudge) && (
-        <div className="mb-2 flex flex-col gap-1.5">
-          {hasDecision && (
-            <div className="rounded-md border border-slack-link/20 bg-slack-link/8 px-3 py-2 text-[11px] font-medium text-slack-link">
-              <div className="font-semibold uppercase tracking-[0.16em]">Decision pending</div>
-              <div className="mt-1 text-xs leading-5 text-white/78">
-                {decisionSummary}
-              </div>
-            </div>
-          )}
-          {nudge && (
-            <div className="rounded-md border border-slack-yellow/12 bg-slack-yellow/5 px-3 py-1.5 text-[11px] font-medium text-slack-yellow">
-              {nudge}
-            </div>
-          )}
+    <div className="relative shrink-0 px-5 pb-4 pt-3">
+      {nudge && (
+        <div className="mb-2 rounded-md border border-slack-yellow/20 bg-slack-yellow/5 px-3 py-1.5 text-[11px] font-medium text-slack-yellow">
+          {nudge}
         </div>
       )}
       <div
-        className={`overflow-hidden rounded-xl border bg-slack-composer-bg focus-within:border-[#8d8d91] ${
-          hasDecision
-            ? 'border-slack-link/45 shadow-[0_0_0_1px_rgba(29,155,209,0.16),0_14px_32px_rgba(0,0,0,0.12)]'
-            : 'border-slack-composer-border shadow-[0_1px_0_rgba(255,255,255,0.75),0_1px_3px_rgba(0,0,0,0.08)]'
+        className={`overflow-hidden rounded-lg border bg-slack-composer-bg transition-colors focus-within:border-slack-text-secondary/60 ${
+          hasDecision ? 'border-slack-link/40' : 'border-slack-composer-border'
         }`}
       >
-        <div className="px-4 py-4 sm:px-5">
+        {/* Top toolbar — formatting controls. Decorative. */}
+        <div className="flex items-center gap-0.5 border-b border-slack-divider px-2 py-1.5">
+          <ToolbarText><b>B</b></ToolbarText>
+          <ToolbarText><i>I</i></ToolbarText>
+          <ToolbarText><span className="line-through">S</span></ToolbarText>
+          <div className="mx-1.5 h-4 w-px bg-slack-divider" />
+          <ToolbarIcon><path d="M5 6.5h10M5 9.5h10M5 12.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></ToolbarIcon>
+          <ToolbarIcon><path d="M3 6.5h2M3 9.5h2M3 12.5h2M7 6.5h8M7 9.5h8M7 12.5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></ToolbarIcon>
+          <div className="mx-1.5 h-4 w-px bg-slack-divider" />
+          <ToolbarIcon><path d="M9 11l-3-3 3-3M3 8h6M11 5l3 3-3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none"/></ToolbarIcon>
+        </div>
+
+        {/* Input area */}
+        <div className="px-4 py-3.5">
           <input
             ref={inputRef}
             type="text"
@@ -186,12 +191,11 @@ export function MessageComposer({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}
-            className="w-full bg-transparent text-[#1d1c1d] text-[15px] leading-6 placeholder:text-slack-composer-placeholder
-              outline-none disabled:opacity-50"
+            className="w-full bg-transparent text-[14px] leading-6 text-slack-text outline-none placeholder:text-slack-composer-placeholder disabled:opacity-50"
           />
           {mentionState && mentionSuggestions.length > 0 && (
-            <div className="mt-3 overflow-hidden rounded-xl border border-black/8 bg-white shadow-[0_14px_32px_rgba(0,0,0,0.14)]">
-              <div className="border-b border-black/6 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slack-composer-icon/70">
+            <div className="absolute bottom-full left-5 right-5 z-10 mb-2 overflow-hidden rounded-lg border border-slack-composer-border bg-slack-composer-bg shadow-[0_14px_32px_rgba(0,0,0,0.4)]">
+              <div className="border-b border-slack-divider px-3 py-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-slack-text-secondary">
                 Mention someone
               </div>
               <div className="max-h-56 overflow-y-auto py-1">
@@ -204,19 +208,15 @@ export function MessageComposer({
                       insertMention(stakeholder);
                     }}
                     className={`flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${
-                      highlightedIndex === index ? 'bg-[#f3f3f5]' : 'hover:bg-[#f7f7f8]'
+                      highlightedIndex === index ? 'bg-slack-sidebar-hover' : 'hover:bg-slack-sidebar-hover/60'
                     }`}
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/8 bg-[linear-gradient(180deg,#f4f4f7_0%,#e7e7eb_100%)] text-xs font-bold uppercase text-[#616061]">
-                      IMG
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-slack-sidebar-active to-slack-sidebar text-[11px] font-bold uppercase text-slack-text">
+                      {stakeholder.name.split(' ').map((p) => p[0]).join('').slice(0, 2)}
                     </div>
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-[#1d1c1d]">
-                        {stakeholder.name}
-                      </div>
-                      <div className="truncate text-xs text-slack-composer-icon/75">
-                        {stakeholder.role}
-                      </div>
+                      <div className="truncate text-[13px] font-semibold text-slack-text">{stakeholder.name}</div>
+                      <div className="truncate text-[11.5px] text-slack-text-secondary">{stakeholder.role}</div>
                     </div>
                   </button>
                 ))}
@@ -224,30 +224,28 @@ export function MessageComposer({
             </div>
           )}
         </div>
-        <div
-          className={`flex items-center justify-between border-t border-black/6 px-3 py-2 ${
-            hasDecision ? 'bg-slack-link/[0.08]' : 'bg-slack-composer-footer'
-          }`}
-        >
+
+        {/* Bottom toolbar + send */}
+        <div className="flex items-center justify-between border-t border-slack-divider bg-slack-composer-footer px-2 py-1.5">
           <div className="flex items-center gap-0.5">
-            <ToolbarIcon><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></ToolbarIcon>
-            <ToolbarIcon><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="9" y1="9" x2="9.01" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="15" y1="9" x2="15.01" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></ToolbarIcon>
-            <div className="w-px h-4 bg-slack-divider mx-1" />
-            <ToolbarIcon><line x1="19" y1="4" x2="10" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="14" y1="20" x2="5" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="4" x2="9" y2="20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></ToolbarIcon>
-            <ToolbarIcon><polyline points="16 18 22 12 16 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/><polyline points="8 6 2 12 8 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></ToolbarIcon>
+            <ToolbarIcon><path d="M5 12h10M10 7v10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></ToolbarIcon>
+            <ToolbarIcon><circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M7 11s1 1.5 3 1.5 3-1.5 3-1.5M8 8h.5M11.5 8h.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></ToolbarIcon>
+            <ToolbarIcon><path d="M11 6l-5 5 4 4 5-5-4-4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/></ToolbarIcon>
+            <ToolbarIcon><rect x="4" y="5" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/><path d="M4 11l3-2 2 1 3-3 4 3" stroke="currentColor" strokeWidth="1.4" fill="none"/></ToolbarIcon>
           </div>
           <button
             onClick={handleSubmit}
             disabled={!text.trim() || disabled}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+            className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${
               text.trim() && !disabled
-                ? hasDecision
-                  ? 'bg-slack-link text-[#0d0f11] hover:bg-slack-link/90 cursor-pointer'
-                  : 'bg-slack-green text-white hover:bg-slack-green/90 cursor-pointer'
-                : 'bg-transparent text-slack-composer-icon/35 cursor-default'
+                ? 'bg-slack-link text-[#1a0e07] hover:opacity-90 cursor-pointer'
+                : 'bg-transparent text-slack-text-secondary cursor-default'
             }`}
+            aria-label={hasDecision ? 'Reply' : 'Send'}
           >
-            {hasDecision ? 'Reply' : 'Send'}
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7l9-4-3.5 9-2-3.5-3.5-1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -257,10 +255,24 @@ export function MessageComposer({
 
 function ToolbarIcon({ children }: { children: React.ReactNode }) {
   return (
-    <button className="cursor-default rounded-md p-1.5 text-slack-composer-icon/60 transition-colors hover:bg-black/3 hover:text-slack-composer-icon">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <button
+      type="button"
+      className="flex h-6 w-6 cursor-default items-center justify-center rounded text-slack-composer-icon hover:bg-slack-sidebar-hover hover:text-slack-text"
+    >
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
         {children}
       </svg>
+    </button>
+  );
+}
+
+function ToolbarText({ children }: { children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      className="flex h-6 w-6 cursor-default items-center justify-center rounded font-serif text-[13px] text-slack-composer-icon hover:bg-slack-sidebar-hover hover:text-slack-text"
+    >
+      {children}
     </button>
   );
 }

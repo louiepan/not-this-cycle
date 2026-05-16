@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Helix · #q4-planning — Variant 2 (Lime / Medium)</title>
+<style>
+  :root {
+    --bg-canvas: #0E1217;
+    --bg-sidebar: #131820;
+    --bg-panel: #171D26;
+    --bg-elevated: #1B2230;
+    --bg-hover: #202938;
+    --bg-input: #161C25;
+    --border-subtle: #1F2632;
+    --border-default: #28303D;
+    --text-primary: #ECEEF1;
+    --text-secondary: #8E96A4;
+    --text-tertiary: #5C6473;
+    --text-quaternary: #404857;
+    --accent: #C8F045;
+    --accent-text: #C8F045;
+    --accent-soft: #C8F04514;
+    --accent-border: #C8F04540;
+    --presence-online: #4FC78F;
+    --presence-away: #E8B85A;
+    --presence-offline: #5C6473;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 256px 1fr 320px;
+    height: 100vh;
+  }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar {
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .workspace-header {
+    padding: 16px 16px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .workspace-name { display: flex; align-items: center; gap: 10px; }
+  .workspace-logo {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: #0E1217; font-weight: 800; font-size: 13px;
+    letter-spacing: -0.04em;
+  }
+  .workspace-title {
+    font-weight: 600; font-size: 14px; letter-spacing: -0.01em;
+  }
+  .workspace-sub {
+    font-size: 11px; color: var(--text-tertiary); margin-top: 1px;
+  }
+  .workspace-icon-btn {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-tertiary); cursor: pointer;
+    border-radius: 5px;
+  }
+  .workspace-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+  .compose-row { padding: 4px 12px 10px; }
+  .compose-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    border-radius: 7px;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .compose-btn:hover { background: var(--bg-elevated); color: var(--text-primary); border-color: #2F3848; }
+  .compose-btn .kbd {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--text-quaternary);
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+
+  .nav-section { padding: 6px 8px; }
+  .nav-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px 6px;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .nav-item .hash { color: var(--text-tertiary); font-weight: 400; }
+  .nav-item .channel-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .nav-item.active {
+    background: var(--bg-elevated);
+    color: var(--text-primary); font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .nav-item.active .hash { color: var(--text-primary); }
+
+  .nav-item.unread { color: var(--text-primary); font-weight: 600; }
+  .nav-item.unread .hash { color: var(--text-primary); }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 3px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    font-feature-settings: 'tnum';
+  }
+  .badge.mention {
+    background: var(--accent);
+    color: #0E1217;
+  }
+  .badge.unread {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+  }
+  /* unique pending decision badge */
+  .badge.decision {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent-border);
+    border-radius: 4px;
+    padding: 2px 6px 2px 5px;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .badge.decision::before {
+    content: ''; width: 5px; height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  .urgent-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .dm-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .dm-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .dm-item .presence-wrap {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #4A6FA5, #2C4A75);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8.5px; font-weight: 700; color: #fff;
+  }
+  .presence-dot {
+    position: absolute; right: -2px; bottom: -2px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--presence-offline);
+    border: 2px solid var(--bg-sidebar);
+  }
+  .presence-dot.online { background: var(--presence-online); }
+  .presence-dot.away { background: var(--presence-away); }
+
+  .dm-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dm-item.unread { color: var(--text-primary); font-weight: 600; }
+
+  .sidebar-spacer { flex: 1; }
+
+  .user-status {
+    border-top: 1px solid var(--border-subtle);
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 11px;
+  }
+  .avatar {
+    flex-shrink: 0;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+  .avatar.sm { width: 24px; height: 24px; font-size: 10px; }
+  .avatar.md { width: 32px; height: 32px; font-size: 12px; }
+  .avatar.lg { width: 40px; height: 40px; font-size: 14px; }
+  .avatar.xl { width: 72px; height: 72px; font-size: 24px; border-radius: 10px; }
+  .avatar-1 { background: linear-gradient(135deg, #4A6FA5, #2C4A75); }
+  .avatar-2 { background: linear-gradient(135deg, #A55E4A, #75382C); }
+  .avatar-3 { background: linear-gradient(135deg, #4AA572, #2C7548); }
+  .avatar-4 { background: linear-gradient(135deg, #8A4AA5, #5C2C75); }
+  .avatar-5 { background: linear-gradient(135deg, #A5984A, #75682C); }
+  .avatar-you { background: linear-gradient(135deg, #5A6170, #3F4551); }
+
+  .user-meta { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .user-role {
+    font-size: 11.5px; color: var(--text-tertiary);
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 1px;
+  }
+  .user-role::before {
+    content: ''; width: 7px; height: 7px;
+    background: var(--presence-online); border-radius: 50%;
+  }
+
+  /* ============ CHAT ============ */
+  .chat {
+    background: var(--bg-canvas);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-header {
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 18px;
+    flex-shrink: 0;
+  }
+  .channel-title { display: flex; align-items: center; gap: 8px; }
+  .channel-title .hash {
+    color: var(--text-tertiary); font-size: 18px; font-weight: 400;
+  }
+  .channel-title h1 {
+    font-size: 16px; font-weight: 600; letter-spacing: -0.015em;
+  }
+  .channel-meta {
+    font-size: 12.5px; color: var(--text-tertiary);
+    display: flex; align-items: center; gap: 12px;
+    padding-left: 14px; margin-left: 4px;
+    border-left: 1px solid var(--border-default);
+  }
+  .channel-meta a { color: var(--text-secondary); text-decoration: none; }
+  .channel-meta a:hover { color: var(--text-primary); }
+  .header-spacer { flex: 1; }
+  .header-actions { display: flex; align-items: center; gap: 4px; }
+  .icon-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-tertiary);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 0 4px;
+  }
+
+  .day-divider {
+    display: flex; align-items: center;
+    padding: 18px 24px 12px;
+    gap: 14px;
+  }
+  .day-divider::before, .day-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border-subtle);
+  }
+  .day-label {
+    font-size: 11.5px; font-weight: 600;
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+  }
+
+  .msg-group {
+    padding: 8px 24px;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+    line-height: 1.6;
+  }
+  .msg-group:hover { background: rgba(255,255,255,0.02); }
+  .msg-meta-row {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 2px;
+  }
+  .msg-author {
+    font-weight: 600; font-size: 14.5px; color: var(--text-primary);
+    letter-spacing: -0.005em;
+  }
+  .msg-role {
+    font-size: 11.5px; color: var(--text-tertiary);
+    background: var(--bg-elevated);
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .msg-time { font-size: 11.5px; color: var(--text-tertiary); }
+  .msg-body {
+    font-size: 14px; color: var(--text-primary);
+    word-wrap: break-word;
+    line-height: 1.6;
+  }
+  .msg-body .mention {
+    color: #0E1217; background: var(--accent);
+    padding: 1px 5px; border-radius: 4px; font-weight: 600;
+  }
+
+  .msg-grouped {
+    padding: 1px 24px;
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+  }
+  .msg-grouped .timestamp-hover {
+    color: var(--text-quaternary); font-size: 10.5px;
+    text-align: right;
+    padding-top: 4px;
+    visibility: hidden;
+    font-feature-settings: 'tnum';
+  }
+  .msg-grouped:hover { background: rgba(255,255,255,0.02); }
+  .msg-grouped:hover .timestamp-hover { visibility: visible; }
+
+  .typing-row {
+    padding: 10px 24px;
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-tertiary); font-size: 12.5px;
+  }
+  .typing-dots { display: inline-flex; gap: 3px; }
+  .typing-dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text-tertiary);
+    opacity: 0.5;
+  }
+
+  /* ============ COMPOSER ============ */
+  .composer-wrap {
+    padding: 0 24px 20px;
+    flex-shrink: 0;
+  }
+  .decisions-stack {
+    display: flex; flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .decision-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--accent-border);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+  .decision-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .decision-card.collapsed {
+    background: var(--bg-input);
+    border: 1px solid var(--border-default);
+  }
+  .decision-card.collapsed::before {
+    background: var(--accent);
+    box-shadow: none;
+    opacity: 0.6;
+  }
+  .decision-header {
+    padding: 10px 14px 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .decision-tag {
+    font-size: 10.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+  }
+  .decision-title {
+    font-size: 14px; font-weight: 600; color: var(--text-primary);
+    flex: 1;
+    letter-spacing: -0.005em;
+  }
+  .decision-from {
+    font-size: 11.5px; color: var(--text-tertiary);
+  }
+  .decision-timer {
+    font-size: 11.5px; color: var(--accent);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: 'tnum';
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    padding: 3px 8px; border-radius: 4px;
+    font-weight: 600;
+  }
+  .decision-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    padding: 4px 14px 12px 16px;
+  }
+  .decision-opt {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 12.5px;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.45;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .decision-opt:hover {
+    border-color: var(--accent);
+    background: var(--bg-hover);
+  }
+  .decision-opt .opt-letter {
+    color: var(--text-tertiary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    background: var(--bg-elevated);
+    padding: 2px 5px; border-radius: 3px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .composer {
+    background: var(--bg-input);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .composer:focus-within { border-color: #2F3848; }
+  .composer-toolbar {
+    display: flex; align-items: center; gap: 2px;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .composer-input {
+    padding: 12px 16px 14px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    min-height: 44px;
+  }
+  .composer-input::before {
+    content: 'Message #q4-planning';
+    color: var(--text-tertiary);
+  }
+  .composer-footer {
+    display: flex; align-items: center;
+    padding: 6px 8px 8px 10px;
+    gap: 2px;
+  }
+  .composer-spacer { flex: 1; }
+  .send-btn {
+    background: var(--accent);
+    color: #0E1217;
+    border: none;
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* ============ PROFILE PANEL ============ */
+  .profile-panel {
+    background: var(--bg-sidebar);
+    border-left: 1px solid var(--border-subtle);
+    overflow-y: auto;
+  }
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .panel-section {
+    padding: 18px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .profile-hero {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  }
+  .profile-name {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.018em;
+  }
+  .profile-role {
+    font-size: 13px; color: var(--text-secondary);
+    margin-top: 3px;
+  }
+  .profile-status {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--text-secondary);
+    margin-top: 10px;
+    background: var(--bg-elevated);
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+  .profile-status::before {
+    content: ''; width: 7px; height: 7px;
+    background: var(--presence-online); border-radius: 50%;
+  }
+  .profile-bio {
+    font-size: 13px; color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .panel-label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .panel-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px;
+    padding: 6px 0;
+  }
+  .panel-row .k { color: var(--text-tertiary); }
+  .panel-row .v { color: var(--text-primary); font-weight: 500; }
+
+  .activity-item {
+    display: flex; gap: 10px;
+    font-size: 13px; color: var(--text-secondary);
+    padding: 10px 0;
+    border-top: 1px solid var(--border-subtle);
+    line-height: 1.4;
+  }
+  .activity-item:first-of-type { border-top: 0; padding-top: 0; }
+  .activity-item .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-tertiary); margin-top: 7px;
+    flex-shrink: 0;
+  }
+  .activity-item .dot.accent { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .activity-meta { font-size: 11.5px; color: var(--text-tertiary); margin-top: 3px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ========= SIDEBAR ========= -->
+  <aside class="sidebar">
+    <div class="workspace-header">
+      <div class="workspace-name">
+        <div class="workspace-logo">H</div>
+        <div>
+          <div class="workspace-title">Helix</div>
+          <div class="workspace-sub">helix-internal.slack</div>
+        </div>
+      </div>
+      <div class="workspace-icon-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <div class="compose-row">
+      <button class="compose-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11.5 2.5L9 5m2.5-2.5l-1.5-1L8 1.5 9 3l2.5-.5z" stroke="currentColor" stroke-width="1.2"/><path d="M9 5l-6 6v2h2l6-6" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        New message
+        <span class="kbd">⌘N</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-header"><span>Channels</span></div>
+      <div class="nav-item"><span class="hash">#</span><span class="channel-name">general</span></div>
+      <div class="nav-item"><span class="hash">#</span><span class="channel-name">announcements</span></div>
+      <div class="nav-item active">
+        <span class="hash">#</span><span class="channel-name">q4-planning</span>
+        <span class="badge decision">1</span>
+        <span class="badge mention">3</span>
+      </div>
+      <div class="nav-item unread">
+        <span class="hash">#</span><span class="channel-name">design-review</span>
+        <span class="badge unread">4</span>
+      </div>
+      <div class="nav-item"><span class="hash">#</span><span class="channel-name">eng-platform</span></div>
+      <div class="nav-item">
+        <span class="hash">#</span><span class="channel-name">incidents-prod</span>
+        <span class="urgent-dot"></span>
+      </div>
+      <div class="nav-item"><span class="hash">#</span><span class="channel-name">data-insights</span></div>
+      <div class="nav-item"><span class="hash">#</span><span class="channel-name">product-leadership</span></div>
+      <div class="nav-item"><span class="hash">#</span><span class="channel-name">growth-pod</span></div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-header"><span>Direct messages</span></div>
+      <div class="dm-item unread">
+        <div class="presence-wrap" style="background:linear-gradient(135deg,#A55E4A,#75382C);">DW<span class="presence-dot online"></span></div>
+        <span class="name">Derek Walsh</span>
+        <span class="badge mention">2</span>
+      </div>
+      <div class="dm-item">
+        <div class="presence-wrap" style="background:linear-gradient(135deg,#4A6FA5,#2C4A75);">MC<span class="presence-dot online"></span></div>
+        <span class="name">Maya Chen</span>
+      </div>
+      <div class="dm-item">
+        <div class="presence-wrap" style="background:linear-gradient(135deg,#4AA572,#2C7548);">SP<span class="presence-dot away"></span></div>
+        <span class="name">Samira Patel</span>
+      </div>
+      <div class="dm-item">
+        <div class="presence-wrap" style="background:linear-gradient(135deg,#8A4AA5,#5C2C75);">TR<span class="presence-dot online"></span></div>
+        <span class="name">Tomás Reyes</span>
+      </div>
+      <div class="dm-item">
+        <div class="presence-wrap" style="background:linear-gradient(135deg,#A5984A,#75682C);">PI<span class="presence-dot"></span></div>
+        <span class="name">Priya Iyer</span>
+      </div>
+    </div>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="user-status">
+      <div class="avatar md avatar-you">LP</div>
+      <div class="user-meta">
+        <div class="user-name">Louis Pan</div>
+        <div class="user-role">Senior PM, Growth</div>
+      </div>
+      <div class="workspace-icon-btn">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="3" r="1" fill="currentColor"/><circle cx="7" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="11" r="1" fill="currentColor"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========= CHAT ========= -->
+  <main class="chat">
+    <div class="chat-header">
+      <div class="channel-title">
+        <span class="hash">#</span>
+        <h1>q4-planning</h1>
+      </div>
+      <div class="channel-meta">
+        <a href="#">47 members</a>
+        <span style="color: var(--text-quaternary)">·</span>
+        <span>Cross-functional alignment for Q4 priorities</span>
+      </div>
+      <div class="header-spacer"></div>
+      <div class="header-actions">
+        <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 6.5l5 5 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+        <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="3" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="13" cy="8" r="1.3" fill="currentColor"/></svg></div>
+      </div>
+    </div>
+
+    <div class="messages">
+      <div class="day-divider">
+        <span class="day-label">Tuesday, May 14</span>
+      </div>
+
+      <div class="msg-group">
+        <div class="avatar md avatar-2">DW</div>
+        <div>
+          <div class="msg-meta-row">
+            <span class="msg-author">Derek Walsh</span>
+            <span class="msg-role">Engineering Manager</span>
+            <span class="msg-time">9:42 AM</span>
+          </div>
+          <div class="msg-body">Hey <span class="mention">@louis</span> — the eng team needs the priority list for Q4 by EOD. We've slipped this twice already and infra has dependencies on it. Please don't let this become Friday's problem.</div>
+        </div>
+      </div>
+
+      <div class="msg-group">
+        <div class="avatar md avatar-you">LP</div>
+        <div>
+          <div class="msg-meta-row">
+            <span class="msg-author">You</span>
+            <span class="msg-time">9:48 AM</span>
+          </div>
+          <div class="msg-body">Working on it, will have draft in ~30</div>
+        </div>
+      </div>
+
+      <div class="msg-group">
+        <div class="avatar md avatar-1">MC</div>
+        <div>
+          <div class="msg-meta-row">
+            <span class="msg-author">Maya Chen</span>
+            <span class="msg-role">Senior PM, Retention</span>
+            <span class="msg-time">10:14 AM</span>
+          </div>
+          <div class="msg-body">Reposting from #product-leadership in case it got buried — cart abandonment work is fully blocked on your call. Three engineers on the floor. Should I move them to something else, or are we still doing this?</div>
+        </div>
+      </div>
+
+      <div class="msg-group">
+        <div class="avatar md avatar-3">SP</div>
+        <div>
+          <div class="msg-meta-row">
+            <span class="msg-author">Samira Patel</span>
+            <span class="msg-role">Director of Product</span>
+            <span class="msg-time">10:31 AM</span>
+          </div>
+          <div class="msg-body"><span class="mention">@louis</span> let's sync at 3 — I want to understand why the roadmap shifted again. Bring the original commit.</div>
+        </div>
+      </div>
+
+      <div class="msg-group">
+        <div class="avatar md avatar-4">TR</div>
+        <div>
+          <div class="msg-meta-row">
+            <span class="msg-author">Tomás Reyes</span>
+            <span class="msg-role">Staff Designer</span>
+            <span class="msg-time">11:02 AM</span>
+          </div>
+          <div class="msg-body">blocked on the modal spec — what's the call on the inline vs full-screen variant for cart recovery? not pushy, but staging cuts in 4 hrs</div>
+        </div>
+      </div>
+
+      <div class="msg-grouped">
+        <div class="timestamp-hover">11:03</div>
+        <div class="msg-body">happy to ship either, just need a yes / no</div>
+      </div>
+
+      <div class="typing-row">
+        <span class="typing-dots"><span></span><span></span><span></span></span>
+        Derek Walsh is typing…
+      </div>
+    </div>
+
+    <!-- COMPOSER -->
+    <div class="composer-wrap">
+      <div class="decisions-stack">
+        <div class="decision-card">
+          <div class="decision-header">
+            <span class="decision-tag">Decision</span>
+            <span class="decision-title">Approve Q4 priority shuffle</span>
+            <span class="decision-from">from Derek Walsh</span>
+            <span class="decision-timer">2:14</span>
+          </div>
+          <div class="decision-options">
+            <button class="decision-opt"><span class="opt-letter">A</span>Approve list as drafted</button>
+            <button class="decision-opt"><span class="opt-letter">B</span>Push back: too aggressive for headcount</button>
+            <button class="decision-opt"><span class="opt-letter">C</span>Defer to leadership sync at 3</button>
+          </div>
+        </div>
+        <div class="decision-card collapsed">
+          <div class="decision-header">
+            <span class="decision-tag">Decision</span>
+            <span class="decision-title">Choose modal pattern for cart recovery</span>
+            <span class="decision-from">from Tomás Reyes · 1 of 2 escalations</span>
+            <span class="workspace-icon-btn"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="composer-toolbar">
+          <div class="icon-btn"><b style="font-style:italic;font-family:Georgia">B</b></div>
+          <div class="icon-btn"><i style="font-family:Georgia">I</i></div>
+          <div class="icon-btn"><span style="text-decoration:line-through;font-size:11px">S</span></div>
+          <div style="width:1px;height:14px;background:var(--border-subtle);margin:0 4px"></div>
+          <div class="icon-btn"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M3 5h8M3 8h8M3 11h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="icon-btn"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7l4-4 6 6-4 4-6-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+          <div class="icon-btn"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.2"/><path d="M5 8s.7 1 2 1 2-1 2-1M5 6h.5M8.5 6H9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+        </div>
+        <div class="composer-input"></div>
+        <div class="composer-footer">
+          <div class="icon-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4-4m0 0l4 4M6 3v9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+          <div class="icon-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="1.2"/></svg></div>
+          <div class="composer-spacer"></div>
+          <button class="send-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l9-4-3.5 9-2-3.5-3.5-1.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========= PROFILE PANEL ========= -->
+  <aside class="profile-panel">
+    <div class="panel-header">
+      <span>Profile</span>
+      <div class="workspace-icon-btn"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+    </div>
+
+    <div class="panel-section profile-hero">
+      <div class="avatar xl avatar-1">MC</div>
+      <div>
+        <div class="profile-name">Maya Chen</div>
+        <div class="profile-role">Senior Product Manager · Retention</div>
+        <div class="profile-status">Active · usually replies in ~12m</div>
+      </div>
+      <div class="profile-bio">Founding PM on the retention surface. Joined from Stripe in 2022. Owns cart-recovery, dunning, and reactivation. Direct in chat, faster than expected to escalate.</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Working with you on</div>
+      <div class="panel-row"><span class="k">Open decisions</span><span class="v">2</span></div>
+      <div class="panel-row"><span class="k">Mutual channels</span><span class="v">4</span></div>
+      <div class="panel-row"><span class="k">Reports to</span><span class="v">Samira Patel</span></div>
+      <div class="panel-row"><span class="k">Local time</span><span class="v">11:14 AM PT</span></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Recent activity</div>
+      <div class="activity-item">
+        <span class="dot accent"></span>
+        <div>
+          Posted in #q4-planning
+          <div class="activity-meta">2 minutes ago</div>
+        </div>
+      </div>
+      <div class="activity-item">
+        <span class="dot"></span>
+        <div>
+          Resolved a thread in #retention-wg
+          <div class="activity-meta">37 minutes ago</div>
+        </div>
+      </div>
+      <div class="activity-item">
+        <span class="dot"></span>
+        <div>
+          Edited "Q3 retro — what worked"
+          <div class="activity-meta">Yesterday, 4:18 PM</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+</body>
+</html>
