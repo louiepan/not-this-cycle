@@ -40,6 +40,7 @@ const MINIMAL_SCENARIO: Scenario = {
         communicationStyle: 'Direct',
         voiceRegister: 'Direct.',
         voiceExamples: ['Make it happen.'],
+        pushBackLines: ['Specifically?'],
       },
       mechanics: {
         patience: 0.5,

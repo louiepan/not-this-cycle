@@ -26,6 +26,12 @@ const THE_VP: StakeholderTemplate = {
       'Keep the tradeoffs below the fold. I need the headline to read clean.',
       'Fine. Bring me a recommendation, not a seminar on complexity.',
     ],
+    pushBackLines: [
+      'Specifically?',
+      'Pick a headline I can repeat.',
+      'I need a direction, not a vibe.',
+      'Try that again. Where are you actually landing?',
+    ],
   },
   mechanics: {
     patience: 0.4,
@@ -64,6 +70,12 @@ const THE_STAFF_ENG: StakeholderTemplate = {
       'Auth is one weird deploy away from eating logins. If we layer SSO on top right now, I think we create actual P0 risk.',
       'I\'ll build the least cursed version of it I can.',
       'I\'m treating the silence as "ship fast." Logging the debt for Q1 and moving on.',
+    ],
+    pushBackLines: [
+      'Need a call, not a vibe.',
+      'I can\'t write the doc with that. Yes or no?',
+      'Give me something I can put in front of the team.',
+      'I need to know which one we\'re actually committing to.',
     ],
   },
   mechanics: {
@@ -104,6 +116,12 @@ const THE_DESIGN_LEAD: StakeholderTemplate = {
       'Okay. Then I want the compromise named somewhere public so design is not carrying it alone later.',
       'I just don\'t want us pretending the UX survives untouched.',
     ],
+    pushBackLines: [
+      'Help me out — what are we actually choosing between?',
+      'Are we phasing this, or shipping all at once? Those are very different.',
+      'I want to help you make this work. What\'s the actual ask?',
+      'Be honest with me. What\'s the part you don\'t want to say out loud?',
+    ],
   },
   mechanics: {
     patience: 0.6,
@@ -142,6 +160,12 @@ const THE_DATA_ANALYST: StakeholderTemplate = {
       'I reran the SSO model. On current enterprise pipeline I\'m seeing closer to ~$200K ARR than the $2M number that made it to the board.',
       'Three enterprise prospects mentioned admin controls before they mentioned onboarding, for whatever that is worth.',
       'Mildly unpopular now is still better than spectacularly wrong later.',
+    ],
+    pushBackLines: [
+      'To make sure I run the right query — what\'s the actual question?',
+      'Hedging is fine, but I need a direction to pull data against.',
+      'What outcome are you optimizing for? Different metrics for different answers.',
+      'Specifically? I can be more useful with a sharper ask.',
     ],
   },
   mechanics: {
@@ -182,6 +206,12 @@ const THE_MANAGER: StakeholderTemplate = {
       'Heads up: {{the-vp.firstName}} was not thrilled that the revenue numbers hit #planning-war-room. Not saying you were wrong. Just saying visibility has a half-life around here.',
       'Today\'s going to be... a day.',
     ],
+    pushBackLines: [
+      'Help me help you — what specifically?',
+      'Walk me through it. I want to make sure I\'m representing you correctly upstairs.',
+      'I\'m all ears! Just want to make sure I understand the actual move.',
+      'Where are you leaning? I can help you sharpen it.',
+    ],
   },
   mechanics: {
     patience: 0.9,
@@ -221,6 +251,12 @@ const THE_TPM: StakeholderTemplate = {
       'Still need those dates. Deck review is tomorrow and I am not putting TBD in front of execs.',
       'Helpful. Messy, but helpful. I can work with conditional dates as long as nobody edits the nuance out of the slide later.',
     ],
+    pushBackLines: [
+      'I need something I can put in the tracker. Date or no date.',
+      'Sharper, please. The row needs a value, not a vibe.',
+      'Translation for the tracker: what\'s the actual call?',
+      'Either / or, not both. Which row goes red if we don\'t decide?',
+    ],
   },
   mechanics: {
     patience: 0.3,
@@ -259,6 +295,12 @@ const THE_ADJACENT_PM: StakeholderTemplate = {
       'Hey! {{the-vp.firstName}} mentioned we should sync on Q4. I\'ve been chatting with {{the-vp.firstName}} about how platform can support the initiative — happy to take the API integration piece off your plate if that helps? 🙌',
       'Looping {{the-vp.firstName}} for visibility ✨',
       'No worries if you\'re slammed! I can just run with it and share back when it\'s ready 💪',
+    ],
+    pushBackLines: [
+      'Just so I\'m sure I\'m tracking — what\'s the move? 🙌',
+      'Want to make sure I rep this correctly to {{the-vp.firstName}}. What direction are we landing on?',
+      'No pressure at all! Just need a sentence I can drop in the next sync ✨',
+      'Quick clarifier — are we coordinating on this or are you taking point?',
     ],
   },
   mechanics: {

@@ -35,6 +35,24 @@ import {
 
 export type SessionPhase = 'menu' | 'playing' | 'review';
 
+// Walk the channel scrollback to find the most recent stakeholder who spoke.
+// Used to pick which stakeholder should deliver an in-character push-back when
+// the player's reply is too vague to match a choice.
+function findAskerForChannel(
+  channelId: string,
+  messages: GameState['messages'],
+  stakeholders: Stakeholder[]
+): Stakeholder | null {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const msg = messages[i];
+    if (msg.channel !== channelId) continue;
+    if (msg.isPlayerMessage || msg.from === 'player') continue;
+    const stakeholder = stakeholders.find((s) => s.id === msg.from);
+    if (stakeholder) return stakeholder;
+  }
+  return null;
+}
+
 interface UseGameSessionReturn {
   phase: SessionPhase;
   gameState: GameState | null;
@@ -68,10 +86,11 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const [sessionSeed, setSessionSeed] = useState<number>(() => Date.now());
   const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
 
-  const world = useMemo<ScenarioWorld>(
-    () => new StaticContentProvider(scenario, sessionSeed).getWorld(),
+  const contentProvider = useMemo(
+    () => new StaticContentProvider(scenario, sessionSeed),
     [scenario, sessionSeed]
   );
+  const world = useMemo<ScenarioWorld>(() => contentProvider.getWorld(), [contentProvider]);
 
   const engineRef = useRef<GameEngine | null>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -82,7 +101,10 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
   const pendingNarrativeTurnsRef = useRef<Set<string>>(new Set());
   const reviewRequestedRef = useRef(false);
   const reviewRequestVersionRef = useRef(0);
-  const nudgeActiveRef = useRef(false);
+  // Tracks how many low-confidence push-backs we've shown per decision.
+  // 0 = no push-back yet, 1 = tier 1 (template) shown, 2 = tier 2 (AI) shown.
+  // On the third low-confidence attempt the server commits to a best-guess match.
+  const pushBackStrikesRef = useRef<Map<string, number>>(new Map());
   const gameCompleteRef = useRef(false);
 
   const clearTypingTimeouts = useCallback(() => {
@@ -207,7 +229,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       pendingNarrativeTurnsRef.current.clear();
       reviewRequestedRef.current = false;
       reviewRequestVersionRef.current = 0;
-      nudgeActiveRef.current = false;
+      pushBackStrikesRef.current.clear();
       gameCompleteRef.current = false;
       startClock();
 
@@ -233,7 +255,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     pendingNarrativeTurnsRef.current.clear();
     reviewRequestedRef.current = false;
     reviewRequestVersionRef.current = 0;
-    nudgeActiveRef.current = false;
+    pushBackStrikesRef.current.clear();
     gameCompleteRef.current = false;
   }, [clearTypingTimeouts, stopClock]);
 
@@ -269,7 +291,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       }
       setGameState(engine.getState());
       setNudgeMessage(null);
-      nudgeActiveRef.current = false;
+      pushBackStrikesRef.current.delete(decisionId);
 
       track('decision_made', {
         decisionId,
@@ -298,17 +320,42 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         return;
       }
 
+      const tryInjectPushBack = (decisionId: string, channel: string): boolean => {
+        const strikes = pushBackStrikesRef.current.get(decisionId) ?? 0;
+        if (strikes >= 2) return false;
+        const currentMessages = engine.getState().messages;
+        const asker = findAskerForChannel(channel, currentMessages, engine.getStakeholders());
+        if (!asker || asker.personality.pushBackLines.length === 0) return false;
+        const line = asker.personality.pushBackLines[
+          strikes % asker.personality.pushBackLines.length
+        ];
+        const resolved = contentProvider.resolveTemplate(line, engine.getStakeholders());
+        engine.injectNarrativeMessages(channel, [
+          {
+            id: `pushback-${decisionId}-${strikes}-${Date.now()}`,
+            from: asker.id,
+            content: resolved,
+            mentionsPlayer: true,
+          },
+        ]);
+        pushBackStrikesRef.current.set(decisionId, strikes + 1);
+        setGameState(engine.getState());
+        return true;
+      };
+
       const applyLocalFallback = () => {
         const result = matchChoice(text, pending.choices);
+        const strikes = pushBackStrikesRef.current.get(pending.decisionId) ?? 0;
 
-        if (result.confidence < CONFIDENCE_THRESHOLD && !nudgeActiveRef.current) {
-          nudgeActiveRef.current = true;
-          setNudgeMessage('Could you say more? Try being more specific about what you want to do.');
+        if (result.confidence < CONFIDENCE_THRESHOLD && strikes < 2) {
+          engine.addFreeformMessage(channelId, text);
           track('low_confidence_nudge', {
             decisionId: pending.decisionId,
             confidence: result.confidence,
             playerText: text,
+            strike: strikes,
           });
+          tryInjectPushBack(pending.decisionId, channelId);
           return;
         }
 
@@ -348,7 +395,8 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
             seed: engine.getSeed(),
             difficulty: difficulty.id,
             playerText: text,
-            allowLowConfidenceMatch: nudgeActiveRef.current,
+            allowLowConfidenceMatch:
+              (pushBackStrikesRef.current.get(pending.decisionId) ?? 0) >= 2,
             world,
             stakeholders: engine.getStakeholders(),
             messages: gameState.messages.slice(-20).map((message) => ({
@@ -382,13 +430,15 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
           });
 
           if (response.nudgeMessage) {
-            nudgeActiveRef.current = true;
-            setNudgeMessage(response.nudgeMessage);
+            engine.addFreeformMessage(channelId, text);
+            const strikes = pushBackStrikesRef.current.get(pending.decisionId) ?? 0;
             track('low_confidence_nudge', {
               decisionId: pending.decisionId,
               confidence: response.confidence,
               playerText: text,
+              strike: strikes,
             });
+            tryInjectPushBack(pending.decisionId, channelId);
             return;
           }
 
@@ -426,7 +476,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         }
       })();
     },
-    [difficulty.id, gameState, resolveDecision, scenario.id, world]
+    [contentProvider, difficulty.id, gameState, resolveDecision, scenario.id, world]
   );
 
   const switchChannel = useCallback((channelId: string) => {
@@ -436,7 +486,6 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     engine.switchChannel(channelId);
     setGameState(engine.getState());
     setNudgeMessage(null);
-    nudgeActiveRef.current = false;
 
     track('channel_switch', { channelId });
   }, []);

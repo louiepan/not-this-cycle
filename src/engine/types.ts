@@ -167,6 +167,9 @@ export interface StakeholderPersonality {
   communicationStyle: string;
   voiceRegister: string;
   voiceExamples: string[];
+  // In-character clarifying push-back lines fired when the player's response
+  // is too vague to match a choice. Picked deterministically per session.
+  pushBackLines: string[];
 }
 
 export interface StakeholderMechanics {

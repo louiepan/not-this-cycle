@@ -56,6 +56,7 @@ const STAKEHOLDERS: Stakeholder[] = [
       communicationStyle: 'Precise and skeptical',
       voiceRegister: 'Precise and skeptical.',
       voiceExamples: ['That assumption does not hold.'],
+      pushBackLines: ['Need a call, not a vibe.'],
     },
     mechanics: {
       patience: 0.5,

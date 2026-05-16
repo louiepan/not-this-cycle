@@ -43,6 +43,7 @@ const TEST_SCENARIO: Scenario = {
         communicationStyle: 'Direct and concise',
         voiceRegister: 'Direct and concise.',
         voiceExamples: ['Need a decision today.'],
+        pushBackLines: ['Specifically?'],
       },
       mechanics: {
         patience: 0.5,
