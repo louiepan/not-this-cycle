@@ -2,6 +2,7 @@ import { analyzePlayerReply, CONFIDENCE_THRESHOLD } from '@/engine/ChoiceMatcher
 import { recordCostEvent } from '@/analytics/narrativeTelemetry';
 import { buildPeerFeedback } from '@/review/buildPeerFeedback';
 import { createTurnFallbackResponse, createFallbackReviewResponse } from './fallbacks';
+import { sanitizeRealizeOutput } from './guardrails';
 import { applyNarrativeMemoryPatch, createEmptyNarrativeMemory } from './memory';
 import { ModelRouter } from './router';
 import { analyzeOutputSchema, realizeOutputSchema, reviewOutputSchema } from './schemas';
@@ -168,9 +169,23 @@ export class NarrativeService {
 
           const realizeResult = realizeRun.parsed;
           if (realizeResult) {
-            reactionMessages = realizeResult.reactionMessages;
+            const matchedChoice = request.decision.choices.find(
+              (choice) => choice.id === analyzeResult.matchedChoiceId
+            );
+            const sanitized = matchedChoice
+              ? sanitizeRealizeOutput(realizeResult, {
+                  matchedChoice,
+                  stakeholders: request.stakeholders,
+                  allowedBeatIds: request.allowedBeatIds,
+                })
+              : { output: realizeResult, violations: [] };
+            reactionMessages = sanitized.output.reactionMessages;
             routingDecision = realizeRoute.decision;
-            await this.recordTaskRun(request.sessionId, 'turn_realize', realizeRun, false, realizeRoute.decision?.promptVersion ?? 'turn-realize.v1');
+            if (sanitized.violations.length > 0) {
+              fallbackUsed = true;
+              fallbackReason = `Realize guardrail filtered: ${sanitized.violations.join('; ')}`;
+            }
+            await this.recordTaskRun(request.sessionId, 'turn_realize', realizeRun, sanitized.violations.length > 0, realizeRoute.decision?.promptVersion ?? 'turn-realize.v1');
           }
         } catch {
           fallbackUsed = true;
