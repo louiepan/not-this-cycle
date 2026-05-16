@@ -129,6 +129,20 @@ export class EventScheduler {
     state: GameState,
     elapsed: number
   ): boolean {
+    // Events with no time-based, dependency-based, or conditional gate are
+    // reactive-only — they must be scheduled dynamically via a choice's
+    // `triggers` array or an escalation stage. Without this guard, the scheduler
+    // fires them on the first tick at t≈100ms, which corrupts the dialogue
+    // ordering (e.g. the "VP was not thrilled" beat landing before the morning
+    // greeting). See dialogueOrdering.test.ts for the authoring contract.
+    if (
+      event.triggerAt === undefined &&
+      event.triggerAfter === undefined &&
+      !event.condition
+    ) {
+      return false;
+    }
+
     // Time-based trigger
     if (event.triggerAt !== undefined) {
       const scaledTime = event.triggerAt * this.difficulty.timingScale;

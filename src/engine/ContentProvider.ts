@@ -38,11 +38,12 @@ export class StaticContentProvider implements ContentProvider {
     this.scenario = scenario;
     this.seed = seed;
     this.rng = new SeededRandom(seed);
-    this.world = this.resolveWorld(scenario.worldTemplate);
+    // Stakeholders must resolve first so world templates can reference them.
     this.stakeholders = this.resolveStakeholders(scenario.stakeholders);
     this.templateMap = new Map(
       this.stakeholders.map((s) => [s.id, s])
     );
+    this.world = this.resolveWorld(scenario.worldTemplate);
   }
 
   getScenario(): Scenario {
@@ -132,18 +133,19 @@ export class StaticContentProvider implements ContentProvider {
   }
 
   private resolveWorld(template: ScenarioWorldTemplate): ScenarioWorld {
+    const resolve = (text: string) => this.resolveTemplate(text, this.stakeholders);
     return {
       templateId: template.templateId,
-      companyName: this.rng.pick(template.companyNamePool),
-      teamName: this.rng.pick(template.teamNamePool),
-      predecessorContext: this.rng.pick(template.predecessorContextPool),
-      hqAddress: this.rng.pick(template.hqAddressPool),
-      productDescription: template.productDescription,
-      stage: template.stage,
-      annualThemes: template.annualThemes,
-      boardPressure: template.boardPressure,
-      teamCharter: template.teamCharter,
-      mandate: template.mandate,
+      companyName: resolve(this.rng.pick(template.companyNamePool)),
+      teamName: resolve(this.rng.pick(template.teamNamePool)),
+      predecessorContext: resolve(this.rng.pick(template.predecessorContextPool)),
+      hqAddress: resolve(this.rng.pick(template.hqAddressPool)),
+      productDescription: resolve(template.productDescription),
+      stage: resolve(template.stage),
+      annualThemes: template.annualThemes.map(resolve),
+      boardPressure: resolve(template.boardPressure),
+      teamCharter: resolve(template.teamCharter),
+      mandate: resolve(template.mandate),
     };
   }
 

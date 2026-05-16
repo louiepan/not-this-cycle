@@ -340,6 +340,107 @@ describe('GameEngine Integration', () => {
     expect(name1).toBe(name2);
   });
 
+  it('does not auto-fire events with no triggerAt, triggerAfter, or condition', () => {
+    // Regression: events authored as reactive-only (fired by a choice.triggers
+    // array or an escalation stage) used to materialize on the first tick
+    // because isReady() defaulted to true with no gating fields set. This
+    // corrupted dialogue ordering — e.g. the "VP was not thrilled" beat landed
+    // before the welcome flow.
+    const REACTIVE_ONLY_SCENARIO: Scenario = {
+      ...TEST_SCENARIO,
+      id: 'reactive-only-scenario',
+      events: [
+        {
+          id: 'evt-reactive-only',
+          channel: 'product',
+          messages: [
+            {
+              id: 'msg-reactive',
+              from: 'the-vp',
+              content: 'This message should never appear without a trigger.',
+              delay: 0,
+              mentionsPlayer: false,
+            },
+          ],
+        },
+      ],
+    };
+
+    const engine = new GameEngine(REACTIVE_ONLY_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    for (let elapsed = 0; elapsed <= 10000; elapsed += 100) {
+      engine.tick(elapsed);
+    }
+
+    const reactiveMessages = engine
+      .getState()
+      .messages.filter((message) => message.id === 'msg-reactive');
+    expect(reactiveMessages).toHaveLength(0);
+  });
+
+  it('fires escalation stage events when a decision times out', () => {
+    // Regression: the EscalationManager emitted an 'escalate' action that had
+    // no handler, so stage.eventId was never scheduled. Escalation messages
+    // only showed up because of the reactive-only auto-fire bug above.
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    for (let elapsed = 0; elapsed <= 8000; elapsed += 100) {
+      engine.tick(elapsed);
+    }
+
+    const escalationMessages = engine
+      .getState()
+      .messages.filter((message) => message.id === 'msg-escalation');
+    expect(escalationMessages).toHaveLength(1);
+  });
+
+  it('does not re-escalate the same stage on every tick', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    for (let elapsed = 0; elapsed <= 8000; elapsed += 100) {
+      engine.tick(elapsed);
+    }
+
+    const escalationMessages = engine
+      .getState()
+      .messages.filter((message) => message.id === 'msg-escalation');
+    // One escalation stage, fires exactly once.
+    expect(escalationMessages).toHaveLength(1);
+  });
+
+  it('records auto-resolved decisions in resolvedDecisions', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    // Tick past the decision's timeout AND past stage delay + autoResolve delay
+    // (timeout 5000 + stage delay 3000 + autoResolve delay 5000 = 13000)
+    for (let elapsed = 0; elapsed <= 15000; elapsed += 100) {
+      engine.tick(elapsed);
+    }
+
+    const resolved = engine.getState().resolvedDecisions;
+    expect(resolved.some((d) => d.choiceId === null)).toBe(true);
+  });
+
+  it('reduces responsivenessDebt when the player sends a freeform message', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    // Drive responsivenessDebt up via escalation, then nudge it back down.
+    for (let elapsed = 0; elapsed <= 15000; elapsed += 100) {
+      engine.tick(elapsed);
+    }
+    const before = engine.getState().variables.responsivenessDebt;
+    expect(before).toBeGreaterThan(0);
+
+    engine.addFreeformMessage('product', 'Sorry, I was heads-down on the spec.');
+    const after = engine.getState().variables.responsivenessDebt;
+    expect(after).toBeLessThan(before);
+  });
+
   it('produces different names for different seeds', () => {
     const engine1 = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 1);
     const engine2 = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 99999);
