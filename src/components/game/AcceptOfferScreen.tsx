@@ -3,10 +3,31 @@
 import { useState } from 'react';
 import { DifficultySelect } from './DifficultySelect';
 import type { DifficultyConfig } from '@/engine/types';
+import type { RunRecord } from '@/lib/playerProfile';
+import { RatingEngine } from '@/engine/RatingEngine';
 
 interface AcceptOfferScreenProps {
   onAccept: (difficulty: DifficultyConfig, playerName: string) => void;
   initialPlayerName?: string;
+  pastRuns?: RunRecord[];
+  onResetProfile?: () => void;
+}
+
+const BUCKET_SHORT_LABELS: Record<RunRecord['calibrationBucket'], string> = {
+  needs_improvement: 'Needs Improvement',
+  partially_meets: 'Partially Meets',
+  meets_expectations: 'Meets Most',
+  exceeds_expectations: 'Exceeds',
+  strongly_exceeds: 'Strongly Exceeds',
+};
+
+function formatRunDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return '—';
+  }
 }
 
 type OnboardingStep = 1 | 2 | 3;
@@ -68,7 +89,12 @@ function StepShell({
   );
 }
 
-export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOfferScreenProps) {
+export function AcceptOfferScreen({
+  onAccept,
+  initialPlayerName = '',
+  pastRuns = [],
+  onResetProfile,
+}: AcceptOfferScreenProps) {
   const [step, setStep] = useState<OnboardingStep>(1);
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyConfig | null>(null);
   const [playerName, setPlayerName] = useState(initialPlayerName);
@@ -76,6 +102,13 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
   const trimmedPlayerName = playerName.trim();
   const canContinueFromName = trimmedPlayerName.length > 0;
   const canContinueFromLevel = selectedDifficulty !== null;
+  const hasReturningName = initialPlayerName.trim().length > 0;
+  const recentPastRuns = pastRuns.slice(0, 3);
+
+  function handleResetIdentity() {
+    setPlayerName('');
+    onResetProfile?.();
+  }
 
   return (
     <div className="app-stage">
@@ -101,6 +134,20 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
                 />
               </label>
 
+              {hasReturningName && (
+                <p className="text-center text-xs text-slack-text-secondary">
+                  Welcome back. Not {initialPlayerName.trim()}?{' '}
+                  <button
+                    type="button"
+                    onClick={handleResetIdentity}
+                    className="text-slack-link underline-offset-2 hover:underline cursor-pointer"
+                  >
+                    Start fresh
+                  </button>
+                  .
+                </p>
+              )}
+
               <div className="actions-row">
                 <p className="content-measure-narrow text-center text-sm leading-6 text-slack-text-secondary">
                   You are about to be evaluated by people who just met you.
@@ -114,6 +161,44 @@ export function AcceptOfferScreen({ onAccept, initialPlayerName = '' }: AcceptOf
                 </button>
               </div>
             </div>
+
+            {recentPastRuns.length > 0 && (
+              <div className="mt-6 panel panel-muted px-6 py-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="section-label text-slack-text-secondary">
+                    Previous Reviews on File
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-slack-text-secondary">
+                    {pastRuns.length} total
+                  </span>
+                </div>
+                <ul className="mt-3 space-y-2 text-sm">
+                  {recentPastRuns.map((run) => {
+                    const archetypeLabel =
+                      RatingEngine.ARCHETYPE_LABELS[run.archetype]?.name ?? 'The Survivor';
+                    return (
+                      <li
+                        key={run.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-white/6 bg-[#15181d] px-3 py-2 text-slack-text"
+                      >
+                        <span className="font-mono text-xs tabular-nums text-slack-text-secondary">
+                          {formatRunDate(run.completedAt)}
+                        </span>
+                        <span className="flex-1 truncate">
+                          {archetypeLabel}
+                        </span>
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slack-text-secondary">
+                          {BUCKET_SHORT_LABELS[run.calibrationBucket]}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-[11px] leading-5 text-slack-text-secondary">
+                  Stored on this device only. Your name and run history never leave your browser.
+                </p>
+              </div>
+            )}
           </StepShell>
         )}
 

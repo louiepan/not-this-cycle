@@ -8,6 +8,11 @@ interface ReviewScreenProps {
   stakeholders: Stakeholder[];
   playerName: string;
   onPlayAgain: () => void;
+  /**
+   * Satirical continuity lines that reference prior runs. Computed by the
+   * caller from localStorage history. Empty array on first-ever run.
+   */
+  continuityLines?: string[];
 }
 
 const BUCKET_LABELS: Record<CalibrationBucket, string> = {
@@ -63,7 +68,13 @@ function personalizeReviewText(text: string, playerName: string): string {
   return text.replaceAll('[Player]', playerName);
 }
 
-export function ReviewScreen({ result, stakeholders, playerName, onPlayAgain }: ReviewScreenProps) {
+export function ReviewScreen({
+  result,
+  stakeholders,
+  playerName,
+  onPlayAgain,
+  continuityLines = [],
+}: ReviewScreenProps) {
   const archetypeInfo = RatingEngine.ARCHETYPE_LABELS[result.archetype];
   const convictionInfo = getConvictionLabel(result.conviction.score);
   const calibration = parseCalibrationOutcome(result.calibrationOutcome);
@@ -208,6 +219,29 @@ export function ReviewScreen({ result, stakeholders, playerName, onPlayAgain }: 
               </p>
 
               <div className="mt-5 space-y-4">
+                {continuityLines.length > 0 && (
+                  <div className="panel border-slack-yellow/30 bg-slack-yellow/8 content-measure">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="section-label text-slack-yellow">
+                        HR — Continuing Notes
+                      </div>
+                      <span className="text-[10px] uppercase tracking-[0.18em] text-slack-text-secondary">
+                        From your file
+                      </span>
+                    </div>
+                    <ul className="mt-3 space-y-2">
+                      {continuityLines.map((line, idx) => (
+                        <li
+                          key={idx}
+                          className="text-sm italic leading-6 text-slack-text"
+                        >
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="panel panel-muted content-measure">
                   <div className="section-label text-white/70">
                     Manager Review
