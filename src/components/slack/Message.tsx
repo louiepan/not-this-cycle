@@ -6,6 +6,7 @@ import { Avatar } from './Avatar';
 interface MessageProps {
   senderId: string | 'player';
   senderName: string;
+  senderRole?: string;
   content: string;
   timestamp: string;
   playerName: string;
@@ -94,6 +95,7 @@ function renderContent(
 export function Message({
   senderId,
   senderName,
+  senderRole,
   content,
   timestamp,
   playerName,
@@ -121,34 +123,37 @@ export function Message({
   return (
     <div
       ref={ref}
-      className={`group flex gap-3 px-5 py-1 transition-all duration-300
-        ${showHeader ? 'mt-4' : ''}
+      className={`group flex gap-3 px-5 py-[2px] transition-all duration-300
+        ${showHeader ? 'mt-3' : ''}
         ${mentionsPlayer ? 'bg-slack-mention-bg/30 border-l-2 border-slack-mention-text' : 'hover:bg-slack-message-hover'}
         ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}
     >
       {showAvatar ? (
-        <Avatar name={displayName} size="md" />
+        <Avatar name={displayName} id={isPlayer ? 'player' : senderId} size="md" />
       ) : (
-        <div className="w-9 shrink-0" />
+        <div className="w-8 shrink-0" />
       )}
       <div className="flex-1 min-w-0">
         {showHeader && (
-          <div className="flex items-baseline gap-2">
+          <div className="mb-0.5 flex items-baseline gap-2">
             <button
               type="button"
               onClick={() => {
                 if (canOpenProfile && onProfileOpen) onProfileOpen(senderId);
               }}
-              className={`font-bold text-[15px] text-slack-white ${
+              className={`text-[13.5px] font-semibold tracking-[-0.005em] text-slack-text ${
                 canOpenProfile ? 'cursor-pointer hover:underline' : 'cursor-default'
               }`}
             >
               {displayName}
             </button>
-            <span className="text-xs text-slack-text-secondary">{timestampLabel}</span>
+            {senderRole && !isPlayer && (
+              <span className="text-[11px] font-normal text-slack-text-secondary">{senderRole}</span>
+            )}
+            <span className="text-[11px] text-slack-text-secondary">{timestampLabel}</span>
           </div>
         )}
-        <div className="text-slack-text text-[15px] whitespace-pre-wrap break-words">
+        <div className="text-slack-text text-[14px] leading-[1.55] whitespace-pre-wrap break-words">
           {renderContent(content, playerName, stakeholderNames, onProfileOpen)}
         </div>
       </div>

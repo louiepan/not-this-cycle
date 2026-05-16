@@ -5,7 +5,6 @@ import type { ChannelDef, DeliveredMessage, PendingDecision, Stakeholder } from 
 import { ChannelHeader } from './ChannelHeader';
 import { MessageGroup } from './MessageGroup';
 import { MessageComposer } from './MessageComposer';
-import { TypingIndicator } from './TypingIndicator';
 import { UnreadBanner } from './UnreadBanner';
 
 interface ChannelViewProps {
@@ -117,14 +116,17 @@ export function ChannelView({
         className="flex-1 overflow-y-auto"
       >
         {/* Today divider */}
-        <div className="flex items-center px-6 py-5">
-          <div className="flex-1 h-px bg-slack-divider" />
-          <span className="px-4 text-xs font-bold text-slack-text-secondary">Today</span>
-          <div className="flex-1 h-px bg-slack-divider" />
+        <div className="flex items-center gap-3 px-5 pb-2 pt-4">
+          <div className="h-px flex-1 bg-slack-divider" />
+          <span className="rounded-full border border-slack-divider bg-slack-sidebar-active px-3 py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-slack-text-secondary">
+            Today
+          </span>
+          <div className="h-px flex-1 bg-slack-divider" />
         </div>
 
         <MessageGroup
           messages={messages}
+          stakeholders={stakeholders}
           stakeholderNames={stakeholderNames}
           playerName={playerName}
           formatTime={formatTime}
@@ -137,11 +139,24 @@ export function ChannelView({
             </p>
           </div>
         )}
-        <TypingIndicator names={typingNames} />
       </div>
 
-      <div className="relative border-t border-white/6 bg-[#1f2023] px-0 pb-1 pt-2">
+      <div className="relative bg-slack-channel-bg pb-1 pt-2">
         <UnreadBanner count={unseenCount} onClick={() => scrollToBottom('smooth')} />
+        {typingNames.length > 0 && (
+          <div
+            className="absolute left-9 z-10 inline-flex h-[22px] items-center gap-2 rounded-[11px] border border-slack-composer-border bg-slack-sidebar-active px-2.5 py-1 text-[11.5px] leading-none text-slack-text-muted"
+            style={{ top: '-12px', boxShadow: '0 4px 12px rgba(0,0,0,0.35)' }}
+          >
+            <span className="flex items-center gap-[3px]">
+              <span className="typing-dot" style={{ background: 'var(--color-slack-link)' }} />
+              <span className="typing-dot [animation-delay:150ms]" style={{ background: 'var(--color-slack-link)' }} />
+              <span className="typing-dot [animation-delay:300ms]" style={{ background: 'var(--color-slack-link)' }} />
+            </span>
+            <span className="font-semibold text-slack-text">{typingNames[0]}</span>
+            <span className="text-slack-text-secondary">is typing…</span>
+          </div>
+        )}
         <MessageComposer
           channelName={channel.name}
           channelType={channel.type}
