@@ -57,14 +57,6 @@ function pinPosition(bucket: CalibrationBucket): number {
   return 50;
 }
 
-function computeComposite(vars: RatingResult['variables']): number {
-  // Positive metrics weighted directly, debt metrics inverted.
-  // Team morale is intentionally excluded from the scored composite; it surfaces via peer feedback severity.
-  const positives = (vars.execTrust + vars.communicationEffectiveness + vars.productJudgment) / 3;
-  const debtsCorrected = (100 - vars.techDebt + 100 - vars.responsivenessDebt) / 2;
-  return Math.round(positives * 0.7 + debtsCorrected * 0.3);
-}
-
 function isPromotionDeferred(outcome: string): boolean {
   // Only the "committee meets" path keeps candidacy alive; all others defer.
   return !outcome.includes('committee meets');
@@ -135,7 +127,6 @@ export function ReviewScreen({
 }: ReviewScreenProps) {
   const companyInitial = world.companyName.charAt(0).toUpperCase() || 'C';
   const archetypeInfo = RatingEngine.ARCHETYPE_LABELS[result.archetype];
-  const composite = computeComposite(result.variables);
   const promotionDeferred = isPromotionDeferred(result.calibrationOutcome);
   const personalizedManagerReview = result.managerReview.replaceAll('[Player]', playerName);
   const managerStakeholder = stakeholders.find((s) => s.id === 'the-manager');
@@ -245,14 +236,6 @@ export function ReviewScreen({
                   <p className="mt-2 max-w-[56ch] text-[14px] leading-[1.6] text-paper-text-secondary">
                     {BUCKET_DESCRIPTIONS[result.calibrationBucket]}
                   </p>
-                </div>
-                <div className="flex-shrink-0 text-right">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-paper-text-tertiary">
-                    Composite
-                  </div>
-                  <div className="mt-1.5 font-mono text-[22px] font-bold tabular-nums tracking-tight text-paper-text-primary">
-                    {composite} / 100
-                  </div>
                 </div>
               </div>
 
@@ -433,7 +416,7 @@ export function ReviewScreen({
                   </strong>
                   Continuity entries are surfaced automatically based on patterns
                   detected in your prior calibration cycles. They are advisory only
-                  and do not factor into composite scoring.
+                  and do not factor into your calibration bucket.
                 </div>
               </div>
             </Card>
