@@ -284,6 +284,9 @@ export interface GameEvent {
     delay: number;
   };
   condition?: StateCondition;
+  // If set, the event is only loaded when the run's difficulty matches.
+  // Used for difficulty-tiered onboarding content.
+  difficulty?: Difficulty[];
   channel: string;
   messages: EventMessage[];
   decision?: Decision;

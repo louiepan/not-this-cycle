@@ -20,39 +20,64 @@ function findEvent(id: string): GameEvent {
   return event;
 }
 
+const MANAGER_DM_VARIANT_IDS = [
+  'evt-history-dm-manager-junior',
+  'evt-history-dm-manager-senior',
+  'evt-history-dm-manager-principal',
+] as const;
+
 describe('q4-planning dialogue ordering', () => {
-  it('greets, welcomes, re-grounds, and points to pins — in that exact order in the manager DM', () => {
-    const event = findEvent('evt-history-dm-manager');
-    const ids = event.messages.map((message) => message.id);
-    expect(ids).toEqual([
-      'msg-dm-mgr-morning',
-      'msg-dm-mgr-welcome',
-      'msg-dm-mgr-regrounding',
-      'msg-dm-mgr-pinned',
-    ]);
-  });
+  it.each(MANAGER_DM_VARIANT_IDS)(
+    'welcomes, then morning aside, re-grounds, and points — in that exact order (%s)',
+    (variantId) => {
+      const event = findEvent(variantId);
+      const ids = event.messages.map((message) => message.id);
+      expect(ids).toEqual([
+        'msg-dm-mgr-welcome',
+        'msg-dm-mgr-morning',
+        'msg-dm-mgr-regrounding',
+        'msg-dm-mgr-pointer',
+      ]);
+    }
+  );
 
-  it('plays manager DM beats with monotonically non-decreasing delays', () => {
-    const event = findEvent('evt-history-dm-manager');
-    const delays = event.messages.map((message) => message.delay);
-    const sorted = [...delays].sort((a, b) => a - b);
-    expect(delays).toEqual(sorted);
-  });
+  it.each(MANAGER_DM_VARIANT_IDS)(
+    'plays manager DM beats with monotonically non-decreasing delays (%s)',
+    (variantId) => {
+      const event = findEvent(variantId);
+      const delays = event.messages.map((message) => message.delay);
+      const sorted = [...delays].sort((a, b) => a - b);
+      expect(delays).toEqual(sorted);
+    }
+  );
 
-  it('keeps reactive beats out of the morning DM event', () => {
-    const event = findEvent('evt-history-dm-manager');
-    const REACTIVE_PHRASES = [
-      'not thrilled',
-      'visibility has a half-life',
-      'revenue numbers hit',
-    ];
-    for (const message of event.messages) {
-      for (const phrase of REACTIVE_PHRASES) {
-        expect(
-          message.content.toLowerCase().includes(phrase.toLowerCase()),
-          `morning DM ${message.id} must not contain reactive phrase "${phrase}"`
-        ).toBe(false);
+  it.each(MANAGER_DM_VARIANT_IDS)(
+    'keeps reactive beats out of the morning DM event (%s)',
+    (variantId) => {
+      const event = findEvent(variantId);
+      const REACTIVE_PHRASES = [
+        'not thrilled',
+        'visibility has a half-life',
+        'revenue numbers hit',
+      ];
+      for (const message of event.messages) {
+        for (const phrase of REACTIVE_PHRASES) {
+          expect(
+            message.content.toLowerCase().includes(phrase.toLowerCase()),
+            `morning DM ${message.id} must not contain reactive phrase "${phrase}"`
+          ).toBe(false);
+        }
       }
+    }
+  );
+
+  it('gates each manager DM variant to exactly one difficulty', () => {
+    const variants = MANAGER_DM_VARIANT_IDS.map(findEvent);
+    const allDifficulties = variants.flatMap((event) => event.difficulty ?? []);
+    expect(allDifficulties.sort()).toEqual(['junior', 'principal', 'senior']);
+    for (const event of variants) {
+      expect(event.difficulty, `${event.id} must be difficulty-gated`).toBeDefined();
+      expect(event.difficulty?.length, `${event.id} should gate to one difficulty`).toBe(1);
     }
   });
 

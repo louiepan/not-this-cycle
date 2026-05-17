@@ -411,29 +411,31 @@ const EVENTS: GameEvent[] = [
     priority: 'ambient',
   },
 
-  // Manager DM — morning greeting, then welcome aside, then re-grounding, then pinned pointer.
-  // ORDER IS LOAD-BEARING: greeting -> welcome -> re-grounding -> pinned references.
-  // Delays stagger the messages over ~6s so the manager's morning DM trickles in
-  // rather than landing as a wall of text.
-  // The "Heads up: {VP} was not thrilled" beat (evt-vp-data-reaction) must NEVER appear
-  // in this event — it only fires after the player surfaces revenue data. Eval enforces this.
+  // Manager DM — three difficulty-gated variants. Exactly one fires per run.
+  // ORDER IS LOAD-BEARING in every variant: welcome -> morning aside -> re-grounding -> pointer.
+  // Pointer-message specificity scales with difficulty: Junior gets an explicit task and a
+  // clickable #q4-planning chip; Senior gets the chip but must infer the ask; Principal gets
+  // only a vague "planning room" reference and must navigate the sidebar themselves.
+  // The "Heads up: {VP} was not thrilled" beat (evt-vp-data-reaction) must NEVER appear here
+  // in any variant — it only fires after the player surfaces revenue data. Eval enforces this.
   {
-    id: 'evt-history-dm-manager',
+    id: 'evt-history-dm-manager-junior',
     triggerAt: 0,
     channel: 'dm-manager',
+    difficulty: ['junior'],
     messages: [
       {
-        id: 'msg-dm-mgr-morning',
+        id: 'msg-dm-mgr-welcome',
         from: 'the-manager',
-        content: 'Big day today. Let me know if you need anything — I\'m in back-to-backs but can make time.',
+        content: 'Hey — welcome to the team, formally. Genuinely excited about the impact you\'re going to make here.',
         delay: 0,
         mentionsPlayer: true,
         contextValue: 'ambient',
       },
       {
-        id: 'msg-dm-mgr-welcome',
+        id: 'msg-dm-mgr-morning',
         from: 'the-manager',
-        content: 'And welcome aboard, formally. I know you\'ve been onboarding but today is where it gets real.',
+        content: 'Big day to land on. I\'m in back-to-backs but ping me if anything\'s on fire — I can make time.',
         delay: 2500,
         mentionsPlayer: false,
         contextValue: 'ambient',
@@ -441,15 +443,99 @@ const EVENTS: GameEvent[] = [
       {
         id: 'msg-dm-mgr-regrounding',
         from: 'the-manager',
-        content: 'Quick re-grounding before you jump in: the mandate {{the-vp.firstName}} gave me for {{world.teamName}} this quarter is "unblock the Q4 roadmap." Translation: something demo-able at the all-hands in 6 weeks, without breaking what already works. You\'ve got more latitude than your predecessor had — use it.',
+        content: 'Quick re-grounding before you jump in: the mandate {{the-vp.firstName}} gave us for {{world.teamName}} this quarter is "unblock the Q4 roadmap." Translation: something demo-able at the all-hands in 6 weeks, without breaking what already works.',
         delay: 4000,
         mentionsPlayer: false,
         contextValue: 'ambient',
       },
       {
-        id: 'msg-dm-mgr-pinned',
+        id: 'msg-dm-mgr-pointer',
         from: 'the-manager',
-        content: 'I pinned the Q4 priorities recap at the top of #q4-planning this morning — read that first. The tracker {{the-tpm.firstName}} runs is linked in there too.',
+        content: 'First thing — head to #q4-planning. {{the-vp.firstName}} posted earlier asking the team to commit to scope by EOD. Read the thread and reply with where you\'d land. Don\'t overthink it; a clear opinion now matters more than a perfect one.',
+        delay: 6000,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
+  {
+    id: 'evt-history-dm-manager-senior',
+    triggerAt: 0,
+    channel: 'dm-manager',
+    difficulty: ['senior'],
+    messages: [
+      {
+        id: 'msg-dm-mgr-welcome',
+        from: 'the-manager',
+        content: 'Hey — welcome to the team, formally. Genuinely excited about the impact you\'re going to make here.',
+        delay: 0,
+        mentionsPlayer: true,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-morning',
+        from: 'the-manager',
+        content: 'Big day to land on. I\'m in back-to-backs but ping me if anything\'s on fire — I can make time.',
+        delay: 2500,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-regrounding',
+        from: 'the-manager',
+        content: 'Quick re-grounding: {{the-vp.firstName}}\'s mandate for {{world.teamName}} this quarter is "unblock the Q4 roadmap." You\'ve got more latitude than your predecessor had — use it.',
+        delay: 4000,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-pointer',
+        from: 'the-manager',
+        content: 'Things are moving in #q4-planning. Have a read when you\'re in — there\'s a thread today that wants a response.',
+        delay: 6000,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+    ],
+    priority: 'ambient',
+  },
+
+  {
+    id: 'evt-history-dm-manager-principal',
+    triggerAt: 0,
+    channel: 'dm-manager',
+    difficulty: ['principal'],
+    messages: [
+      {
+        id: 'msg-dm-mgr-welcome',
+        from: 'the-manager',
+        content: 'Hey — welcome to the team, formally. Genuinely excited about the impact you\'re going to make here.',
+        delay: 0,
+        mentionsPlayer: true,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-morning',
+        from: 'the-manager',
+        content: 'Big day to land on. I\'m in back-to-backs but ping me if anything\'s on fire — I can make time.',
+        delay: 2500,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-regrounding',
+        from: 'the-manager',
+        content: 'Quick re-grounding: {{the-vp.firstName}}\'s mandate this quarter is "unblock the Q4 roadmap." Translation depends on who you ask. You\'ve got more latitude than your predecessor — use it.',
+        delay: 4000,
+        mentionsPlayer: false,
+        contextValue: 'ambient',
+      },
+      {
+        id: 'msg-dm-mgr-pointer',
+        from: 'the-manager',
+        content: 'Today\'s going to be... a day. Planning room\'s already noisy. You\'ll see.',
         delay: 6000,
         mentionsPlayer: false,
         contextValue: 'ambient',
