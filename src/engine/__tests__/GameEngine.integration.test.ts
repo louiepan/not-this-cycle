@@ -25,6 +25,8 @@ const TEST_SCENARIO: Scenario = {
     boardPressure: 'Test pressure.',
     teamCharter: 'Test charter.',
     mandate: 'Test mandate.',
+    successCriteria: ['Test criterion.'],
+    successCriteriaFooter: 'Test footer.',
   },
   stakeholders: [
     {
@@ -452,5 +454,111 @@ describe('GameEngine Integration', () => {
     // For now, just assert that names are resolved
     expect(name1).toBeTruthy();
     expect(name2).toBeTruthy();
+  });
+
+  it('stamps askerId on pending decisions from the event\'s last message author', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+    engine.tick(0);
+    engine.tick(600);
+
+    const pending = engine.getState().pendingDecisions[0];
+    expect(pending.askerId).toBe('the-vp');
+  });
+
+  it('captures eventId, channel, and presentedAt on a directly resolved decision', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+    engine.tick(0);
+    engine.tick(600);
+
+    const pending = engine.getState().pendingDecisions[0];
+    engine.resolve(pending.decisionId, 'choice-engage');
+
+    const resolved = engine.getState().resolvedDecisions[0];
+    expect(resolved.eventId).toBe(pending.eventId);
+    expect(resolved.channel).toBe(pending.channel);
+    expect(resolved.presentedAt).toBe(pending.presentedAt);
+    expect(resolved.wasAutoResolved).toBe(false);
+    expect(resolved.matchSource).toBe('matched');
+  });
+
+  it('records player attempts on the pending decision without resolving it', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+    engine.tick(0);
+    engine.tick(600);
+
+    const pending = engine.getState().pendingDecisions[0];
+    engine.recordAttempt(pending.decisionId, 'idk maybe', {
+      confidence: 0.05,
+      bestChoiceId: 'choice-engage',
+    });
+    engine.recordAttempt(pending.decisionId, 'hmm', {
+      confidence: 0.04,
+      bestChoiceId: 'choice-defer',
+    });
+
+    const state = engine.getState();
+    expect(state.pendingDecisions[0].attempts).toHaveLength(2);
+    expect(state.pendingDecisions[0].pushBackStrikes).toBe(2);
+    // Decision is still open.
+    expect(state.resolvedDecisions).toHaveLength(0);
+  });
+
+  it('auto-resolves with low_confidence_fallback when attempts exist on timeout', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+    engine.tick(0);
+    engine.tick(600);
+
+    const pending = engine.getState().pendingDecisions[0];
+    engine.recordAttempt(pending.decisionId, 'sure on it', {
+      confidence: 0.08,
+      bestChoiceId: 'choice-engage',
+    });
+
+    // Tick well past timeout + escalation + autoResolve delays.
+    for (let elapsed = 700; elapsed <= 16000; elapsed += 100) {
+      engine.tick(elapsed);
+    }
+
+    const resolved = engine
+      .getState()
+      .resolvedDecisions.find((d) => d.decisionId === pending.decisionId);
+    expect(resolved).toBeDefined();
+    expect(resolved?.matchSource).toBe('low_confidence_fallback');
+    expect(resolved?.wasAutoResolved).toBe(true);
+    expect(resolved?.choiceId).toBe('choice-engage');
+    expect(resolved?.playerText).toBe('sure on it');
+    expect(resolved?.playerAttempts).toHaveLength(1);
+
+    // Effects must be scaled — full credit on choice-engage is +10 execTrust.
+    // Half scale should yield +5, plus a partial responsiveness debt.
+    const execTrustEffect = resolved?.effects.find((e) => e.variable === 'execTrust');
+    expect(execTrustEffect?.delta).toBe(5);
+    expect(execTrustEffect?.tag).toContain('low-conf');
+    const debtEffect = resolved?.effects.find((e) => e.variable === 'responsivenessDebt');
+    expect(debtEffect?.delta).toBeLessThan(8); // full vp debt is 8
+    expect(debtEffect?.tag).toContain('partial');
+  });
+
+  it('auto-resolves with matchSource=timeout when the player never typed', () => {
+    const engine = new GameEngine(TEST_SCENARIO, DIFFICULTIES.senior, 42);
+    engine.start();
+
+    for (let elapsed = 0; elapsed <= 16000; elapsed += 100) {
+      engine.tick(elapsed);
+    }
+
+    const resolved = engine
+      .getState()
+      .resolvedDecisions.find((d) => d.choiceId === null);
+    expect(resolved).toBeDefined();
+    expect(resolved?.matchSource).toBe('timeout');
+    expect(resolved?.wasAutoResolved).toBe(true);
+    expect(resolved?.playerAttempts).toEqual([]);
+    expect(resolved?.eventId).toBe('evt-welcome');
+    expect(resolved?.channel).toBe('product');
   });
 });

@@ -23,7 +23,11 @@ import type {
 import { DIFFICULTIES } from '@/engine/types';
 import { useGameClock } from './useGameClock';
 import { track, initTracker, flush } from '@/analytics/tracker';
-import { requestNarrativeReview, requestNarrativeTurn } from '@/narrative/client';
+import {
+  requestFreetextReply,
+  requestNarrativeReview,
+  requestNarrativeTurn,
+} from '@/narrative/client';
 import type { NarrativeReactionMessage } from '@/narrative/types';
 import { buildPeerFeedback } from '@/review/buildPeerFeedback';
 import { buildTranscript } from '@/eval/buildTranscript';
@@ -47,14 +51,21 @@ export interface OfferContext {
   companyDomain: string;
 }
 
-// Walk the channel scrollback to find the most recent stakeholder who spoke.
-// Used to pick which stakeholder should deliver an in-character push-back when
-// the player's reply is too vague to match a choice.
-function findAskerForChannel(
+// Picks which stakeholder should deliver an in-character push-back when the
+// player's reply is too vague to match a choice. Prefers the askerId stamped
+// on the pending decision (set by EventScheduler from the event's last
+// message). Falls back to the most recent non-player speaker in the channel
+// for legacy decisions that never recorded an askerId.
+function findPushBackStakeholder(
+  askerId: string | undefined,
   channelId: string,
   messages: GameState['messages'],
   stakeholders: Stakeholder[]
 ): Stakeholder | null {
+  if (askerId) {
+    const direct = stakeholders.find((s) => s.id === askerId);
+    if (direct) return direct;
+  }
   for (let i = messages.length - 1; i >= 0; i -= 1) {
     const msg = messages[i];
     if (msg.channel !== channelId) continue;
@@ -70,6 +81,10 @@ interface UseGameSessionReturn {
   gameState: GameState | null;
   ratingResult: RatingResult | null;
   stakeholders: Stakeholder[];
+  // Stakeholders resolved for the upcoming session (rotating names + roles).
+  // Available BEFORE startGame so the Day 1 briefing can render the cast list
+  // with the same names the player will see in-game.
+  previewStakeholders: Stakeholder[];
   stakeholderNames: Record<string, string>;
   channels: ChannelDef[];
   world: ScenarioWorld;
@@ -105,6 +120,10 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     [scenario, sessionSeed]
   );
   const world = useMemo<ScenarioWorld>(() => contentProvider.getWorld(), [contentProvider]);
+  const previewStakeholders = useMemo<Stakeholder[]>(
+    () => contentProvider.getStakeholders(),
+    [contentProvider]
+  );
   const offerContext = useMemo<OfferContext>(() => {
     const provided = contentProvider.getStakeholders();
     const pick = (id: string) =>
@@ -344,6 +363,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
         skipReactiveFollowUp?: boolean;
         reactionMessages?: NarrativeReactionMessage[];
         reactionChannelId?: string;
+        matchConfidence?: number;
       }
     ) => {
       const engine = engineRef.current;
@@ -351,6 +371,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
 
       engine.resolve(decisionId, choice.id, playerText, analysis, {
         skipReactiveFollowUp: options?.skipReactiveFollowUp,
+        matchConfidence: options?.matchConfidence,
       });
       if (options?.reactionMessages && options.reactionMessages.length > 0) {
         engine.injectNarrativeMessages(
@@ -392,15 +413,96 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       if (!pending) {
         engine.addFreeformMessage(channelId, text);
         setGameState(engine.getState());
+
+        // If the player @-mentioned a stakeholder, fire an LLM call to get an
+        // in-character reply so the channel doesn't feel dead. Silent failure
+        // is the fallback (silence beats a bad templated line).
+        const analysis = analyzePlayerReply(text, engine.getStakeholders());
+        if (sessionId && analysis.addressedStakeholderIds.length > 0) {
+          void (async () => {
+            try {
+              const response = await requestFreetextReply({
+                sessionId,
+                scenarioId: scenario.id,
+                seed: engine.getSeed(),
+                difficulty: difficulty.id,
+                channelId,
+                playerText: text,
+                addressedStakeholderIds: analysis.addressedStakeholderIds,
+                world,
+                stakeholders: engine.getStakeholders(),
+                messages: engine
+                  .getState()
+                  .messages.filter((message) => message.channel === channelId)
+                  .slice(-12)
+                  .map((message) => ({
+                    id: message.id,
+                    eventId: message.eventId,
+                    channel: message.channel,
+                    from: message.from,
+                    content: message.content,
+                    timestamp: message.timestamp,
+                    mentionsPlayer: message.mentionsPlayer,
+                    contextValue: message.contextValue,
+                    isPlayerMessage: message.isPlayerMessage,
+                  })),
+              });
+              if (response.reactionMessages.length > 0) {
+                engine.injectNarrativeMessages(
+                  channelId,
+                  response.reactionMessages.map((message) => ({
+                    id: message.id,
+                    from: message.from,
+                    content: message.content,
+                    mentionsPlayer: message.mentionsPlayer,
+                    contextValue: message.contextValue,
+                  }))
+                );
+                setGameState(engine.getState());
+                track('freetext_reply_applied', {
+                  channelId,
+                  addressedCount: analysis.addressedStakeholderIds.length,
+                  replyCount: response.reactionMessages.length,
+                  fallbackUsed: response.fallbackUsed,
+                });
+              }
+            } catch {
+              // Silence is acceptable. Better than a generic templated reply.
+            }
+          })();
+        }
         return;
       }
 
-      const tryInjectPushBack = (decisionId: string, channel: string): boolean => {
+      const tryInjectPushBack = (
+        decisionId: string,
+        channel: string,
+        askerId: string | undefined,
+        attempt: { text: string; confidence: number; bestChoiceId: string }
+      ): boolean => {
+        // Record the attempt unconditionally — it feeds the graceful-degradation
+        // auto-resolve even if a push-back ends up not firing this round.
+        engine.recordAttempt(decisionId, attempt.text, {
+          confidence: attempt.confidence,
+          bestChoiceId: attempt.bestChoiceId,
+        });
+
         const strikes = pushBackStrikesRef.current.get(decisionId) ?? 0;
-        if (strikes >= 2) return false;
+        if (strikes >= 2) {
+          setGameState(engine.getState());
+          return false;
+        }
         const currentMessages = engine.getState().messages;
-        const asker = findAskerForChannel(channel, currentMessages, engine.getStakeholders());
-        if (!asker || asker.personality.pushBackLines.length === 0) return false;
+        const asker = findPushBackStakeholder(
+          askerId,
+          channel,
+          currentMessages,
+          engine.getStakeholders()
+        );
+        if (!asker || asker.personality.pushBackLines.length === 0) {
+          setGameState(engine.getState());
+          return false;
+        }
         const line = asker.personality.pushBackLines[
           strikes % asker.personality.pushBackLines.length
         ];
@@ -430,7 +532,11 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
             playerText: text,
             strike: strikes,
           });
-          tryInjectPushBack(pending.decisionId, channelId);
+          tryInjectPushBack(pending.decisionId, channelId, pending.askerId, {
+            text,
+            confidence: result.confidence,
+            bestChoiceId: result.choice.id,
+          });
           return;
         }
 
@@ -439,7 +545,9 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
           engine.getStakeholders(),
           result.matchedTone
         );
-        resolveDecision(pending.decisionId, result.choice, text, analysis);
+        resolveDecision(pending.decisionId, result.choice, text, analysis, {
+          matchConfidence: result.confidence,
+        });
       };
 
       if (pendingNarrativeTurnsRef.current.has(pending.decisionId)) {
@@ -513,7 +621,12 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
               playerText: text,
               strike: strikes,
             });
-            tryInjectPushBack(pending.decisionId, channelId);
+            const localMatch = matchChoice(text, pending.choices);
+            tryInjectPushBack(pending.decisionId, channelId, pending.askerId, {
+              text,
+              confidence: response.confidence ?? localMatch.confidence,
+              bestChoiceId: response.matchedChoiceId ?? localMatch.choice.id,
+            });
             return;
           }
 
@@ -531,6 +644,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
               skipReactiveFollowUp: response.reactionMessages.length > 0,
               reactionMessages: response.reactionMessages,
               reactionChannelId: channelId,
+              matchConfidence: response.confidence ?? localMatch.confidence,
             }
           );
 
@@ -661,6 +775,7 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
     gameState,
     ratingResult,
     stakeholders,
+    previewStakeholders,
     stakeholderNames,
     channels,
     world,

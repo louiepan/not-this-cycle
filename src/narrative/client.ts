@@ -1,4 +1,6 @@
 import type {
+  NarrativeFreetextReplyRequest,
+  NarrativeFreetextReplyResponse,
   NarrativeReviewRequest,
   NarrativeReviewResponse,
   NarrativeTurnRequest,
@@ -31,4 +33,10 @@ export function requestNarrativeReview(
   payload: NarrativeReviewRequest
 ): Promise<NarrativeReviewResponse> {
   return postJson('/api/narrative/review', payload);
+}
+
+export function requestFreetextReply(
+  payload: NarrativeFreetextReplyRequest
+): Promise<NarrativeFreetextReplyResponse> {
+  return postJson('/api/narrative/freetext-reply', payload);
 }

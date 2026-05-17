@@ -15,6 +15,7 @@ export type NarrativeTaskType =
   | 'turn_realize'
   | 'turn_guardrail_lint'
   | 'review_compose'
+  | 'freetext_reply'
   | 'offline_eval'
   | 'routing_benchmark';
 
@@ -232,6 +233,33 @@ export interface NarrativeTurnResponse {
   fallbackUsed: boolean;
   fallbackReason: string | null;
   nudgeMessage: string | null;
+}
+
+// Player typed in a channel where no decision is pending and @-mentioned a
+// stakeholder. The narrative service generates an in-character reply so the
+// channel doesn't feel dead. No state effects — pure dialogue beat.
+export interface NarrativeFreetextReplyRequest {
+  sessionId: string;
+  scenarioId: string;
+  seed: number;
+  difficulty: Difficulty;
+  channelId: string;
+  playerText: string;
+  addressedStakeholderIds: string[];
+  world?: ScenarioWorld;
+  stakeholders: Stakeholder[];
+  messages: NarrativeMessageContext[];
+}
+
+export interface NarrativeFreetextReplyResponse {
+  reactionMessages: NarrativeReactionMessage[];
+  routingDecision: RoutingDecision | null;
+  fallbackUsed: boolean;
+  fallbackReason: string | null;
+}
+
+export interface NarrativeFreetextReplyOutput {
+  reactionMessages: NarrativeReactionMessage[];
 }
 
 export interface NarrativeReviewRequest {

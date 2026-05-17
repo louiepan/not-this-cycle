@@ -163,6 +163,8 @@ export class StaticContentProvider implements ContentProvider {
       boardPressure: resolve(template.boardPressure),
       teamCharter: resolve(template.teamCharter),
       mandate: resolve(template.mandate),
+      successCriteria: template.successCriteria.map(resolve),
+      successCriteriaFooter: resolve(template.successCriteriaFooter),
     };
   }
 

@@ -5,6 +5,7 @@ import { useGameSession } from '@/hooks/useGameSession';
 import { Q4_PLANNING_SCENARIO } from '@/content/scenarios/q4-planning';
 import { AcceptOfferScreen } from '@/components/game/AcceptOfferScreen';
 import { IntroScreen, type IntroSubmission } from '@/components/game/IntroScreen';
+import { MorningBrief } from '@/components/game/MorningBrief';
 import { Workspace } from '@/components/slack/Workspace';
 import { ReviewScreen } from '@/components/review/ReviewScreen';
 import { Window } from '@/components/layout/Window';
@@ -20,6 +21,7 @@ export default function Home() {
   // Marketing-platform sync will dedupe by email when wired up (BACKLOG).
   const [playerEmail, setPlayerEmail] = useState('');
   const [introCompleted, setIntroCompleted] = useState(false);
+  const [pendingBrief, setPendingBrief] = useState<DifficultyConfig | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   const handleIntroSubmit = (data: IntroSubmission) => {
@@ -96,6 +98,24 @@ export default function Home() {
   }
 
   if (session.phase === 'menu') {
+    if (pendingBrief) {
+      return (
+        <Window theme="dark">
+          <MorningBrief
+            difficulty={pendingBrief}
+            playerName={playerName}
+            world={session.world}
+            stakeholders={session.previewStakeholders}
+            onBack={() => setPendingBrief(null)}
+            onContinue={() => {
+              session.startGame(pendingBrief, playerName);
+              setPendingBrief(null);
+            }}
+          />
+        </Window>
+      );
+    }
+
     return (
       <Window theme="light">
         <AcceptOfferScreen
@@ -104,7 +124,11 @@ export default function Home() {
           offerContext={session.offerContext}
           onAccept={(diff: DifficultyConfig, submittedName: string) => {
             setPlayerName(submittedName);
-            session.startGame(diff, submittedName);
+            // Day 1 briefing runs for every difficulty. The 3-minute session
+            // can't afford to spend its opening seconds on "wait, who are
+            // these people and why am I here." Manager DM still does
+            // in-world re-grounding once the game starts.
+            setPendingBrief(diff);
           }}
         />
       </Window>
@@ -123,6 +147,7 @@ export default function Home() {
           continuityLines={continuityLines}
           onPlayAgain={() => {
             setSelectedProfileId(null);
+            setPendingBrief(null);
             setContinuityLines([]);
             session.resetGame();
           }}

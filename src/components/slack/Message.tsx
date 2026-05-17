@@ -7,6 +7,12 @@ import type { ChannelDef } from '@/engine/types';
 interface MessageProps {
   senderId: string | 'player';
   senderName: string;
+  // Role shown inline next to the sender name (e.g. "VP of Product").
+  // Surfaced in the message stream — players need to know rank without
+  // hunting through profile clicks. This trades Slack realism for game
+  // legibility; the satire works better when the room's hierarchy is
+  // visible at a glance.
+  senderRole?: string;
   content: string;
   timestamp: string;
   playerName: string;
@@ -17,6 +23,9 @@ interface MessageProps {
   showAvatar?: boolean;
   showHeader?: boolean;
   animate?: boolean;
+  // Renders the message dimmed so the player can tell scrollback from live
+  // exchanges. Live messages keep full styling.
+  isHistory?: boolean;
   onProfileOpen?: (stakeholderId: string) => void;
   onChannelOpen?: (channelId: string) => void;
 }
@@ -274,6 +283,7 @@ function renderContent(
 export function Message({
   senderId,
   senderName,
+  senderRole,
   content,
   timestamp,
   playerName,
@@ -284,6 +294,7 @@ export function Message({
   showAvatar = true,
   showHeader = true,
   animate = true,
+  isHistory = false,
   onProfileOpen,
   onChannelOpen,
 }: MessageProps) {
@@ -306,7 +317,10 @@ export function Message({
       className={`group flex gap-3 px-5 py-[2px] transition-all duration-300
         ${showHeader ? 'mt-3' : ''}
         ${mentionsPlayer ? 'bg-slack-mention-bg/30 border-l-2 border-slack-mention-text' : 'hover:bg-slack-message-hover'}
-        ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}
+        ${visible ? 'translate-y-0' : 'translate-y-1'}`}
+      style={{
+        opacity: visible ? (isHistory ? 0.55 : 1) : 0,
+      }}
     >
       {showAvatar ? (
         <Avatar name={displayName} id={isPlayer ? 'player' : senderId} size="md" />
@@ -327,6 +341,11 @@ export function Message({
             >
               {displayName}
             </button>
+            {senderRole && !isPlayer && (
+              <span className="text-[11px] font-normal text-slack-text-secondary">
+                {senderRole}
+              </span>
+            )}
             <span className="text-[11px] text-slack-text-secondary">{timestampLabel}</span>
           </div>
         )}

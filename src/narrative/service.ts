@@ -5,12 +5,20 @@ import { createTurnFallbackResponse, createFallbackReviewResponse } from './fall
 import { sanitizeRealizeOutput } from './guardrails';
 import { applyNarrativeMemoryPatch, createEmptyNarrativeMemory } from './memory';
 import { ModelRouter } from './router';
-import { analyzeOutputSchema, realizeOutputSchema, reviewOutputSchema } from './schemas';
+import {
+  analyzeOutputSchema,
+  freetextReplyOutputSchema,
+  realizeOutputSchema,
+  reviewOutputSchema,
+} from './schemas';
 import { createNarrativeStores } from './storeFactory';
 import { TASK_SPECS } from './taskSpecs';
 import type { ProviderAdapter } from './provider';
 import type {
   NarrativeAnalyzeOutput,
+  NarrativeFreetextReplyOutput,
+  NarrativeFreetextReplyRequest,
+  NarrativeFreetextReplyResponse,
   NarrativeMemory,
   NarrativeReactionMessage,
   NarrativeRealizeOutput,
@@ -21,7 +29,12 @@ import type {
   NarrativeTurnResponse,
   TaskRunResult,
 } from './types';
-import { buildReviewPrompt, buildTurnAnalyzePrompt, buildTurnRealizePrompt } from './prompts';
+import {
+  buildFreetextReplyPrompt,
+  buildReviewPrompt,
+  buildTurnAnalyzePrompt,
+  buildTurnRealizePrompt,
+} from './prompts';
 
 function getPromptCacheKey(scenarioId: string, taskType: string, version: string): string {
   return `${scenarioId}:${taskType}:${version}`;
@@ -297,6 +310,91 @@ export class NarrativeService {
         { ...request, ratingResult: defaultResult },
         'Review generation failed'
       );
+    }
+  }
+
+  // Player @-mentioned a stakeholder in a channel where no decision is pending.
+  // Generate a short in-character reply so the channel doesn't feel dead.
+  // Returns empty reactionMessages if the LLM is unconfigured or fails —
+  // caller treats that as silence, which is better than a bad templated line.
+  async runFreetextReply(
+    request: NarrativeFreetextReplyRequest
+  ): Promise<NarrativeFreetextReplyResponse> {
+    const allowedSenderIds = new Set(request.stakeholders.map((s) => s.id));
+    const route = this.router.selectRoute({
+      taskType: 'freetext_reply',
+      complexityScore: 0,
+    });
+    const provider =
+      route.decision && route.entry
+        ? selectProvider(this.providers, route.decision.providerId)
+        : null;
+
+    if (!provider || !route.entry || !provider.isConfigured()) {
+      return {
+        reactionMessages: [],
+        routingDecision: null,
+        fallbackUsed: true,
+        fallbackReason: 'Freetext-reply model is not configured',
+      };
+    }
+
+    try {
+      const prompt = buildFreetextReplyPrompt(request);
+      const run = await provider.runStructured<NarrativeFreetextReplyOutput>({
+        model: route.entry,
+        system: prompt.system,
+        user: prompt.user,
+        schema: freetextReplyOutputSchema,
+        schemaName: 'NarrativeFreetextReplyOutput',
+        promptCacheKey: getPromptCacheKey(
+          request.scenarioId,
+          'freetext_reply',
+          route.decision?.promptVersion ?? 'freetext-reply.v1'
+        ),
+        maxOutputTokens: TASK_SPECS.freetext_reply.maxOutputTokens,
+        reasoningEffort: route.decision?.reasoningEffort,
+        verbosity: route.decision?.verbosity,
+        store: false,
+      });
+
+      await this.recordTaskRun(
+        request.sessionId,
+        'freetext_reply',
+        run,
+        false,
+        route.decision?.promptVersion ?? 'freetext-reply.v1'
+      );
+
+      const parsed = run.parsed;
+      if (!parsed) {
+        return {
+          reactionMessages: [],
+          routingDecision: route.decision,
+          fallbackUsed: true,
+          fallbackReason: 'Freetext-reply returned no parsed content',
+        };
+      }
+
+      // Guardrail: drop any reactions from senders not in the cast. Cheap
+      // post-filter to keep the model from inventing speakers.
+      const cleanReactions: NarrativeReactionMessage[] = parsed.reactionMessages
+        .filter((reaction) => allowedSenderIds.has(reaction.from))
+        .slice(0, 2);
+
+      return {
+        reactionMessages: cleanReactions,
+        routingDecision: route.decision,
+        fallbackUsed: false,
+        fallbackReason: null,
+      };
+    } catch {
+      return {
+        reactionMessages: [],
+        routingDecision: route.decision,
+        fallbackUsed: true,
+        fallbackReason: 'Freetext-reply generation failed',
+      };
     }
   }
 

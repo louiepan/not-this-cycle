@@ -119,8 +119,9 @@ export class GameEngine {
     choiceId: string,
     playerText?: string,
     replyAnalysis?: PlayerReplyAnalysis,
-    options?: { skipReactiveFollowUp?: boolean }
+    options?: { skipReactiveFollowUp?: boolean; matchConfidence?: number }
   ): EngineAction[] {
+    const matchConfidence = options?.matchConfidence;
     const pending = this.stateManager.getPendingDecision(decisionId);
     if (!pending) return [];
 
@@ -143,6 +144,14 @@ export class GameEngine {
       matchedTone: replyAnalysis?.matchedTone ?? null,
       replySignals: replyAnalysis?.signals ?? [],
       addressedStakeholderIds: replyAnalysis?.addressedStakeholderIds ?? [],
+      eventId: pending.eventId,
+      channel: pending.channel,
+      presentedAt: pending.presentedAt,
+      wasAutoResolved: false,
+      pushBackStrikes: pending.pushBackStrikes ?? 0,
+      playerAttempts: pending.attempts ?? [],
+      matchConfidence: matchConfidence ?? undefined,
+      matchSource: 'matched',
     };
     this.stateManager.addResolvedDecision(resolved);
 
@@ -211,6 +220,26 @@ export class GameEngine {
     }
 
     return actions;
+  }
+
+  /**
+   * Records a vague reply the player made while a decision was still pending.
+   * Used by the graceful-degradation auto-resolve so the engine doesn't lose
+   * the player's intent when the timer eventually fires. Idempotent — appends
+   * to the pending decision's attempts list, does not resolve it.
+   */
+  recordAttempt(
+    decisionId: string,
+    text: string,
+    info: { confidence: number; bestChoiceId: string }
+  ): void {
+    const elapsed = this.stateManager.getState().clock;
+    this.stateManager.recordPendingAttempt(decisionId, {
+      text,
+      timestamp: elapsed,
+      confidence: info.confidence,
+      bestChoiceId: info.bestChoiceId,
+    });
   }
 
   addFreeformMessage(channel: string, content: string): void {
@@ -387,15 +416,26 @@ export class GameEngine {
           this.stateManager.removePendingDecision(action.decisionId);
           break;
         case 'auto_resolve':
-          this.stateManager.addResolvedDecision({
-            decisionId: action.decisionId,
-            choiceId: null,
-            resolvedAt: this.stateManager.getState().clock,
-            effects: [],
-            tags: ['auto-resolved'],
-            wasDefer: false,
-            contradicts: null,
-          });
+          if (action.resolution) {
+            this.stateManager.addResolvedDecision({
+              ...action.resolution,
+              resolvedAt: this.stateManager.getState().clock,
+            });
+          } else {
+            // Defensive fallback for any legacy emitter that still ships an
+            // auto_resolve without a resolution payload.
+            this.stateManager.addResolvedDecision({
+              decisionId: action.decisionId,
+              choiceId: null,
+              resolvedAt: this.stateManager.getState().clock,
+              effects: [],
+              tags: ['auto-resolved'],
+              wasDefer: false,
+              contradicts: null,
+              wasAutoResolved: true,
+              matchSource: 'timeout',
+            });
+          }
           break;
         case 'end_game':
           this.stateManager.setPhase('review');

@@ -25,6 +25,8 @@ const MINIMAL_SCENARIO: Scenario = {
     boardPressure: 'Board wants growth.',
     teamCharter: 'Owns onboarding.',
     mandate: 'Unblock the roadmap.',
+    successCriteria: ['Stay credible.'],
+    successCriteriaFooter: 'No promotion this cycle.',
   },
   stakeholders: [
     {

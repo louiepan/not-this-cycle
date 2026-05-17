@@ -36,11 +36,19 @@ export interface TranscriptDecision {
   resolvedAt: number | null;
   choices: Array<{ id: string; label: string; tone: string }>;
   outcome: {
-    matchedChoiceId: string | null; // null = auto-resolved (timeout)
+    matchedChoiceId: string | null; // null = pure timeout with no inference
     playerText: string | null;
     wasDefer: boolean;
     wasAutoResolved: boolean;
     pushBackStrikes: number; // how many low-confidence push-backs fired
+    matchSource: 'matched' | 'low_confidence_fallback' | 'timeout';
+    matchConfidence: number | null;
+    attempts: Array<{
+      text: string;
+      timestamp: number;
+      confidence: number;
+      bestChoiceId: string;
+    }>;
   };
 }
 

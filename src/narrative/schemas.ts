@@ -79,6 +79,19 @@ export const guardrailOutputSchema = z.object({
   violations: z.array(z.string()),
 });
 
+export const freetextReplyOutputSchema = z.object({
+  reactionMessages: z.array(
+    z.object({
+      id: z.string(),
+      from: z.string(),
+      content: z.string(),
+      delay: z.number().min(0),
+      mentionsPlayer: z.boolean().optional(),
+      contextValue: z.enum(['noise', 'ambient', 'optional', 'trap']).optional(),
+    })
+  ),
+});
+
 export const reviewOutputSchema = z.object({
   managerReview: z.string(),
   peerFeedback: z.array(

@@ -117,6 +117,13 @@ export interface GameState {
   activeChannel: string;
 }
 
+export interface PlayerAttempt {
+  text: string;
+  timestamp: number;
+  confidence: number;
+  bestChoiceId: string;
+}
+
 export interface PendingDecision {
   decisionId: string;
   eventId: string;
@@ -125,11 +132,20 @@ export interface PendingDecision {
   timeout: number;
   choices: Choice[];
   escalationStage: number;
+  // Stakeholder who delivered the message that presents this decision.
+  // Used so push-backs come from the asker, not whoever last spoke in the channel.
+  askerId?: string;
+  // Vague player replies recorded while the decision is still open. Drives the
+  // graceful-degradation auto-resolve and feeds the post-game "what you said" view.
+  attempts?: PlayerAttempt[];
+  pushBackStrikes?: number;
 }
+
+export type DecisionMatchSource = 'matched' | 'low_confidence_fallback' | 'timeout';
 
 export interface ResolvedDecision {
   decisionId: string;
-  choiceId: string | null; // null = auto-resolved
+  choiceId: string | null; // null = pure timeout with no inference
   resolvedAt: number;
   effects: StateEffect[];
   tags: string[];
@@ -139,6 +155,16 @@ export interface ResolvedDecision {
   matchedTone?: Tone | null;
   replySignals?: PlayerReplySignal[];
   addressedStakeholderIds?: string[];
+  // Provenance — populated for every resolution path so transcripts/rating can
+  // tell matched from timed-out from best-effort fallback.
+  eventId?: string;
+  channel?: string;
+  presentedAt?: number;
+  wasAutoResolved?: boolean;
+  pushBackStrikes?: number;
+  playerAttempts?: PlayerAttempt[];
+  matchConfidence?: number;
+  matchSource?: DecisionMatchSource;
 }
 
 export interface DeliveredMessage {
@@ -151,6 +177,10 @@ export interface DeliveredMessage {
   mentionsPlayer: boolean;
   contextValue: MessageContextValue | null;
   isPlayerMessage: boolean;
+  // True for warm-start scrollback that establishes channel context before the
+  // player arrived. UI renders these dimmed below a divider, distinct from
+  // live messages. Stamped from GameEvent.isHistory at delivery time.
+  isHistory?: boolean;
 }
 
 // ============================================================
@@ -291,6 +321,13 @@ export interface GameEvent {
   messages: EventMessage[];
   decision?: Decision;
   priority?: EventPriority;
+  // Marks this event as warm-start scrollback rather than a live exchange.
+  // The scheduler stamps every message it materializes from this event with
+  // isHistory: true so the UI can render them dimmed below a divider.
+  // Authors should set this on pure backstory events (channel history
+  // dumps that establish context), NOT on live first-touch DMs that
+  // happen to fire at t=0.
+  isHistory?: boolean;
 }
 
 // ============================================================
@@ -336,6 +373,14 @@ export interface ScenarioWorldTemplate {
   boardPressure: string;
   teamCharter: string;
   mandate: string;
+  // Observable behaviors that constitute "doing the job credibly" today.
+  // Surfaced on the Day 1 briefing so the player has anchors mid-game. Each
+  // criterion should be qualitative and behavioral — players can check them
+  // against themselves in real time without seeing hidden variables.
+  successCriteria: string[];
+  // Trailing one-liner shown under the success criteria. Holds the satirical
+  // reality-check: doing well today doesn't actually get you promoted.
+  successCriteriaFooter: string;
 }
 
 export interface ScenarioWorld {
@@ -352,6 +397,8 @@ export interface ScenarioWorld {
   boardPressure: string;
   teamCharter: string;
   mandate: string;
+  successCriteria: string[];
+  successCriteriaFooter: string;
 }
 
 export interface Scenario {
@@ -384,7 +431,15 @@ export type EngineAction =
   | { type: 'deliver_message'; message: DeliveredMessage }
   | { type: 'present_decision'; decision: PendingDecision }
   | { type: 'escalate'; decisionId: string; stage: number }
-  | { type: 'auto_resolve'; decisionId: string; description: string }
+  | {
+      type: 'auto_resolve';
+      decisionId: string;
+      description: string;
+      // Optional pre-built resolution. When present, processActions records this
+      // directly instead of the legacy null-choice stub. EscalationManager fills
+      // this in so the transcript captures eventId/channel/presentedAt/attempts.
+      resolution?: ResolvedDecision;
+    }
   | { type: 'update_state'; variable: VariableName; delta: number; tag: string }
   | { type: 'close_decision'; decisionId: string }
   | { type: 'typing_started'; channel: string; stakeholderId: string }

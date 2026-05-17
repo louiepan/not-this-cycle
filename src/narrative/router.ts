@@ -11,6 +11,7 @@ const PROMPT_VERSIONS: Record<NarrativeTaskType, string> = {
   turn_realize: 'turn-realize.v1',
   turn_guardrail_lint: 'turn-guardrail.v1',
   review_compose: 'review-compose.v1',
+  freetext_reply: 'freetext-reply.v1',
   offline_eval: 'offline-eval.v1',
   routing_benchmark: 'routing-benchmark.v1',
 };
@@ -30,6 +31,10 @@ function slotForTask(taskType: NarrativeTaskType, complexityScore: number): Mode
       return 'validator_lowcost';
     case 'review_compose':
       return 'review_strong';
+    case 'freetext_reply':
+      // Side-conversation reply. Always use the fast slot — the player is
+      // waiting for an ack, latency matters more than premium voice quality.
+      return 'dramatic_fast';
     case 'offline_eval':
     case 'routing_benchmark':
       return 'offline_judge';

@@ -36,7 +36,11 @@ function recommendationFor(finding: Finding, transcript: Transcript): Recommenda
       break;
     }
     case 'engagement': {
-      if (finding.title.includes('auto-resolved')) {
+      if (finding.title.includes('timed out with no player reply')) {
+        suggestedChange = 'Either increase the decision timeout (DifficultyConfig.escalationTimeoutScale) for the affected difficulty, or audit whether the decision channel was visible/active when the ask landed. If the same decisions are missed across sessions, the player likely never sees the ping.';
+        rationale = 'Pure timeouts mean the player never typed in the channel. That is an attention or pacing failure, not a matching failure.';
+        confidence = 0.75;
+      } else if (finding.title.includes('auto-resolved')) {
         suggestedChange = 'Either increase the decision timeout (DifficultyConfig.escalationTimeoutScale) for the affected difficulty, or audit which decisions timed out and review their phrasing/clarity. If the same decisions keep timing out across sessions, the decision text is probably the problem.';
         rationale = 'High timeout rate kills agency. The player either felt overwhelmed or didn\'t know to act.';
         confidence = 0.7;
@@ -80,9 +84,15 @@ function recommendationFor(finding: Finding, transcript: Transcript): Recommenda
       break;
     }
     case 'matching': {
-      suggestedChange = 'Review the matched-choice quality. Consider adjusting ChoiceMatcher keyword aliases or adding more authored choices to cover natural player phrasing.';
-      rationale = 'Choice matching may be missing common phrasings.';
-      confidence = 0.5;
+      if (finding.title.includes('low-confidence inference')) {
+        suggestedChange = 'Inspect each fallback decision: did the player\'s reply look like a clear intent that should have matched? If yes, add keyword aliases to ChoiceMatcher.TONE_SIGNALS / SIGNAL_PATTERNS or broaden the authored choice.message vocabulary. If no, the decision prompt may be inviting an answer the choices do not cover — add a choice or rewrite the ask. The transcript captures every attempt + its bestChoiceId for diagnosis.';
+        rationale = 'Fallback resolutions mean the player engaged but the classifier could not commit. This is high-leverage to fix because each attempt is captured.';
+        confidence = 0.8;
+      } else {
+        suggestedChange = 'Review the matched-choice quality. Consider adjusting ChoiceMatcher keyword aliases or adding more authored choices to cover natural player phrasing.';
+        rationale = 'Choice matching may be missing common phrasings.';
+        confidence = 0.5;
+      }
       break;
     }
   }

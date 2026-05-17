@@ -5,10 +5,21 @@ import {
   type DifficultyConfig,
   type Stakeholder,
   type Decision,
+  type Choice,
   type EscalationStage,
+  type ResolvedDecision,
+  type StateEffect,
   type Seniority,
 } from './types';
 import { EventScheduler } from './EventScheduler';
+
+// When auto-resolve fires AFTER the player made vague attempts, we infer the
+// best-matched choice and apply its effects at this multiplier. The player
+// expressed intent, just not clearly — so they get partial credit (or partial
+// blame) instead of the pure-timeout debt. Tuned so a fallback resolution
+// can't earn a higher effective score than a clean, in-time match.
+const LOW_CONFIDENCE_EFFECT_SCALE = 0.5;
+const LOW_CONFIDENCE_DEBT_SCALE = 0.4;
 
 const RESPONSIVENESS_COST: Record<Seniority, number> = {
   'c-suite': 10,
@@ -167,6 +178,9 @@ export class EscalationManager {
           timeout: scaledTimeout,
           choices: stage.replacementDecision.choices,
           escalationStage: stageIndex + 1,
+          askerId: pending.askerId,
+          attempts: [],
+          pushBackStrikes: 0,
         },
       });
     }
@@ -180,7 +194,40 @@ export class EscalationManager {
   ): EngineAction[] {
     const actions: EngineAction[] = [];
     const autoResolve = decision?.escalation?.autoResolve;
+    const attempts = pending.attempts ?? [];
+    const seniority = this.getDecisionSeniority(pending);
 
+    // Graceful degradation: if the player typed during this decision but
+    // never landed a confident match, infer the best-fitting choice from
+    // their attempts and apply its effects at half weight. They tried.
+    if (attempts.length > 0 && decision && decision.choices.length > 0) {
+      const fallback = this.buildFallbackResolution(
+        pending,
+        decision.choices,
+        attempts,
+        seniority
+      );
+      for (const effect of fallback.effects) {
+        actions.push({
+          type: 'update_state',
+          variable: effect.variable,
+          delta: effect.delta,
+          tag: effect.tag,
+        });
+      }
+      actions.push({
+        type: 'auto_resolve',
+        decisionId: pending.decisionId,
+        description:
+          'Resolved from best-effort interpretation of your replies after timeout.',
+        resolution: fallback,
+      });
+      actions.push({ type: 'close_decision', decisionId: pending.decisionId });
+      return actions;
+    }
+
+    // Pure timeout — player never typed in the decision channel.
+    const effectsApplied: StateEffect[] = [];
     if (autoResolve) {
       for (const effect of autoResolve.effects) {
         actions.push({
@@ -189,28 +236,106 @@ export class EscalationManager {
           delta: effect.delta,
           tag: effect.tag,
         });
+        effectsApplied.push(effect);
       }
     } else {
-      // No authored auto-resolve effects — apply a baseline responsiveness debt
-      // so ignoring a decision always has weight, and the resolved-decision log
-      // captures the ignore.
-      const seniority = this.getDecisionSeniority(pending);
       const debtCost = RESPONSIVENESS_COST[seniority] || 5;
-      actions.push({
-        type: 'update_state',
+      const effect: StateEffect = {
         variable: 'responsivenessDebt',
         delta: debtCost,
         tag: `ignored-${seniority}`,
-      });
+      };
+      actions.push({ type: 'update_state', ...effect });
+      effectsApplied.push(effect);
     }
+
+    const timeoutResolution: ResolvedDecision = {
+      decisionId: pending.decisionId,
+      choiceId: null,
+      // resolvedAt is overwritten in GameEngine.processActions to the live clock.
+      resolvedAt: 0,
+      effects: effectsApplied,
+      tags: ['auto-resolved', 'timeout'],
+      wasDefer: false,
+      contradicts: null,
+      eventId: pending.eventId,
+      channel: pending.channel,
+      presentedAt: pending.presentedAt,
+      wasAutoResolved: true,
+      pushBackStrikes: pending.pushBackStrikes ?? 0,
+      playerAttempts: [],
+      matchSource: 'timeout',
+    };
 
     actions.push({
       type: 'auto_resolve',
       decisionId: pending.decisionId,
-      description: autoResolve?.description ?? 'Decision expired without a response.',
+      description:
+        autoResolve?.description ?? 'Decision expired without a response.',
+      resolution: timeoutResolution,
     });
     actions.push({ type: 'close_decision', decisionId: pending.decisionId });
     return actions;
+  }
+
+  private buildFallbackResolution(
+    pending: PendingDecision,
+    choices: Choice[],
+    attempts: NonNullable<PendingDecision['attempts']>,
+    seniority: Seniority
+  ): ResolvedDecision {
+    // Prefer the highest-confidence attempt; ties break to the most recent.
+    const bestAttempt = attempts.reduce((best, current) => {
+      if (current.confidence > best.confidence) return current;
+      if (
+        current.confidence === best.confidence &&
+        current.timestamp > best.timestamp
+      ) {
+        return current;
+      }
+      return best;
+    }, attempts[0]);
+
+    const matchedChoice =
+      choices.find((c) => c.id === bestAttempt.bestChoiceId) ?? choices[0];
+
+    const scaledEffects: StateEffect[] = matchedChoice.effects.map((effect) => ({
+      variable: effect.variable,
+      delta:
+        effect.delta >= 0
+          ? Math.ceil(effect.delta * LOW_CONFIDENCE_EFFECT_SCALE)
+          : Math.floor(effect.delta * LOW_CONFIDENCE_EFFECT_SCALE),
+      tag: `${effect.tag}-low-conf`,
+    }));
+
+    const partialDebt = Math.max(
+      1,
+      Math.round((RESPONSIVENESS_COST[seniority] || 5) * LOW_CONFIDENCE_DEBT_SCALE)
+    );
+    scaledEffects.push({
+      variable: 'responsivenessDebt',
+      delta: partialDebt,
+      tag: `partial-${seniority}`,
+    });
+
+    return {
+      decisionId: pending.decisionId,
+      choiceId: matchedChoice.id,
+      resolvedAt: 0,
+      effects: scaledEffects,
+      tags: ['low-confidence-fallback', ...scaledEffects.map((e) => e.tag)],
+      wasDefer: matchedChoice.isDefer ?? false,
+      contradicts: matchedChoice.contradicts ?? null,
+      playerText: bestAttempt.text,
+      eventId: pending.eventId,
+      channel: pending.channel,
+      presentedAt: pending.presentedAt,
+      wasAutoResolved: true,
+      pushBackStrikes: pending.pushBackStrikes ?? attempts.length,
+      playerAttempts: [...attempts],
+      matchConfidence: bestAttempt.confidence,
+      matchSource: 'low_confidence_fallback',
+    };
   }
 
   private getDecisionSeniority(pending: PendingDecision): Seniority {

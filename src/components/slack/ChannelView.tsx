@@ -119,17 +119,26 @@ export function ChannelView({
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto"
       >
-        {/* Today divider */}
-        <div className="flex items-center gap-3 px-5 pb-2 pt-4">
-          <div className="h-px flex-1 bg-slack-divider" />
-          <span className="rounded-full border border-slack-divider bg-slack-sidebar-active px-3 py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-slack-text-secondary">
-            Today
-          </span>
-          <div className="h-px flex-1 bg-slack-divider" />
-        </div>
+        {/* Top divider — labels the section. When the channel has scrollback,
+            "Earlier" cues the player that they're looking at history; the
+            MessageGroup injects a "New · this morning" divider at the live
+            boundary. When the channel has no history, fall back to "Today". */}
+        {(() => {
+          const hasHistory = messages.some((m) => m.isHistory);
+          return (
+            <div className="flex items-center gap-3 px-5 pb-2 pt-4">
+              <div className="h-px flex-1 bg-slack-divider" />
+              <span className="rounded-full border border-slack-divider bg-slack-sidebar-active px-3 py-[3px] text-[11px] font-semibold uppercase tracking-[0.06em] text-slack-text-secondary">
+                {hasHistory ? 'Earlier · context' : 'Today'}
+              </span>
+              <div className="h-px flex-1 bg-slack-divider" />
+            </div>
+          );
+        })()}
 
         <MessageGroup
           messages={messages}
+          stakeholders={stakeholders}
           stakeholderNames={stakeholderNames}
           playerName={playerName}
           channels={channels}
