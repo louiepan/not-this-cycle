@@ -148,7 +148,7 @@ export function ChannelView({
 
       <div className="relative bg-slack-channel-bg pb-1 pt-2">
         <UnreadBanner count={unseenCount} onClick={() => scrollToBottom('smooth')} />
-        {typingNames.length > 0 && (
+        {typingNames.length > 0 && !channel.readOnly && (
           <div
             className="absolute left-9 z-10 inline-flex h-[22px] items-center gap-2 rounded-[11px] border border-slack-composer-border bg-slack-sidebar-active px-2.5 py-1 text-[11.5px] leading-none text-slack-text-muted"
             style={{ top: '-12px', boxShadow: '0 4px 12px rgba(0,0,0,0.35)' }}
@@ -162,16 +162,26 @@ export function ChannelView({
             <span className="text-slack-text-secondary">is typing…</span>
           </div>
         )}
-        <MessageComposer
-          channelName={channel.name}
-          channelType={channel.type}
-          stakeholders={stakeholders}
-          hasDecision={hasDecision}
-          decisionCount={decisionCount}
-          decisionTargetName={decisionTargetName}
-          nudge={nudge}
-          onSubmit={onMessageSubmit}
-        />
+        {channel.readOnly ? (
+          <div className="mx-5 mb-3 mt-1 flex items-center gap-2 rounded-md border border-slack-composer-border bg-slack-sidebar-active px-3.5 py-2.5 text-[12.5px] text-slack-text-secondary">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path d="M4 6V4.5a3 3 0 016 0V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              <rect x="2.75" y="6" width="8.5" height="6" rx="1.25" stroke="currentColor" strokeWidth="1.3" />
+            </svg>
+            <span>Only admins can post in <span className="font-semibold text-slack-text">#{channel.name}</span>.</span>
+          </div>
+        ) : (
+          <MessageComposer
+            channelName={channel.name}
+            channelType={channel.type}
+            stakeholders={stakeholders}
+            hasDecision={hasDecision}
+            decisionCount={decisionCount}
+            decisionTargetName={decisionTargetName}
+            nudge={nudge}
+            onSubmit={onMessageSubmit}
+          />
+        )}
       </div>
     </div>
   );
