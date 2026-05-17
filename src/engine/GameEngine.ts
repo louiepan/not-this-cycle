@@ -45,7 +45,9 @@ export class GameEngine {
 
     this.stateManager = new StateManager(scenario.initialState);
 
-    const resolvedEvents = this.contentProvider.getEvents();
+    const resolvedEvents = this.contentProvider
+      .getEvents()
+      .filter((e) => !e.difficulty || e.difficulty.includes(difficulty.id));
     const ambientEvents = this.contentProvider.getAmbientEvents(difficulty);
     this.scheduler = new EventScheduler([...resolvedEvents, ...ambientEvents], difficulty);
 
