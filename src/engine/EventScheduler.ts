@@ -197,6 +197,7 @@ export class EventScheduler {
           mentionsPlayer: msg.mentionsPlayer ?? false,
           contextValue: msg.contextValue ?? null,
           isPlayerMessage: false,
+          isHistory: event.isHistory ?? false,
         },
         deliverAt,
         priority,
@@ -215,6 +216,14 @@ export class EventScheduler {
       const scaledTimeout =
         event.decision.timeout * this.difficulty.escalationTimeoutScale;
 
+      // The asker is the stakeholder whose last message in this event presented
+      // the decision. Used so any push-back to a vague reply comes from them,
+      // not whoever happens to have spoken most recently in the channel.
+      const askerId =
+        event.messages.length > 0
+          ? event.messages[event.messages.length - 1].from
+          : undefined;
+
       this.pendingDecisions.push({
         presentAt: decisionTime,
         decision: {
@@ -225,6 +234,9 @@ export class EventScheduler {
           timeout: scaledTimeout,
           choices: event.decision.choices,
           escalationStage: 0,
+          askerId,
+          attempts: [],
+          pushBackStrikes: 0,
         },
       });
     }

@@ -2,7 +2,6 @@ import type {
   Decision,
   GameState,
   RatingResult,
-  ResolvedDecision,
   ScenarioWorld,
   Stakeholder,
 } from '@/engine/types';
@@ -19,7 +18,9 @@ export interface BuildTranscriptInput {
   world: ScenarioWorld;
   stakeholders: Stakeholder[];
   gameState: GameState;
-  // Map of decisionId -> push-back strike count tracked client-side
+  // Map of decisionId -> push-back strike count tracked client-side. The engine
+  // now also tracks this on the ResolvedDecision; this map is kept for backwards
+  // compatibility and used as a fallback when the engine value is missing.
   pushBackStrikes: Map<string, number>;
   // The decisions as authored, so we can include their original choices
   authoredDecisions: Decision[];
@@ -32,11 +33,15 @@ export function buildTranscript(input: BuildTranscriptInput): Transcript {
   // Each entry in resolvedDecisions corresponds to one historical decision.
   for (const resolved of input.gameState.resolvedDecisions) {
     const authored = input.authoredDecisions.find((d) => d.id === resolved.decisionId);
+    const matchSource = resolved.matchSource ?? 'timeout';
+    const pushBackStrikes =
+      resolved.pushBackStrikes ?? input.pushBackStrikes.get(resolved.decisionId) ?? 0;
+
     decisions.push({
       decisionId: resolved.decisionId,
-      eventId: findEventIdForDecision(resolved, input.gameState),
-      channel: findChannelForDecision(resolved, input.gameState),
-      presentedAt: findPresentedAt(resolved, input.gameState),
+      eventId: resolved.eventId ?? 'unknown',
+      channel: resolved.channel ?? 'unknown',
+      presentedAt: resolved.presentedAt ?? resolved.resolvedAt,
       resolvedAt: resolved.resolvedAt,
       choices:
         authored?.choices.map((c) => ({
@@ -48,8 +53,16 @@ export function buildTranscript(input: BuildTranscriptInput): Transcript {
         matchedChoiceId: resolved.choiceId,
         playerText: resolved.playerText ?? null,
         wasDefer: resolved.wasDefer,
-        wasAutoResolved: resolved.choiceId === null,
-        pushBackStrikes: input.pushBackStrikes.get(resolved.decisionId) ?? 0,
+        wasAutoResolved: resolved.wasAutoResolved ?? resolved.choiceId === null,
+        pushBackStrikes,
+        matchSource,
+        matchConfidence: resolved.matchConfidence ?? null,
+        attempts: (resolved.playerAttempts ?? []).map((attempt) => ({
+          text: attempt.text,
+          timestamp: attempt.timestamp,
+          confidence: attempt.confidence,
+          bestChoiceId: attempt.bestChoiceId,
+        })),
       },
     });
   }
@@ -70,18 +83,4 @@ export function buildTranscript(input: BuildTranscriptInput): Transcript {
     finalVariables: input.gameState.variables,
     finalRating: input.finalRating,
   };
-}
-
-// We don't always have the original eventId on the resolved decision, so we
-// best-effort it from the message log. Decisions are presented in-channel,
-// so the most recent non-player message on the decision's channel at the
-// time of resolution is probably the decision-event message.
-function findEventIdForDecision(_resolved: ResolvedDecision, _state: GameState): string {
-  return 'unknown';
-}
-function findChannelForDecision(_resolved: ResolvedDecision, _state: GameState): string {
-  return 'unknown';
-}
-function findPresentedAt(_resolved: ResolvedDecision, _state: GameState): number {
-  return _resolved.resolvedAt;
 }

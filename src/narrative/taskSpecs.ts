@@ -25,6 +25,18 @@ export const TASK_SPECS: Record<NarrativeTaskType, TaskSpec> = {
     qualityTier: 'economy',
     allowedFallbacks: ['skip_generation'],
   },
+  freetext_reply: {
+    taskType: 'freetext_reply',
+    requiresStructuredOutput: true,
+    // Faster than turn_realize because the player is waiting in real time
+    // for an ack from someone they just @-mentioned. The reply has fewer
+    // constraints than a decision reaction (no authored beats to honor,
+    // just the stakeholder's voice and recent channel state).
+    maxLatencyMs: 1400,
+    maxOutputTokens: 400,
+    qualityTier: 'balanced',
+    allowedFallbacks: ['skip_generation'],
+  },
   review_compose: {
     taskType: 'review_compose',
     requiresStructuredOutput: true,

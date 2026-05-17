@@ -5,6 +5,7 @@ import {
   type StateEffect,
   type DeliveredMessage,
   type PendingDecision,
+  type PlayerAttempt,
   type ResolvedDecision,
   type GamePhase,
   INITIAL_VARIABLES,
@@ -103,6 +104,16 @@ export class StateManager {
 
   getPendingDecisionForChannel(channel: string): PendingDecision | undefined {
     return this.state.pendingDecisions.find((d) => d.channel === channel);
+  }
+
+  recordPendingAttempt(decisionId: string, attempt: PlayerAttempt): PendingDecision | undefined {
+    const pending = this.state.pendingDecisions.find(
+      (d) => d.decisionId === decisionId
+    );
+    if (!pending) return undefined;
+    pending.attempts = [...(pending.attempts ?? []), attempt];
+    pending.pushBackStrikes = (pending.pushBackStrikes ?? 0) + 1;
+    return pending;
   }
 
   addResolvedDecision(resolved: ResolvedDecision): void {

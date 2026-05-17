@@ -81,7 +81,12 @@ function findEngagementIssues(transcript: Transcript): Finding[] {
   const totalDecisions = transcript.decisions.length;
   if (totalDecisions === 0) return findings;
 
-  const autoResolved = transcript.decisions.filter((d) => d.outcome.wasAutoResolved).length;
+  const pureTimeouts = transcript.decisions.filter(
+    (d) => d.outcome.matchSource === 'timeout'
+  );
+  const fallbacks = transcript.decisions.filter(
+    (d) => d.outcome.matchSource === 'low_confidence_fallback'
+  );
   const totalPushBacks = transcript.decisions.reduce(
     (sum, d) => sum + d.outcome.pushBackStrikes,
     0
@@ -95,19 +100,43 @@ function findEngagementIssues(transcript: Transcript): Finding[] {
       ? playerReplies.reduce((s, t) => s + t.split(/\s+/).length, 0) / playerReplies.length
       : 0;
 
-  const autoRate = autoResolved / totalDecisions;
-  if (autoRate > 0.3) {
+  // Pure timeout = player never typed in the channel. That's the engagement signal.
+  const pureTimeoutRate = pureTimeouts.length / totalDecisions;
+  if (pureTimeoutRate > 0.3) {
     findings.push({
       id: nextFindingId(),
       category: 'engagement',
       severity: 'high',
-      title: `${Math.round(autoRate * 100)}% of decisions auto-resolved (timed out)`,
-      description: `Player let ${autoResolved} of ${totalDecisions} decisions time out. Either the timer is too tight, the player was overwhelmed, or the decisions felt skippable.`,
+      title: `${Math.round(pureTimeoutRate * 100)}% of decisions timed out with no player reply`,
+      description: `Player never typed in the decision channel for ${pureTimeouts.length} of ${totalDecisions} decisions. Either the timer is too tight or the player didn't see the ask.`,
       evidence: {
-        metric: { name: 'auto_resolve_rate', value: autoRate, threshold: 0.3 },
-        decisionIds: transcript.decisions
-          .filter((d) => d.outcome.wasAutoResolved)
-          .map((d) => d.decisionId),
+        metric: {
+          name: 'pure_timeout_rate',
+          value: pureTimeoutRate,
+          threshold: 0.3,
+        },
+        decisionIds: pureTimeouts.map((d) => d.decisionId),
+      },
+    });
+  }
+
+  // Fallback resolution = player typed but never landed a confident match.
+  // That is a matching/affordance issue, not engagement. Reported separately.
+  const fallbackRate = fallbacks.length / totalDecisions;
+  if (fallbackRate > 0.3) {
+    findings.push({
+      id: nextFindingId(),
+      category: 'matching',
+      severity: 'high',
+      title: `${Math.round(fallbackRate * 100)}% of decisions resolved by low-confidence inference`,
+      description: `Player replied to ${fallbacks.length} of ${totalDecisions} decisions but no reply matched a choice with enough confidence. The engine inferred a best-fit at half weight, but this is a matching problem: the classifier, the decision phrasing, or the expected response shape is off.`,
+      evidence: {
+        metric: {
+          name: 'low_confidence_fallback_rate',
+          value: fallbackRate,
+          threshold: 0.3,
+        },
+        decisionIds: fallbacks.map((d) => d.decisionId),
       },
     });
   }

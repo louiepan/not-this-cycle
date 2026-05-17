@@ -10,7 +10,8 @@ export type AnalyticsEventType =
   | 'low_confidence_nudge'
   | 'narrative_turn_applied'
   | 'narrative_turn_fallback'
-  | 'narrative_review_applied';
+  | 'narrative_review_applied'
+  | 'freetext_reply_applied';
 
 export interface AnalyticsEvent {
   type: AnalyticsEventType;

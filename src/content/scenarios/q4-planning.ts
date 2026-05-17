@@ -475,6 +475,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-announcements',
     triggerAt: 0,
     channel: 'announcements',
+    isHistory: true,
     messages: [
       {
         id: 'msg-announcements-trading-window-q3',
@@ -597,6 +598,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-product',
     triggerAt: 0,
     channel: 'product-strategy',
+    isHistory: true,
     messages: [
       {
         id: 'msg-history-kickoff',
@@ -783,12 +785,12 @@ const EVENTS: GameEvent[] = [
     priority: 'ambient',
   },
 
-  // VP welcome DM — fires a few seconds in. Low-value introduction, no ask.
-  // Sets up the relationship without creating action. Player notices the DM
-  // light up second (after the manager DM that's already there at t=0).
+  // VP welcome DM — fires after the manager's onboarding DM finishes.
+  // The manager trickles in over 0-6s with the mandate re-grounding, so we
+  // delay this until 9s to keep the floor clear during orientation.
   {
     id: 'evt-history-dm-vp-welcome',
-    triggerAt: 3000,
+    triggerAt: 9000,
     channel: 'dm-vp',
     messages: [
       {
@@ -803,11 +805,12 @@ const EVENTS: GameEvent[] = [
     priority: 'ambient',
   },
 
-  // Staff Eng DM — brief pleasantry, then the ask. Fires ~8s in so the
-  // manager + VP messages land first and the player can orient.
+  // Staff Eng DM — brief pleasantry, then the ask. Held until after the
+  // VP welcome DM + first VP roadmap ping so the player isn't fielding
+  // three DMs in the first 10 seconds.
   {
     id: 'evt-history-dm-eng',
-    triggerAt: 8000,
+    triggerAt: 16000,
     channel: 'dm-staff-eng',
     messages: [
       {
@@ -834,7 +837,7 @@ const EVENTS: GameEvent[] = [
   // last (~14s in) so the player isn't drowning in pings at game start.
   {
     id: 'evt-history-dm-design',
-    triggerAt: 14000,
+    triggerAt: 21000,
     channel: 'dm-design-lead',
     messages: [
       {
@@ -863,6 +866,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-planning-war-room',
     triggerAt: 0,
     channel: 'planning-war-room',
+    isHistory: true,
     messages: [
       {
         id: 'msg-planning-war-room-1',
@@ -913,6 +917,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-support-escalations',
     triggerAt: 0,
     channel: 'support-escalations',
+    isHistory: true,
     messages: [
       {
         id: 'msg-support-escalations-0a',
@@ -969,6 +974,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-customer-feedback',
     triggerAt: 0,
     channel: 'customer-feedback',
+    isHistory: true,
     messages: [
       {
         id: 'msg-customer-feedback-0a',
@@ -1025,6 +1031,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-gtm-launches',
     triggerAt: 0,
     channel: 'gtm-launches',
+    isHistory: true,
     messages: [
       {
         id: 'msg-gtm-launches-0a',
@@ -1081,6 +1088,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-sales-questions',
     triggerAt: 0,
     channel: 'sales-questions',
+    isHistory: true,
     messages: [
       {
         id: 'msg-sales-questions-0a',
@@ -1137,6 +1145,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-platform-ops',
     triggerAt: 0,
     channel: 'platform-ops',
+    isHistory: true,
     messages: [
       {
         id: 'msg-platform-ops-0a',
@@ -1193,6 +1202,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-growth-ideas',
     triggerAt: 0,
     channel: 'growth-ideas',
+    isHistory: true,
     messages: [
       {
         id: 'msg-growth-ideas-0a',
@@ -1249,6 +1259,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-board-prep',
     triggerAt: 0,
     channel: 'board-prep',
+    isHistory: true,
     messages: [
       {
         id: 'msg-board-prep-0a',
@@ -1305,6 +1316,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-roadmap-backlog',
     triggerAt: 0,
     channel: 'roadmap-backlog',
+    isHistory: true,
     messages: [
       {
         id: 'msg-roadmap-backlog-0a',
@@ -1361,6 +1373,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-compliance-fire-drill',
     triggerAt: 0,
     channel: 'compliance-fire-drill',
+    isHistory: true,
     messages: [
       {
         id: 'msg-compliance-fire-drill-0a',
@@ -1417,6 +1430,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-team-random',
     triggerAt: 0,
     channel: 'team-random',
+    isHistory: true,
     messages: [
       {
         id: 'msg-team-random-0a',
@@ -1473,6 +1487,7 @@ const EVENTS: GameEvent[] = [
     id: 'evt-history-field-asks',
     triggerAt: 0,
     channel: 'field-asks',
+    isHistory: true,
     messages: [
       {
         id: 'msg-field-asks-0a',
@@ -1546,10 +1561,12 @@ const EVENTS: GameEvent[] = [
     priority: 'ambient',
   },
 
-  // VP drops in with the big ask
+  // VP drops in with the big ask. Held until ~13s so the manager's onboarding
+  // DM (which finishes at 6s) and the VP welcome DM (9s) land first. Player
+  // gets a runway of clear context before the first decision arrives.
   {
     id: 'evt-vp-roadmap',
-    triggerAt: 8000,
+    triggerAt: 13000,
     channel: 'product-strategy',
     messages: [
       {
@@ -1644,6 +1661,31 @@ const EVENTS: GameEvent[] = [
           tone: 'deflecting',
           isDefer: true,
         },
+        // Bounded ask-for-context: player asks for a fast inputs read instead
+        // of dodging. Small exec-trust hit (the VP wanted speed) but a real
+        // productJudgment + communication gain, and unlocks two DMs with the
+        // scope context the player needs. This is the path for "I want to
+        // ground my answer" — distinct from the open-ended defer above.
+        {
+          id: 'choice-vp-ask-inputs',
+          label: 'Ask for a fast inputs read',
+          message: 'Yes — but I want to ground this in where eng and design actually are. Give me 30 minutes for a fast read with the team, then a recommendation, not a wishlist.',
+          effects: [
+            { variable: 'execTrust', delta: -1, tag: 'asked-for-context' },
+            { variable: 'productJudgment', delta: 6, tag: 'sought-context' },
+            { variable: 'communicationEffectiveness', delta: 3, tag: 'transparent-process' },
+          ],
+          reactions: [
+            {
+              id: 'react-vp-ask-inputs-default',
+              from: 'the-vp',
+              delay: 1200,
+              content: 'Fine. Thirty minutes. Don\'t make me regret it.',
+            },
+          ],
+          tone: 'direct',
+          triggers: ['evt-scope-context-staff-eng', 'evt-scope-context-manager'],
+        },
       ],
       escalation: {
         stages: [
@@ -1715,10 +1757,80 @@ const EVENTS: GameEvent[] = [
     ],
   },
 
+  // ---- Reactive: scope-context DMs (unlocked by choice-vp-ask-inputs) ----
+  // These two events fire only when the player asks the VP for an inputs read
+  // instead of committing or deferring. They give the player concrete scope
+  // context they can use on later decisions: tech tradeoffs from the staff
+  // eng, priority + political read from the manager. No state effects — pure
+  // information unlock. Reactive-only (no triggerAt/triggerAfter authored);
+  // GameEngine.resolve wires them in when the choice fires.
+  {
+    id: 'evt-scope-context-staff-eng',
+    channel: 'dm-staff-eng',
+    messages: [
+      {
+        id: 'msg-scope-eng-1',
+        from: 'the-staff-eng',
+        content: 'You asked — fast read. Auth service is one big refactor away from being a real platform. SSO without it: three weeks of patch-pain you\'ll feel in Q1. With it: ~3 weeks upfront, durable after.',
+        delay: 1500,
+        mentionsPlayer: true,
+        contextValue: 'optional',
+      },
+      {
+        id: 'msg-scope-eng-2',
+        from: 'the-staff-eng',
+        content: 'Onboarding revamp is the cheapest to descope. Dashboard v2 is mid. If you commit to all three at once I will respect you less, just so we both know.',
+        delay: 4500,
+        mentionsPlayer: false,
+        contextValue: 'optional',
+      },
+      {
+        id: 'msg-scope-eng-3',
+        from: 'the-staff-eng',
+        content: 'Also: billing module is in active migration. If anyone says "just touch billing real quick," loop me first.',
+        delay: 8000,
+        mentionsPlayer: false,
+        contextValue: 'optional',
+      },
+    ],
+    priority: 'decision',
+  },
+  {
+    id: 'evt-scope-context-manager',
+    channel: 'dm-manager',
+    messages: [
+      {
+        id: 'msg-scope-mgr-1',
+        from: 'the-manager',
+        content: 'Glad you asked. Three things {{the-vp.firstName}} actually cares about, ranked: SSO landing for the enterprise deals stuck in legal review, the dashboard demo for the all-hands, and the AI surface — but the AI is optional from his POV, you have cover to defer it.',
+        delay: 2500,
+        mentionsPlayer: true,
+        contextValue: 'optional',
+      },
+      {
+        id: 'msg-scope-mgr-2',
+        from: 'the-manager',
+        content: 'If you have to cut something to make the math work, cut the onboarding revamp. {{the-design-lead.firstName}} won\'t love that and I can defend it upward.',
+        delay: 6500,
+        mentionsPlayer: false,
+        contextValue: 'optional',
+      },
+      {
+        id: 'msg-scope-mgr-3',
+        from: 'the-manager',
+        content: 'Use the thirty minutes well. {{the-vp.firstName}} doesn\'t mind a delay if the recommendation that lands afterward is sharp.',
+        delay: 10000,
+        mentionsPlayer: false,
+        contextValue: 'optional',
+      },
+    ],
+    priority: 'decision',
+  },
+
   // ---- Ambient: Adjacent PM appears ----
   {
     id: 'evt-adjacent-intro',
-    triggerAt: 18000,
+    triggerAt: 23000,
     channel: 'product-strategy',
     messages: [
       {
@@ -2783,6 +2895,14 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
       'Owns the surfaces where customers first land, activate, and expand: onboarding, in-product navigation, the admin console, and the integration platform.',
     mandate:
       'Unblock the Q4 roadmap. {{the-vp.firstName}} needs something demo-able at the all-hands in 6 weeks. Make the team look credible to executives without breaking what already works.',
+    successCriteria: [
+      'Land a plan {{the-vp.firstName}} can defend. By end of day, the Q4 roadmap should have explicit cuts, commitments, and a recommendation. Not a wishlist.',
+      'Stay visibly responsive. When someone @-mentions you, give them an answer. Going silent reads as ducking the question, not as thoughtful.',
+      'Lead with a point of view. Each reply should land somewhere — what you think, what you\'d cut, what you\'d ship. Stenography of other people\'s opinions does not count.',
+      'Don\'t volunteer eng into a fantasy. {{the-staff-eng.firstName}} and {{the-design-lead.firstName}} know their constraints. Promising scope you can\'t ship costs you more in Q1 than it saves today.',
+    ],
+    successCriteriaFooter:
+      'None of this gets you promoted in this cycle. The math is already set. Your only goal today is to walk out of Friday looking like the person they hired.',
   },
   stakeholders: [
     THE_VP,

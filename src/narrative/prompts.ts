@@ -1,5 +1,6 @@
 import type { ScenarioWorld, Stakeholder } from '@/engine/types';
 import type {
+  NarrativeFreetextReplyRequest,
   NarrativeMemory,
   NarrativeMessageContext,
   NarrativeReviewRequest,
@@ -159,6 +160,67 @@ export function buildTurnRealizePrompt(
         stakeholderVoices: serializeStakeholderVoices(request.stakeholders, request.messages),
         recentMessages: request.messages.slice(-8),
         memory: summarizeMemory(memory),
+      },
+      null,
+      2
+    ),
+  };
+}
+
+export function buildFreetextReplyPrompt(request: NarrativeFreetextReplyRequest) {
+  const addressed = request.stakeholders.filter((s) =>
+    request.addressedStakeholderIds.includes(s.id)
+  );
+  // If the player addressed people not in the cast (typo, @here, @channel),
+  // we still pass the full stakeholder cast so the model can route a reply
+  // to whoever's most active in this channel.
+  const allowedSenderIds = request.stakeholders.map((s) => s.id);
+
+  return {
+    system: [
+      'You write in-character Slack replies for a satirical PM simulation set inside a big-tech product org.',
+      'Tone target: HBO Silicon Valley energy. Heightened but recognizable. Sharp, specific, psychologically real.',
+      '',
+      'CONTEXT: The player just typed in a channel where no decision is currently pending. They @-mentioned at least one stakeholder (addressedStakeholderIds). Your job is to write a short in-character reply from the addressed stakeholder so the channel feels alive.',
+      '',
+      'HARD RULES — violating any of these is a failure:',
+      '  1. Generate 1 reaction message in most cases. Generate 2 only if the player asked a multi-part question or two addressed stakeholders would naturally both chime in. Never 3+.',
+      '  2. Each reactionMessages[i].from MUST be one of allowedSenderIds (the authored stakeholder ids in this scenario).',
+      '  3. Strongly prefer replies from the addressedStakeholderIds. Only use a different stakeholder if the addressed person realistically would not engage (extremely rare).',
+      '  4. Each reactionMessages[i].id MUST be a fresh id prefixed with "ai-reply-".',
+      '  5. delay: integer milliseconds, 600-2500 range. Stagger if multiple replies.',
+      '  6. Do NOT fabricate game events: no new decisions, no escalations to other stakeholders, no references to deals, dashboards, or numbers that did not appear in recentMessages.',
+      '  7. Do NOT advance the plot. This is a side-conversation, not a decision moment. The reply ackowledges, asks a clarifying question, or hedges. It does not force the player into a new commitment.',
+      '  8. Keep each line to one sentence (two short ones MAX if the voice register supports it).',
+      '',
+      'Voice rules:',
+      'Each line MUST sound like the named stakeholder — use voiceRegister as directorial guidance, voiceExamples as the gold-standard bar.',
+      'Reference what the player actually said. If they asked a question, answer it within the stakeholder\'s frame. If they thanked someone, the stakeholder might say "noted" or push back if grateful-tone feels off-register.',
+      'Specifics over abstractions. "I\'ll send you the auth-service capacity read" beats "I\'ll send you what I have."',
+      '',
+      'Anti-patterns (NEVER do these):',
+      VOICE_ANTI_PATTERNS,
+      worldContextBlock(request.world),
+    ].join('\n'),
+    user: JSON.stringify(
+      {
+        scenarioId: request.scenarioId,
+        channelId: request.channelId,
+        playerText: request.playerText,
+        addressedStakeholderIds: request.addressedStakeholderIds,
+        addressedStakeholders: addressed.map((s) => ({
+          id: s.id,
+          name: s.name,
+          role: s.role,
+          voiceRegister: s.personality.voiceRegister,
+          voiceExamples: s.personality.voiceExamples,
+          conflictStyle: s.mechanics.conflictStyle,
+        })),
+        allowedSenderIds,
+        // Channel context so the reply sits inside the ongoing thread, not in
+        // a vacuum. Last 8 messages give the LLM enough history without
+        // bloating the prompt.
+        recentMessages: request.messages.slice(-8),
       },
       null,
       2
