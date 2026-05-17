@@ -20,6 +20,10 @@ const TICK_INTERVAL = 100;
 export function useGameClock(onTick: (elapsed: number) => void): UseGameClockReturn {
   const [elapsed, setElapsed] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  // Mirror of isRunning. The visibility handler reads this ref instead of the
+  // state closure so back-to-back visibilitychange events (hide then show
+  // before React commits) can't leave the clock stuck paused.
+  const isRunningRef = useRef(false);
   const startTimeRef = useRef(0);
   const pausedAtRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -50,28 +54,33 @@ export function useGameClock(onTick: (elapsed: number) => void): UseGameClockRet
 
   const start = useCallback(() => {
     startTimeRef.current = Date.now();
+    pausedAtRef.current = 0;
+    isRunningRef.current = true;
     setIsRunning(true);
     startInterval();
   }, [startInterval]);
 
   const pause = useCallback(() => {
+    if (!isRunningRef.current) return;
     pausedAtRef.current = Date.now() - startTimeRef.current;
+    isRunningRef.current = false;
     stopInterval();
     setIsRunning(false);
   }, [stopInterval]);
 
   const resume = useCallback(() => {
+    if (isRunningRef.current) return;
     startTimeRef.current = Date.now() - pausedAtRef.current;
+    isRunningRef.current = true;
     setIsRunning(true);
     startInterval();
   }, [startInterval]);
 
-  // Pause/resume on tab visibility
   useEffect(() => {
     function handleVisibility() {
-      if (document.hidden && isRunning) {
-        pause();
-      } else if (!document.hidden && pausedAtRef.current > 0 && !isRunning) {
+      if (document.hidden) {
+        if (isRunningRef.current) pause();
+      } else if (pausedAtRef.current > 0 && !isRunningRef.current) {
         resume();
       }
     }
@@ -80,7 +89,7 @@ export function useGameClock(onTick: (elapsed: number) => void): UseGameClockRet
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [isRunning, pause, resume]);
+  }, [pause, resume]);
 
   // Ensure interval is cleaned up only on unmount.
   useEffect(() => {
