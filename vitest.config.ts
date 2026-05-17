@@ -9,5 +9,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // Playwright owns `tests/e2e/`. Vitest only runs unit/integration specs
+    // under `src/`.
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.next/**', 'tests/e2e/**'],
   },
 });
