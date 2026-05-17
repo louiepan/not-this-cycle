@@ -132,6 +132,48 @@ describe('q4-planning dialogue ordering', () => {
     }
   });
 
+  it('lands the player on a read-only #announcements channel with a CEO welcome as the last message', () => {
+    expect(SCENARIO.initialActiveChannel).toBe('announcements');
+
+    const announcements = SCENARIO.channels.find((channel) => channel.id === 'announcements');
+    expect(announcements).toBeDefined();
+    expect(announcements?.readOnly).toBe(true);
+
+    const event = findEvent('evt-history-announcements');
+    expect(event.channel).toBe('announcements');
+    expect(event.triggerAt).toBe(0);
+    expect(event.messages.length).toBeGreaterThanOrEqual(10);
+
+    const allowedSenders = new Set([
+      'the-ceo',
+      'the-ceo-chief-of-staff',
+      'the-cfo',
+    ]);
+    for (const message of event.messages) {
+      expect(allowedSenders.has(message.from)).toBe(true);
+    }
+
+    const welcome = event.messages[event.messages.length - 1];
+    expect(welcome.from).toBe('the-ceo');
+    expect(welcome.content).toContain('{{player.firstName}}');
+    expect(welcome.content).toContain('{{player.title}}');
+    expect(welcome.content).toContain('{{world.teamName}}');
+    // The welcome should @-mention the player, the reporting manager, and
+    // the partnering VP so they all see notifications, and should @channel
+    // to broadcast it like a real post.
+    expect(welcome.content).toMatch(/@\{\{player\.(firstName|name)\}\}/);
+    expect(welcome.content).toMatch(/@\{\{the-manager\.(firstName|name)\}\}/);
+    expect(welcome.content).toMatch(/@\{\{the-vp\.(firstName|name)\}\}/);
+    expect(welcome.content).toContain('@channel');
+  });
+
+  it('registers the new exec stakeholders so the announcements senders resolve', () => {
+    const stakeholderIds = new Set(SCENARIO.stakeholders.map((s) => s.id));
+    expect(stakeholderIds.has('the-ceo')).toBe(true);
+    expect(stakeholderIds.has('the-ceo-chief-of-staff')).toBe(true);
+    expect(stakeholderIds.has('the-cfo')).toBe(true);
+  });
+
   it('emits each DM event from a single stakeholder so message grouping stays coherent', () => {
     const dmChannels = new Set(
       SCENARIO.channels.filter((channel) => channel.type === 'dm').map((channel) => channel.id)

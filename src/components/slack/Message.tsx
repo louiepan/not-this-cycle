@@ -31,10 +31,19 @@ function buildMentionCatalog(
 ) {
   const catalog = new Map<string, { stakeholderId: string | null }>();
 
+  // Channel-wide pings — styled the same as @-mentions, never clickable.
+  catalog.set('@channel', { stakeholderId: null });
+  catalog.set('@here', { stakeholderId: null });
+
   catalog.set('@you', { stakeholderId: null });
   catalog.set('@player', { stakeholderId: null });
-  if (playerName.trim()) {
-    catalog.set(`@${playerName}`, { stakeholderId: null });
+  const trimmedPlayer = playerName.trim();
+  if (trimmedPlayer) {
+    catalog.set(`@${trimmedPlayer}`, { stakeholderId: null });
+    const firstName = trimmedPlayer.split(/\s+/)[0];
+    if (firstName && firstName !== trimmedPlayer) {
+      catalog.set(`@${firstName}`, { stakeholderId: null });
+    }
   }
 
   for (const [stakeholderId, name] of Object.entries(stakeholderNames)) {

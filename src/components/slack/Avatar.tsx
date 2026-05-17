@@ -32,6 +32,9 @@ const ID_GRADIENTS: Record<string, [string, string]> = {
   'the-data-analyst': ['#a5984a', '#75682c'], // mustard — analytical
   'the-tpm': ['#4a6fa5', '#2c4a75'], // blue — coordination
   'the-adjacent-pm': ['#5a8a72', '#385a48'], // sage — peer
+  'the-ceo': ['#7a5a8a', '#4a3a5c'], // mauve — founder
+  'the-ceo-chief-of-staff': ['#5a6f85', '#384757'], // graphite — operating arm
+  'the-cfo': ['#9a8a4a', '#6a5e2c'], // brass — finance
   player: ['#6e6359', '#45403a'], // graphite-warm — neutral self
 };
 
