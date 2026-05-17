@@ -16,12 +16,12 @@ interface AcceptOfferScreenProps {
 const LEVEL_COPY: Record<DifficultyConfig['id'], { name: string; pay: string; description: string }> = {
   junior: {
     name: 'Junior PM',
-    pay: 'L3 · base $135K',
+    pay: 'L5 · base $135K',
     description: '"I can do this."',
   },
   senior: {
     name: 'Senior PM',
-    pay: 'L5 · base $215K',
+    pay: 'L6 · base $215K',
     description: '"I should be able to do this."',
   },
   principal: {
