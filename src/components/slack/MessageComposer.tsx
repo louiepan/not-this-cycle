@@ -116,6 +116,27 @@ export function MessageComposer({
     });
   }
 
+  function applyFormat(marker: string) {
+    const input = inputRef.current;
+    if (!input || disabled) return;
+    const start = input.selectionStart ?? text.length;
+    const end = input.selectionEnd ?? text.length;
+    const selected = text.slice(start, end);
+    const nextText =
+      `${text.slice(0, start)}${marker}${selected}${marker}${text.slice(end)}`;
+    const cursorStart = selected ? start + marker.length : start + marker.length;
+    const cursorEnd = selected ? end + marker.length : start + marker.length;
+
+    setText(nextText);
+    setMentionState(null);
+
+    requestAnimationFrame(() => {
+      if (!inputRef.current) return;
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(cursorStart, cursorEnd);
+    });
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (mentionSuggestions.length > 0 && mentionState) {
       if (e.key === 'ArrowDown') {
@@ -138,6 +159,23 @@ export function MessageComposer({
         setMentionState(null);
         return;
       }
+    }
+
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && !e.shiftKey && (e.key === 'b' || e.key === 'B')) {
+      e.preventDefault();
+      applyFormat('*');
+      return;
+    }
+    if (mod && !e.shiftKey && (e.key === 'i' || e.key === 'I')) {
+      e.preventDefault();
+      applyFormat('_');
+      return;
+    }
+    if (mod && e.shiftKey && (e.key === 'x' || e.key === 'X')) {
+      e.preventDefault();
+      applyFormat('~');
+      return;
     }
 
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -164,11 +202,26 @@ export function MessageComposer({
           hasDecision ? 'border-slack-link/40' : 'border-slack-composer-border'
         }`}
       >
-        {/* Top toolbar — formatting controls. Decorative. */}
+        {/* Top toolbar — formatting controls. */}
         <div className="flex items-center gap-0.5 border-b border-slack-divider px-2 py-1.5">
-          <ToolbarText><b>B</b></ToolbarText>
-          <ToolbarText><i>I</i></ToolbarText>
-          <ToolbarText><span className="line-through">S</span></ToolbarText>
+          <ToolbarText
+            onMouseDown={(e) => { e.preventDefault(); applyFormat('*'); }}
+            label="Bold"
+          >
+            <b>B</b>
+          </ToolbarText>
+          <ToolbarText
+            onMouseDown={(e) => { e.preventDefault(); applyFormat('_'); }}
+            label="Italic"
+          >
+            <i>I</i>
+          </ToolbarText>
+          <ToolbarText
+            onMouseDown={(e) => { e.preventDefault(); applyFormat('~'); }}
+            label="Strikethrough"
+          >
+            <span className="line-through">S</span>
+          </ToolbarText>
           <div className="mx-1.5 h-4 w-px bg-slack-divider" />
           <ToolbarIcon><path d="M5 6.5h10M5 9.5h10M5 12.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></ToolbarIcon>
           <ToolbarIcon><path d="M3 6.5h2M3 9.5h2M3 12.5h2M7 6.5h8M7 9.5h8M7 12.5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></ToolbarIcon>
@@ -266,11 +319,24 @@ function ToolbarIcon({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ToolbarText({ children }: { children: React.ReactNode }) {
+function ToolbarText({
+  children,
+  onMouseDown,
+  label,
+}: {
+  children: React.ReactNode;
+  onMouseDown?: (e: React.MouseEvent) => void;
+  label?: string;
+}) {
   return (
     <button
       type="button"
-      className="flex h-6 w-6 cursor-default items-center justify-center rounded font-serif text-[13px] text-slack-composer-icon hover:bg-slack-sidebar-hover hover:text-slack-text"
+      onMouseDown={onMouseDown}
+      aria-label={label}
+      title={label}
+      className={`flex h-6 w-6 items-center justify-center rounded font-serif text-[13px] text-slack-composer-icon hover:bg-slack-sidebar-hover hover:text-slack-text ${
+        onMouseDown ? 'cursor-pointer' : 'cursor-default'
+      }`}
     >
       {children}
     </button>
