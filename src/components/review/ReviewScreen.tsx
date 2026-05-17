@@ -247,7 +247,6 @@ export function ReviewScreen({
                   <div className="mt-1.5 font-mono text-[22px] font-bold tabular-nums tracking-tight text-paper-text-primary">
                     {composite} / 100
                   </div>
-                  <div className="mt-0.5 text-[11px] text-paper-text-tertiary">cohort median: 64</div>
                 </div>
               </div>
 
