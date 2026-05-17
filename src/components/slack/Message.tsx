@@ -59,11 +59,50 @@ function buildChannelCatalog(channels: ChannelDef[] | undefined) {
   return catalog;
 }
 
-function renderContent(
+type FormatNode =
+  | { type: 'text'; value: string }
+  | { type: 'bold'; children: FormatNode[] }
+  | { type: 'italic'; children: FormatNode[] }
+  | { type: 'strike'; children: FormatNode[] }
+  | { type: 'code'; value: string };
+
+const FORMAT_REGEX =
+  /\*(?=\S)([^*\n]+?)(?<=\S)\*|_(?=\S)([^_\n]+?)(?<=\S)_|~(?=\S)([^~\n]+?)(?<=\S)~|`([^`\n]+?)`/g;
+
+function parseFormatting(text: string): FormatNode[] {
+  const nodes: FormatNode[] = [];
+  let lastIndex = 0;
+  const regex = new RegExp(FORMAT_REGEX.source, 'g');
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+    }
+    const [token, bold, italic, strike, code] = match;
+    if (bold !== undefined) {
+      nodes.push({ type: 'bold', children: parseFormatting(bold) });
+    } else if (italic !== undefined) {
+      nodes.push({ type: 'italic', children: parseFormatting(italic) });
+    } else if (strike !== undefined) {
+      nodes.push({ type: 'strike', children: parseFormatting(strike) });
+    } else if (code !== undefined) {
+      nodes.push({ type: 'code', value: code });
+    }
+    lastIndex = match.index + token.length;
+  }
+  if (lastIndex < text.length) {
+    nodes.push({ type: 'text', value: text.slice(lastIndex) });
+  }
+  return nodes;
+}
+
+function renderInlineText(
   content: string,
   playerName: string,
   stakeholderNames: Record<string, string>,
   channels: ChannelDef[] | undefined,
+  keyPrefix: string,
   onProfileOpen?: (stakeholderId: string) => void,
   onChannelOpen?: (channelId: string) => void
 ): React.ReactNode {
@@ -80,6 +119,7 @@ function renderContent(
   if (parts.length === 1) return content;
 
   return parts.map((part, i) => {
+    const key = `${keyPrefix}-t${i}`;
     const lower = part.toLowerCase();
     const mention = mentions.get(part) || mentions.get(lower);
     const channelId = channelCatalog.get(part) || channelCatalog.get(lower);
@@ -88,7 +128,7 @@ function renderContent(
       const isClickable = Boolean(onChannelOpen);
       return (
         <button
-          key={i}
+          key={key}
           type="button"
           onClick={() => {
             if (onChannelOpen) onChannelOpen(channelId);
@@ -116,7 +156,7 @@ function renderContent(
 
       return (
         <button
-          key={i}
+          key={key}
           type="button"
           onClick={() => {
             if (stakeholderId && onProfileOpen) onProfileOpen(stakeholderId);
@@ -131,8 +171,95 @@ function renderContent(
         </button>
       );
     }
-    return part;
+    return <span key={key}>{part}</span>;
   });
+}
+
+function renderNodes(
+  nodes: FormatNode[],
+  playerName: string,
+  stakeholderNames: Record<string, string>,
+  channels: ChannelDef[] | undefined,
+  keyPrefix: string,
+  onProfileOpen?: (stakeholderId: string) => void,
+  onChannelOpen?: (channelId: string) => void
+): React.ReactNode {
+  return nodes.map((node, i) => {
+    const key = `${keyPrefix}-${i}`;
+    if (node.type === 'text') {
+      return (
+        <span key={key}>
+          {renderInlineText(
+            node.value,
+            playerName,
+            stakeholderNames,
+            channels,
+            key,
+            onProfileOpen,
+            onChannelOpen
+          )}
+        </span>
+      );
+    }
+    if (node.type === 'code') {
+      return (
+        <code
+          key={key}
+          className="rounded border border-slack-divider bg-slack-composer-bg px-1 py-[1px] font-mono text-[12.5px] text-slack-mention-text"
+        >
+          {node.value}
+        </code>
+      );
+    }
+    const inner = renderNodes(
+      node.children,
+      playerName,
+      stakeholderNames,
+      channels,
+      key,
+      onProfileOpen,
+      onChannelOpen
+    );
+    if (node.type === 'bold') {
+      return (
+        <strong key={key} className="font-bold">
+          {inner}
+        </strong>
+      );
+    }
+    if (node.type === 'italic') {
+      return (
+        <em key={key} className="italic">
+          {inner}
+        </em>
+      );
+    }
+    return (
+      <span key={key} className="line-through">
+        {inner}
+      </span>
+    );
+  });
+}
+
+function renderContent(
+  content: string,
+  playerName: string,
+  stakeholderNames: Record<string, string>,
+  channels: ChannelDef[] | undefined,
+  onProfileOpen?: (stakeholderId: string) => void,
+  onChannelOpen?: (channelId: string) => void
+): React.ReactNode {
+  const nodes = parseFormatting(content);
+  return renderNodes(
+    nodes,
+    playerName,
+    stakeholderNames,
+    channels,
+    'm',
+    onProfileOpen,
+    onChannelOpen
+  );
 }
 
 export function Message({
