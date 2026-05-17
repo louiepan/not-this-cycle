@@ -401,11 +401,6 @@ export function ReviewScreen({
                   );
                 })}
               </div>
-              <div className="mt-4 border-t border-paper-border-subtle pt-4 text-[12px] leading-[1.6] text-paper-text-tertiary">
-                <strong className="font-semibold text-paper-text-secondary">Trend:</strong> the gap
-                between your strongest and weakest signals is the most common precursor to a deferred
-                promotion. Closing it is the focus area committee identified for next cycle.
-              </div>
             </div>
           </Card>
 
