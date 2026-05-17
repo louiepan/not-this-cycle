@@ -11,6 +11,11 @@ import {
 import { AmbientNoiseGenerator } from './AmbientNoiseGenerator';
 import { SeededRandom } from './SeededRandom';
 
+export interface PlayerInfo {
+  name: string;
+  title: string;
+}
+
 export interface ContentProvider {
   getScenario(): Scenario;
   getWorld(): ScenarioWorld;
@@ -33,11 +38,13 @@ export class StaticContentProvider implements ContentProvider {
   private templateMap: Map<string, Stakeholder>;
   private rng: SeededRandom;
   private seed: number;
+  private playerInfo: PlayerInfo | null;
 
-  constructor(scenario: Scenario, seed: number) {
+  constructor(scenario: Scenario, seed: number, playerInfo: PlayerInfo | null = null) {
     this.scenario = scenario;
     this.seed = seed;
     this.rng = new SeededRandom(seed);
+    this.playerInfo = playerInfo;
     // Stakeholders must resolve first so world templates can reference them.
     this.stakeholders = this.resolveStakeholders(scenario.stakeholders);
     this.templateMap = new Map(
@@ -113,6 +120,16 @@ export class StaticContentProvider implements ContentProvider {
             case 'companyName': return this.world.companyName;
             case 'teamName': return this.world.teamName;
             case 'predecessorContext': return this.world.predecessorContext;
+            default: return match;
+          }
+        }
+
+        if (id === 'player') {
+          if (!this.playerInfo) return match;
+          switch (field) {
+            case 'name': return this.playerInfo.name;
+            case 'firstName': return this.playerInfo.name.split(' ')[0];
+            case 'title': return this.playerInfo.title;
             default: return match;
           }
         }

@@ -17,7 +17,7 @@ import { StateManager } from './StateManager';
 import { EventScheduler } from './EventScheduler';
 import { EscalationManager } from './EscalationManager';
 import { StaticContentProvider } from './ContentProvider';
-import type { ContentProvider } from './ContentProvider';
+import type { ContentProvider, PlayerInfo } from './ContentProvider';
 
 export class GameEngine {
   private stateManager: StateManager;
@@ -34,12 +34,13 @@ export class GameEngine {
   constructor(
     scenario: Scenario,
     difficulty: DifficultyConfig = DIFFICULTIES.senior,
-    seed?: number
+    seed?: number,
+    playerInfo: PlayerInfo | null = null
   ) {
     this.seed = seed ?? Date.now();
     this.scenario = scenario;
     this.difficulty = difficulty;
-    this.contentProvider = new StaticContentProvider(scenario, this.seed);
+    this.contentProvider = new StaticContentProvider(scenario, this.seed, playerInfo);
     this.stakeholders = this.contentProvider.getStakeholders();
     this.channels = this.contentProvider.getChannels();
 

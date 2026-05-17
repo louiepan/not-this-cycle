@@ -316,6 +316,9 @@ export interface ChannelDef {
   type: 'channel' | 'dm';
   description?: string;
   isNoise?: boolean;
+  // When true, the player can't post — the composer is replaced with a
+  // posts-only notice. Used for company-wide announcement channels.
+  readOnly?: boolean;
 }
 
 export interface ScenarioWorldTemplate {

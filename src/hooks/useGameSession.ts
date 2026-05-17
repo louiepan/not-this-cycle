@@ -285,7 +285,10 @@ export function useGameSession(scenario: Scenario): UseGameSessionReturn {
       sessionStartedAtRef.current = new Date().toISOString();
       playerNameRef.current = playerName;
 
-      const engine = new GameEngine(scenario, diff, seed);
+      const engine = new GameEngine(scenario, diff, seed, {
+        name: playerName,
+        title: diff.label,
+      });
       engineRef.current = engine;
       engine.start();
 
