@@ -319,11 +319,123 @@ const THE_ADJACENT_PM: StakeholderTemplate = {
   ],
 };
 
+// Non-interactive exec personas. They only appear as the `from` field on
+// authored announcement messages in #announcements. Personality + mechanics
+// are required by the type but never reached by the engine since these
+// stakeholders aren't wired into ambient generation, decisions, or peer
+// feedback. Keeping them as full templates so name pools and template
+// resolution ({{the-ceo.firstName}} etc.) work consistently.
+const THE_CEO: StakeholderTemplate = {
+  id: 'the-ceo',
+  templateId: 'the-ceo',
+  role: 'CEO',
+  seniority: 'c-suite',
+  statusEmoji: '🌐',
+  statusText: 'Off-site',
+  personality: {
+    mbtiType: 'ENTJ',
+    enneagramType: 3,
+    enneagramWing: 8,
+    stressDirection: 9,
+    coreFear: 'Mission irrelevance',
+    coreDesire: 'Generational outcome',
+    communicationStyle: 'Vision-forward, careful, occasionally vulnerable on cue',
+    voiceRegister: 'Long paragraphs that read like a founders letter. Earnest framing on hard news. Uses "we" expansively. Closes with gratitude.',
+    voiceExamples: [],
+    pushBackLines: [],
+  },
+  mechanics: {
+    patience: 1,
+    directness: 0.5,
+    conflictStyle: 'absorb',
+    politicalAwareness: 1,
+    escalationPattern: 'go-public',
+  },
+  namePool: [
+    { firstName: 'Mira', lastName: 'Solano' },
+    { firstName: 'Daniel', lastName: 'Reyes' },
+    { firstName: 'Aaron', lastName: 'Whitcombe' },
+    { firstName: 'Priya', lastName: 'Iyer' },
+    { firstName: 'Jonas', lastName: 'Eklund' },
+  ],
+};
+
+const THE_CEO_CHIEF_OF_STAFF: StakeholderTemplate = {
+  id: 'the-ceo-chief-of-staff',
+  templateId: 'the-ceo-chief-of-staff',
+  role: 'Chief of Staff to the CEO',
+  seniority: 'manager',
+  statusEmoji: '🗓️',
+  statusText: 'Owning the operating cadence',
+  personality: {
+    mbtiType: 'ESTJ',
+    enneagramType: 1,
+    enneagramWing: 2,
+    stressDirection: 4,
+    coreFear: 'A meeting going sideways',
+    coreDesire: 'A calendar that holds',
+    communicationStyle: 'Logistics-first, lots of bullets, signs off as the CEO\'s office',
+    voiceRegister: 'Precise. Subject lines. Action items. Reads as if every message has a tracker row. Often posts on the CEO\'s behalf.',
+    voiceExamples: [],
+    pushBackLines: [],
+  },
+  mechanics: {
+    patience: 0.7,
+    directness: 0.8,
+    conflictStyle: 'confront',
+    politicalAwareness: 1,
+    escalationPattern: 'go-public',
+  },
+  namePool: [
+    { firstName: 'Helena', lastName: 'Park' },
+    { firstName: 'Vikram', lastName: 'Bhalla' },
+    { firstName: 'Eleanor', lastName: 'Choi' },
+    { firstName: 'Marco', lastName: 'Vance' },
+    { firstName: 'Sienna', lastName: 'Okafor' },
+  ],
+};
+
+const THE_CFO: StakeholderTemplate = {
+  id: 'the-cfo',
+  templateId: 'the-cfo',
+  role: 'CFO',
+  seniority: 'c-suite',
+  statusEmoji: '📊',
+  statusText: 'In a Finance review',
+  personality: {
+    mbtiType: 'ISTJ',
+    enneagramType: 5,
+    enneagramWing: 6,
+    stressDirection: 7,
+    coreFear: 'A surprise on the income statement',
+    coreDesire: 'A clean close',
+    communicationStyle: 'Careful, qualified, prefers ranges to numbers, lawyer-vetted',
+    voiceRegister: 'Measured. Headlines plus the asterisks. References segments, capital efficiency, and "disciplined investment." Never the first to share a number.',
+    voiceExamples: [],
+    pushBackLines: [],
+  },
+  mechanics: {
+    patience: 0.8,
+    directness: 0.6,
+    conflictStyle: 'absorb',
+    politicalAwareness: 0.9,
+    escalationPattern: 'go-public',
+  },
+  namePool: [
+    { firstName: 'Margaret', lastName: 'Hanley' },
+    { firstName: 'Theo', lastName: 'Marchetti' },
+    { firstName: 'Rashida', lastName: 'Boateng' },
+    { firstName: 'Walter', lastName: 'Nakamura' },
+    { firstName: 'Camille', lastName: 'Devereaux' },
+  ],
+};
+
 // ============================================================
 // Channels
 // ============================================================
 
 const CHANNELS: ChannelDef[] = [
+  { id: 'announcements', name: 'announcements', type: 'channel', description: 'Company-wide announcements. Posts only.', isNoise: true, readOnly: true },
   { id: 'product-strategy', name: 'q4-planning', type: 'channel', description: 'Cross-functional alignment for Q4 priorities' },
   { id: 'eng-team', name: 'eng-platform', type: 'channel', description: 'Platform engineering updates' },
   { id: 'design-sync', name: 'design-review', type: 'channel', description: 'Design crit and shipping decisions' },
@@ -332,7 +444,6 @@ const CHANNELS: ChannelDef[] = [
   { id: 'customer-feedback', name: 'growth-pod', type: 'channel', description: 'Growth-org standup and posts', isNoise: true },
   { id: 'gtm-launches', name: 'retention-wg', type: 'channel', description: 'Retention working group', isNoise: true },
   { id: 'sales-questions', name: 'general', type: 'channel', description: 'Company-wide chat', isNoise: true },
-  { id: 'support-triage', name: 'announcements', type: 'channel', description: 'Company-wide announcements', isNoise: true },
   { id: 'platform-ops', name: 'data-insights', type: 'channel', description: 'Data and insights digest', isNoise: true },
   { id: 'growth-ideas', name: 'field-asks', type: 'channel', description: 'Urgent requests that are somehow all strategic', isNoise: true },
   { id: 'board-prep', name: 'board-prep', type: 'channel', description: 'Narrative cleanup and exec polish', isNoise: true },
@@ -352,6 +463,134 @@ const CHANNELS: ChannelDef[] = [
 
 const EVENTS: GameEvent[] = [
   // ---- Warm-start: pre-existing channel history ----
+
+  // #announcements — the channel the player lands on. Reads as months of
+  // accumulated all-hands posts from the CEO, the CEO Chief of Staff, and the
+  // CFO. The final message is the CEO formally welcoming the player and
+  // naming their title, scope, and reporting manager. Ordering matters: the
+  // welcome must be the last entry in this event so it lands at the bottom
+  // of the viewport when the player enters the game. The channel is marked
+  // readOnly so the player can't post — see ChannelDef.readOnly.
+  {
+    id: 'evt-history-announcements',
+    triggerAt: 0,
+    channel: 'announcements',
+    messages: [
+      {
+        id: 'msg-announcements-trading-window-q3',
+        from: 'the-ceo-chief-of-staff',
+        content: 'Reminder: Q3 trading window closes tonight.\n\nThe blackout window opens at 11:59 PM PT and remains in effect until 48 hours after the Q3 earnings call. During this period, no employee may trade {{world.companyName}} securities, exercise options, or modify 10b5-1 plans.\n\nIf you are unsure whether you possess material non-public information, the answer is to not trade. Questions to stock-admin@.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-q3-financials',
+        from: 'the-cfo',
+        content: 'Sharing a brief recap of our Q3 results ahead of the all-hands.\n\nWe delivered results that were in line with the upper end of our internal range, with continued strength in our enterprise segment and prudent execution across the rest of the business. AI-attached revenue is becoming a more meaningful contributor and the team\'s investment discipline showed up in our operating margin.\n\nA more complete view will be shared at the all-hands. As a reminder, please do not discuss any of these figures externally, including with friends, family, or in semi-public channels, until the public disclosure has landed.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-leadership-transition',
+        from: 'the-ceo',
+        content: 'Team,\n\nI want to share some leadership news. After many years of partnership, our SVP of Platform has made the decision to step away from {{world.companyName}} to spend more time with family and explore what\'s next. Their fingerprints are on so much of what we\'ve built and we are all better for having worked alongside them.\n\nIn the interim, the Platform org will report into me directly while we run a thoughtful process for the permanent role. Expect more from me on this over the next few weeks.\n\nGrateful, as always, for this team.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-allhands-cadence',
+        from: 'the-ceo-chief-of-staff',
+        content: 'Two logistics items:\n\n• All-hands is moving from Wednesdays at 10am to Thursdays at 9am, effective next week. This gives leadership a fuller view of weekly metrics before we present.\n• The standing "Coffee with the CEO" sessions will be replaced by a quarterly written Q&A. We\'ve heard the feedback that the live format wasn\'t serving the volume of questions we receive.\n\nCalendar invites have been updated. Please refresh.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-press-leak',
+        from: 'the-ceo',
+        content: 'Earlier this week, internal communication from a leadership channel appeared in a published article. I want to be direct: this kind of leak damages trust, undermines the people who shared in good faith, and makes it harder for us to be candid with each other when it matters most.\n\nWe will not name names. We will, however, be tightening access to certain channels and reviewing how we share work-in-progress material going forward. If you ever feel something needs to be raised externally, my door is open. That is always a better path than the alternative.\n\nThank you for understanding.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-rif',
+        from: 'the-ceo',
+        content: 'Team,\n\nToday is one of the hardest days I\'ve had as CEO. After a careful review of where we need to invest to position {{world.companyName}} for the next chapter, we have made the difficult decision to reduce the size of our team by approximately 7%.\n\nThis is not a reflection of the work or the talent of the people affected. It is a reflection of where we need to focus. Everyone impacted has already been notified directly by their manager and is being supported with severance, extended healthcare, and dedicated career transition help.\n\nTo those leaving us: thank you. You shaped this company and we are wishing you every success in your next chapter.\n\nTo those of us continuing: we owe it to our former colleagues to build something worthy of the sacrifice. More from me at a special all-hands tomorrow.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-rif-cos',
+        from: 'the-ceo-chief-of-staff',
+        content: 'A few practical notes following the CEO\'s message:\n\n• A special all-hands will be held tomorrow at 9am. Calendar invite is going out within the hour. Attendance is strongly encouraged.\n• Please keep all conversations about today internal. We have not yet made an external announcement and any commentary on social media or with press contacts is not appropriate.\n• People leaders: a guide on how to support your teams over the coming days has been shared in the leadership wiki.\n\nThank you for the care you bring to each other.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-velocity',
+        from: 'the-ceo',
+        content: 'Quick update on something I\'ve been spending a lot of time thinking about: velocity.\n\nOver the past two quarters, our internal benchmarks show output per engineer is up roughly 23% year-over-year, driven in large part by adoption of AI-assisted tooling. This is real and it should change how each of us thinks about what is possible in a quarter.\n\nGoing forward, I am asking every team to revisit their planning assumptions with this in mind. Scope that felt aggressive last year is the new baseline. We are not asking anyone to work more hours. We are asking us all to use these tools to do more with the hours we already have.\n\nMore on this at the all-hands.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-mid-q-finance',
+        from: 'the-cfo',
+        content: 'A brief mid-quarter financial note.\n\nWe are tracking in line with our internal plan. As communicated previously, we are continuing to invest in our strategic priorities, including AI infrastructure and enterprise readiness, while exercising thoughtful discipline elsewhere. Hiring remains active in priority areas. Other open roles are being reviewed on a case-by-case basis with the office of the CFO.\n\nIf your team has a role that has been in review for more than three weeks, please reach out to your finance partner directly. We want to move quickly on the headcount that matters.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-engagement-survey',
+        from: 'the-ceo-chief-of-staff',
+        content: 'Engagement survey results are now live in the People portal.\n\nA few headlines:\n\n• Overall engagement is healthy and broadly stable versus last cycle.\n• "Confidence in leadership" and "I have what I need to do my best work" remain our most consistent areas of growth opportunity.\n• Open comments highlight excitement about our AI direction and a desire for more clarity on prioritization.\n\nEach functional leader will share team-specific results and a focused action plan over the next two weeks. Thank you to the 81% of you who participated.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-okr-cadence',
+        from: 'the-ceo',
+        content: 'One more change I want to flag.\n\nStarting next quarter, we are moving from a quarterly OKR cycle to a monthly check-in cadence with a quarterly recap. The goal is to shorten the loop between what we plan and what we ship, and to give every team faster permission to course-correct.\n\nYour functional leader will share what this looks like for your org. As always, I would rather we make the change and learn together than wait for the perfect rollout.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-new-joiners',
+        from: 'the-ceo',
+        content: 'Closing the week with one of my favorite parts of the job: welcoming the people who chose to join us this month.\n\nWe brought on an exceptional group across Product, Engineering, Design, Go-to-Market, and Finance. Each of them turned down other strong options to be here. Please make a point of introducing yourself to anyone new on your team or an adjacent one this week.\n\nThis company is the people in it. Glad you\'re here.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-trading-window-open',
+        from: 'the-ceo-chief-of-staff',
+        content: 'The Q4 trading window is now open.\n\nThe window will remain open until two weeks before quarter-end. As a reminder, if you possess MNPI, the window being open does not authorize you to trade. When in doubt, ask stock-admin@ before placing a trade or modifying a 10b5-1 plan.',
+        delay: 0,
+        mentionsPlayer: false,
+        contextValue: 'noise',
+      },
+      {
+        id: 'msg-announcements-welcome-player',
+        from: 'the-ceo',
+        content: '@channel — one welcome I want to share personally.\n\nPlease join me in welcoming @{{player.firstName}} to {{world.companyName}}. {{player.firstName}} is joining us as a {{player.title}} on {{world.teamName}}, where they\'ll own the surface area where our customers first land, activate, and grow into the rest of the product. It is one of the most consequential pieces of the roadmap heading into Q4 and one I have been personally focused on for some time.\n\n@{{player.firstName}} reports to @{{the-manager.name}}, Director of Product for {{world.teamName}}, and will partner closely with @{{the-vp.name}}, our VP of Product, alongside the engineering, design, and go-to-market leaders on the team. We ran a long and competitive process for this role, and I am genuinely excited about the judgment, operating bar, and product instincts {{player.firstName}} brings to it.\n\nThey are jumping in on day one of Q4 planning, so please make a point of saying hello this week and offer a little grace as they ramp.\n\nWelcome aboard, @{{player.firstName}}. 🙌',
+        delay: 0,
+        mentionsPlayer: true,
+        contextValue: 'noise',
+      },
+    ],
+    priority: 'ambient',
+  },
 
   // Context already in product-strategy when you arrive (chronological — oldest to newest)
   {
@@ -887,62 +1126,6 @@ const EVENTS: GameEvent[] = [
         id: 'msg-sales-questions-3',
         from: 'the-manager',
         content: 'Let\'s just keep the menu verbal until planning settles.',
-        delay: 0,
-        mentionsPlayer: false,
-        contextValue: 'noise',
-      },
-    ],
-    priority: 'ambient',
-  },
-  {
-    id: 'evt-history-support-triage',
-    triggerAt: 0,
-    channel: 'support-triage',
-    messages: [
-      {
-        id: 'msg-support-triage-0a',
-        from: 'the-staff-eng',
-        content: 'Closed out the deploy-train rollback retro. Action items survived the meeting, which is two more than usual.',
-        delay: 0,
-        mentionsPlayer: false,
-        contextValue: 'noise',
-      },
-      {
-        id: 'msg-support-triage-0b',
-        from: 'the-tpm',
-        content: 'Will track them in the tracker.',
-        delay: 0,
-        mentionsPlayer: false,
-        contextValue: 'noise',
-      },
-      {
-        id: 'msg-support-triage-0c',
-        from: 'the-staff-eng',
-        content: 'The tracker is haunted but yes.',
-        delay: 0,
-        mentionsPlayer: false,
-        contextValue: 'noise',
-      },
-      {
-        id: 'msg-support-triage-1',
-        from: 'the-staff-eng',
-        content: 'The auth service has entered the part of its life cycle where every fix feels like a threat.',
-        delay: 0,
-        mentionsPlayer: false,
-        contextValue: 'noise',
-      },
-      {
-        id: 'msg-support-triage-2',
-        from: 'the-tpm',
-        content: 'Copying that into the incident retro under "known emotional truths."',
-        delay: 0,
-        mentionsPlayer: false,
-        contextValue: 'noise',
-      },
-      {
-        id: 'msg-support-triage-3',
-        from: 'the-staff-eng',
-        content: 'Please don\'t. The doc has suffered enough.',
         delay: 0,
         mentionsPlayer: false,
         contextValue: 'noise',
@@ -2601,9 +2784,20 @@ export const Q4_PLANNING_SCENARIO: Scenario = {
     mandate:
       'Unblock the Q4 roadmap. {{the-vp.firstName}} needs something demo-able at the all-hands in 6 weeks. Make the team look credible to executives without breaking what already works.',
   },
-  stakeholders: [THE_VP, THE_STAFF_ENG, THE_DESIGN_LEAD, THE_DATA_ANALYST, THE_MANAGER, THE_TPM, THE_ADJACENT_PM],
+  stakeholders: [
+    THE_VP,
+    THE_STAFF_ENG,
+    THE_DESIGN_LEAD,
+    THE_DATA_ANALYST,
+    THE_MANAGER,
+    THE_TPM,
+    THE_ADJACENT_PM,
+    THE_CEO,
+    THE_CEO_CHIEF_OF_STAFF,
+    THE_CFO,
+  ],
   channels: CHANNELS,
-  initialActiveChannel: 'dm-manager',
+  initialActiveChannel: 'announcements',
   events: EVENTS,
   ambientPools: AMBIENT_POOLS,
   initialState: {},
